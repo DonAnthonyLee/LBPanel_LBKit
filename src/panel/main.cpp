@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 	app.AddPageView(new OLEDMainPageView());
 
 
-	app.Run(); // the "app" only handling input events
+	app.Run(); // the "app" only handle input events
 
 	return 0;
 }
