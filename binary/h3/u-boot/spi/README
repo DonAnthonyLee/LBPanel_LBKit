@@ -13,7 +13,7 @@ SPI Nor Flash（考虑后期将储存 OpenWrt 的 rootfs，建议不小于8M）
 注意：
 初始化后将使用 0x4b060000~0x4b1fffff 区域内存（约1.7MB）作为存储解压后字库及数据缓冲区，
 该内存区域数据将保留至 Linux Kernel 的 OLED 驱动加载后才释放，因此内核映像加载等需确保
-不映像该区域。
+不影响该区域。
 
 3. 字库
 所提供 u-boot-spi.bin 文件自 512K 后为压缩字库，含一套 12 点阵 Unicode 字库、
