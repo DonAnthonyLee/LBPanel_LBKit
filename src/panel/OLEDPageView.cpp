@@ -35,7 +35,7 @@ OLEDPageView::OLEDPageView(uint8 num)
 	: OLEDView(),
 	  fNavButtonsState(0)
 {
-	num = min_c(OLED_PAGE_VIEW_NAV_BUTTONS_NUM_MAX, num);
+	num = min_c(OLED_BUTTONS_NUM, num);
 	switch(num)
 	{
 		case 1:
@@ -70,7 +70,7 @@ OLEDPageView::~OLEDPageView()
 void
 OLEDPageView::ShowNavButton(uint8 idBtn)
 {
-	if(idBtn >= OLED_PAGE_VIEW_NAV_BUTTONS_NUM_MAX) return;
+	if(idBtn >= OLED_BUTTONS_NUM) return;
 
 	if((fNavButtonsState & (0x01 << idBtn)) == 0)
 	{
@@ -83,7 +83,7 @@ OLEDPageView::ShowNavButton(uint8 idBtn)
 void
 OLEDPageView::HideNavButton(uint8 idBtn)
 {
-	if(idBtn >= OLED_PAGE_VIEW_NAV_BUTTONS_NUM_MAX) return;
+	if(idBtn >= OLED_BUTTONS_NUM) return;
 
 	if((fNavButtonsState & (0x01 << idBtn)) != 0)
 	{
@@ -96,7 +96,7 @@ OLEDPageView::HideNavButton(uint8 idBtn)
 bool
 OLEDPageView::IsNavButtonHidden(uint8 idBtn) const
 {
-	if(idBtn >= OLED_PAGE_VIEW_NAV_BUTTONS_NUM_MAX) return false;
+	if(idBtn >= OLED_BUTTONS_NUM) return false;
 
 	return((fNavButtonsState & (0x01 << idBtn)) == 0);
 }
@@ -105,7 +105,7 @@ OLEDPageView::IsNavButtonHidden(uint8 idBtn) const
 void
 OLEDPageView::SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon)
 {
-	if(idBtn >= OLED_PAGE_VIEW_NAV_BUTTONS_NUM_MAX) return;
+	if(idBtn >= OLED_BUTTONS_NUM) return;
 
 	if(fButtonIcons[idBtn] != idIcon)
 	{
