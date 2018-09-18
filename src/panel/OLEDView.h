@@ -47,8 +47,10 @@ public:
 	virtual BRect	Bounds() const;
 
 	void		FillRect(BRect r, pattern p = B_SOLID_HIGH);
+	void		StrokeRect(BRect r, bool erase = false);
 	void		DrawString(const char *string, BPoint location, bool erase = false);
 	void		DrawIcon(const oled_icon *icon, BPoint location);
+
 	virtual void	DrawIcon(oled_icon_id idIcon, BPoint location);
 
 	uint8		FontSize() const;
@@ -69,7 +71,7 @@ public:
 
 	uint8		KeyState(bool *pressed = NULL) const;
 
-	void		Deactivated();
+	void		Deactivate();
 	bool		IsActivated() const;
 	virtual void	Activated(bool state);
 
