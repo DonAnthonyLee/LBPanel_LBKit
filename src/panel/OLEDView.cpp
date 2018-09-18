@@ -37,10 +37,11 @@
 #include <stdint.h>
 #include <oled_ssd1306_ioctl.h>
 
+#include "OLEDConfig.h"
 #include "OLEDView.h"
 
-OLEDView::OLEDView()
-	: BLooper(),
+OLEDView::OLEDView(const char *name)
+	: BHandler(name),
 	  fFD(-1), fTimestamp(0),
 	  fActivated(false),
 	  fFontSize(12),
@@ -287,7 +288,6 @@ OLEDView::SetActivated(bool state)
 	if(fActivated != state)
 	{
 		fActivated = state;
-		if(state && IsRunning() == false) Run();
 		Activated(state);
 	}
 }

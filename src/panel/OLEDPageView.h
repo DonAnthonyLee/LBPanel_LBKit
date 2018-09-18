@@ -31,14 +31,13 @@
 #ifndef __OLED_PAGE_VIEW_H__
 #define __OLED_PAGE_VIEW_H__
 
-#include "OLEDConfig.h"
 #include "OLEDView.h"
 
 #ifdef __cplusplus /* Just for C++ */
 
 class OLEDPageView : public OLEDView {
 public:
-	OLEDPageView(uint8 num_of_nav_buttons);
+	OLEDPageView(uint8 num_of_nav_buttons, const char *name = NULL);
 	virtual ~OLEDPageView();
 
 	virtual void	ShowNavButton(uint8 idBtn);
@@ -61,7 +60,7 @@ public:
 
 private:
 	uint8 fNavButtonsState;
-	oled_icon_id fButtonIcons[OLED_BUTTONS_NUM];
+	oled_icon_id fButtonIcons[8]; // enough
 };
 
 #endif /* __cplusplus */

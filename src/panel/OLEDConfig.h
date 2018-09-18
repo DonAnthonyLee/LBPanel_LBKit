@@ -33,6 +33,8 @@
 
 #define OLED_SCREEN_WIDTH	128
 #define OLED_SCREEN_HEIGHT	64
+
+/* OLED_BUTTONS_NUM <= 8 */
 #define OLED_BUTTONS_NUM	3
 
 #endif /* __OLED_CONFIG_H__ */
