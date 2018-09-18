@@ -71,7 +71,7 @@ OLEDView::FillRect(BRect r, pattern p)
 		if(p.data[k] == 0x00 || p.data[k] == 0xff)
 			data.patterns[k] = p.data[k];
 		else for(int m = 0; m < 8; m++)
-			data.patterns[k] |= (p.data[m] >> (7 - k + m));
+			data.patterns[k] |= ((p.data[m] >> (7 - k + m)) & (0x01 << m));
 	}
 
 	if(ioctl(fFD, OLED_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
@@ -94,6 +94,9 @@ OLEDView::StrokeRect(BRect rect, bool erase)
 		r.top = r.bottom = rect.bottom;
 		FillRect(r, p);
 	}
+
+	rect.InsetBy(0, 1);
+	if (rect.IsValid() == false) return;
 
 	r = rect;
 	r.left = r.right;
@@ -237,7 +240,7 @@ OLEDView::SetPowerState(bool state)
 BRect
 OLEDView::Bounds() const
 {
-	return BRect(0, 0, 127, 63);
+	return BRect(0, 0, OLED_SCREEN_WIDTH - 1, OLED_SCREEN_HEIGHT - 1);
 }
 
 void
@@ -271,12 +274,22 @@ void
 OLEDView::MessageReceived(BMessage *msg)
 {
 	// TODO: handling key events from app's looper
+	switch(msg->what)
+	{
+		default:
+			break;
+	}
 }
 
 void
-OLEDView::Deactivate()
+OLEDView::SetActivated(bool state)
 {
-	// TODO
+	if(fActivated != state)
+	{
+		fActivated = state;
+		if(state && IsRunning() == false) Run();
+		Activated(state);
+	}
 }
 
 bool
@@ -288,6 +301,6 @@ OLEDView::IsActivated() const
 void
 OLEDView::Activated(bool state)
 {
-	if(state) Draw(Bounds());
+	if(state) Draw(OLEDView::Bounds());
 }
 
