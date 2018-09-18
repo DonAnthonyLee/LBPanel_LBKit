@@ -28,11 +28,12 @@
  *
  * --------------------------------------------------------------------------*/
 
+#include "OLEDConfig.h"
 #include "OLEDPageView.h"
 
 
-OLEDPageView::OLEDPageView(uint8 num)
-	: OLEDView(),
+OLEDPageView::OLEDPageView(uint8 num, const char *name)
+	: OLEDView(name),
 	  fNavButtonsState(0)
 {
 	num = min_c(OLED_BUTTONS_NUM, num);

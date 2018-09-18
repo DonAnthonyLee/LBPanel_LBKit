@@ -38,9 +38,9 @@
 
 class OLEDApp;
 
-class OLEDView : public BLooper {
+class OLEDView : public BHandler {
 public:
-	OLEDView();
+	OLEDView(const char *name = NULL);
 	virtual ~OLEDView();
 
 	// Bounds(): A derived class should draw only in this region.
