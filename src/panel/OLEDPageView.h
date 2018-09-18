@@ -31,9 +31,8 @@
 #ifndef __OLED_PAGE_VIEW_H__
 #define __OLED_PAGE_VIEW_H__
 
+#include "OLEDConfig.h"
 #include "OLEDView.h"
-
-#define OLED_PAGE_VIEW_NAV_BUTTONS_NUM_MAX	3
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -62,7 +61,7 @@ public:
 
 private:
 	uint8 fNavButtonsState;
-	oled_icon_id fButtonIcons[OLED_PAGE_VIEW_NAV_BUTTONS_NUM_MAX];
+	oled_icon_id fButtonIcons[OLED_BUTTONS_NUM];
 };
 
 #endif /* __cplusplus */

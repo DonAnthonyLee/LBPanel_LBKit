@@ -71,7 +71,6 @@ public:
 
 	uint8		KeyState(bool *pressed = NULL) const;
 
-	void		Deactivate();
 	bool		IsActivated() const;
 	virtual void	Activated(bool state);
 
@@ -86,6 +85,8 @@ private:
 
 	uint8 fFontSize;
 	uint16 fKeyState;
+
+	void		SetActivated(bool state);
 };
 
 #endif /* __cplusplus */
