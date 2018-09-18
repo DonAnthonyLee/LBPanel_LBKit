@@ -100,7 +100,7 @@ OLEDView::StrokeRect(BRect rect, bool erase)
 	FillRect(r, p);
 	if (rect.Width() > 0)
 	{
-		r.right = r.left = r.left;
+		r.right = r.left = rect.left;
 		FillRect(r, p);
 	}
 }
