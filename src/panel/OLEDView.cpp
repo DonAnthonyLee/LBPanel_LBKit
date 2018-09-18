@@ -59,15 +59,54 @@ OLEDView::FillRect(BRect r, pattern p)
 {
 	_oled_ssd1306_clear_t data;
 
-	if (fFD < 0 || fActivated == false) return;
+	if (fFD < 0 || fActivated == false || r.IsValid() == false) return;
 
 	data.x = (uint8_t)r.left;
 	data.y = (uint8_t)r.top;
 	data.w = (uint8_t)(r.Width() + 1);
 	data.h = (uint8_t)(r.Height() + 1);
-	memcpy(data.patterns, p.data, sizeof(data.patterns));
+	bzero(data.patterns, sizeof(data.patterns));
+	for(int k = 0; k < 8; k++)
+	{
+		if(p.data[k] == 0x00 || p.data[k] == 0xff)
+			data.patterns[k] = p.data[k];
+		else for(int m = 0; m < 8; m++)
+			data.patterns[k] |= (p.data[m] >> (7 - k + m));
+	}
 
 	if(ioctl(fFD, OLED_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
+}
+
+
+void
+OLEDView::StrokeRect(BRect rect, bool erase)
+{
+	BRect r;
+	pattern p = (erase ? B_SOLID_LOW : B_SOLID_HIGH);
+
+	if (fFD < 0 || fActivated == false || r.IsValid() == false) return;
+
+	r = rect;
+	r.bottom = r.top;
+	FillRect(r, p);
+
+	if (r.Height() > 0)
+	{
+		r = rect;
+		r.top = r.bottom;
+		FillRect(r, p);
+	}
+
+	r = rect;
+	r.left = r.right;
+	FillRect(r, p);
+
+	if (r.Width() > 0)
+	{
+		r = rect;
+		r.right = r.left;
+		FillRect(r, p);
+	}
 }
 
 
@@ -93,18 +132,19 @@ OLEDView::DrawIcon(const oled_icon *icon, BPoint pt)
 {
 	_oled_ssd1306_clear_t data;
 
-	if (icon == NULL || fFD < 0 || icon->type > 2 || fActivated == false) return;
+	if (fFD < 0 || fActivated == false) return;
+	if (icon == NULL || icon->type > 2 /*OLED_ICON_32x32*/) return;
 
 	data.w = 8;
 	data.h = 8;
-	for(int k = 0; k < icon->type + 1; k++)
+	for(int k = 0; k < (1 << icon->type); k++) // y
 	{
-		for(int m = 0; m < icon->type + 1; m++)
+		for(int m = 0; m < (1 << icon->type); m++) // x
 		{
 			data.x = (m << 3) + (uint8_t)pt.x;
-			data.y = (m << 3) + (uint8_t)pt.y;
+			data.y = (k << 3) + (uint8_t)pt.y;
 			memcpy(data.patterns,
-			       icon->data + (k * (icon->type + 1) + m),
+			       icon->data + ((k * (1 << icon->type) + m) << 3),
 			       sizeof(data.patterns));
 
 			if(ioctl(fFD, OLED_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
@@ -238,7 +278,7 @@ OLEDView::MessageReceived(BMessage *msg)
 }
 
 void
-OLEDView::Deactivated()
+OLEDView::Deactivate()
 {
 	// TODO
 }
