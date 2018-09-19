@@ -54,15 +54,12 @@ public:
 
 	// TODO
 
+	virtual void	MessageReceived(BMessage *msg);
+
 private:
-	bool fQuit;
 	int fOLEDFD;
 	int fInputFD;
 
-	BLocker fLocker;
-
-	bool fLeftSide;
-	int32 fActivatedPage;
 	BList fLeftPageViews;
 	BList fRightPageViews;
 };

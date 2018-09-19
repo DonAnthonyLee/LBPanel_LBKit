@@ -277,11 +277,11 @@ OLEDView::KeyState(bool *pressed) const
 void
 OLEDView::MessageReceived(BMessage *msg)
 {
-	// TODO: handling key events from app's looper
 	switch(msg->what)
 	{
+		// TODO: handling key events from app's looper
 		default:
-			break;
+			BHandler::MessageReceived(msg);
 	}
 }
 
