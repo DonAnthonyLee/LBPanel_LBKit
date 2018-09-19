@@ -11,7 +11,7 @@ LiteBeAPI 为方便在其它平台直接编译原生采用 BeOS API 撰写的程
 
 + 友善官方配套的编译工具等
 
-非 OpenWrt 开发环境所需编译工具详见友善官方 Wiki（http://wiki.friendlyarm.com/wiki/index.php/NanoPi_NEO）
+非 OpenWrt 开发环境所需编译工具详见 [友善官方 Wiki](http://wiki.friendlyarm.com/wiki/index.php/NanoPi_NEO)。
 
 
 Anthony Lee <don.anthony.lee@gmail.com>

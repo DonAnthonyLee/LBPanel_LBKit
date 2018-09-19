@@ -44,8 +44,7 @@
 
 
 OLEDApp::OLEDApp(int oled_fd, int input_fd)
-	: fOLEDFD(oled_fd), fInputFD(input_fd),
-	  fLeftSide(false), fActivatedPage(-1)
+	: fOLEDFD(oled_fd), fInputFD(input_fd)
 {
 }
 
@@ -122,9 +121,7 @@ OLEDApp::ActivatePageView(int32 index, bool left_side)
 	if(oldView)
 		oldView->SetActivated(false);
 
-	fActivatedPage = index;
-	fLeftSide = left_side;
-
+	SetPreferredHandler(newView);
 	newView->SetActivated(true);
 }
 
@@ -132,7 +129,7 @@ OLEDApp::ActivatePageView(int32 index, bool left_side)
 OLEDView*
 OLEDApp::GetActivatedPageView() const
 {
-	return PageViewAt(fActivatedPage, fLeftSide);
+	return cast_as(PreferredHandler(), OLEDView);
 }
 
 
@@ -186,7 +183,19 @@ OLEDApp::Go()
 	}
 
 	Lock();
-	PostMessage(B_QUIT_REQUESTED);
+	PostMessage(B_QUIT_REQUESTED, this);
 	Unlock();
+}
+
+
+void
+OLEDApp::MessageReceived(BMessage *msg)
+{
+	switch(msg->what)
+	{
+		// TODO
+		default:
+			break;
+	}
 }
 
