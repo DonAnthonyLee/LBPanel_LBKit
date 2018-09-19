@@ -36,33 +36,33 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
-class OLEDApp {
+class OLEDApp : public BLooper {
 public:
 	OLEDApp(int oled_fd, int input_fd);
 	virtual ~OLEDApp();
 
 	bool		AddPageView(OLEDView *view, bool left_side = true);
-	void		RemovePageView(OLEDView *view);
+	bool		RemovePageView(OLEDView *view);
 	OLEDView*	RemovePageView(int32 index, bool left_side = true);
-	OLEDView*	PageViewAt(int32 index, bool left_side = true);
-	int32		CountPageViews(bool left_side = true);
+	OLEDView*	PageViewAt(int32 index, bool left_side = true) const;
+	int32		CountPageViews(bool left_side = true) const;
 
 	void		ActivatePageView(int32 index, bool left_side = true);
+	OLEDView*	GetActivatedPageView() const;
 
-	bool		Lock();
-	void		Unlock();
-	status_t	LockWithTimeout(bigtime_t microseconds);
-
-	void		Run();
+	void		Go();
 
 	// TODO
 
 private:
+	bool fQuit;
 	int fOLEDFD;
 	int fInputFD;
 
 	BLocker fLocker;
 
+	bool fLeftSide;
+	int32 fActivatedPage;
 	BList fLeftPageViews;
 	BList fRightPageViews;
 };

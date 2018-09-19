@@ -28,11 +28,24 @@
  *
  * --------------------------------------------------------------------------*/
 
+#include <stdio.h>
+#include <unistd.h>
+#include <linux/input.h>
+
 #include "OLEDApp.h"
+
+#define OLED_DEBUG
+
+#ifdef OLED_DEBUG
+#define DBGOUT(msg...)		do { printf(msg); } while (0)
+#else
+#define DBGOUT(msg...)		do {} while (0)
+#endif
 
 
 OLEDApp::OLEDApp(int oled_fd, int input_fd)
-	: fOLEDFD(oled_fd), fInputFD(input_fd)
+	: fOLEDFD(oled_fd), fInputFD(input_fd),
+	  fLeftSide(false), fActivatedPage(-1)
 {
 }
 
@@ -49,55 +62,51 @@ OLEDApp::~OLEDApp()
 bool
 OLEDApp::AddPageView(OLEDView *view, bool left_side)
 {
-	if(fOLEDFD < 0 || view->fFD >= 0) return false;
+	if(fOLEDFD < 0 || view == NULL || view->Looper() != NULL) return false;
 
 	if((left_side ? fLeftPageViews.AddItem(view) : fRightPageViews.AddItem(view)) == false) return false;
+	AddHandler(view);
 
-	// TODO: activate, etc.
+	view->fActivated = false;
 	view->fFD = fOLEDFD;
 
 	return true;
 }
 
 
-void
+bool
 OLEDApp::RemovePageView(OLEDView *view)
 {
-	if(view->fFD < 0 || view->fFD != fOLEDFD) return;
-
+	if(RemoveHandler(view) == false) return false;
 	if(fLeftPageViews.RemoveItem(view) == false)
 		fRightPageViews.RemoveItem(view);
 
-	// TODO: activate, etc.
+	// TODO: handling when it's activated one
 	view->fActivated = false;
 	view->fFD = -1;
+
+	return true;
 }
 
 
 OLEDView*
 OLEDApp::RemovePageView(int32 index, bool left_side)
 {
-	OLEDView *view;
+	OLEDView *view = PageViewAt(index, left_side);
 
-	view = (left_side ? (OLEDView*)fLeftPageViews.RemoveItem(index) : (OLEDView*)fRightPageViews.RemoveItem(index));
-
-	// TODO: activate, etc.
-	view->fActivated = false;
-	view->fFD = -1;
-
-	return view;
+	return(RemovePageView(view) ? view : NULL);
 }
 
 
 OLEDView*
-OLEDApp::PageViewAt(int32 index, bool left_side)
+OLEDApp::PageViewAt(int32 index, bool left_side) const
 {
 	return(left_side ? (OLEDView*)fLeftPageViews.ItemAt(index) : (OLEDView*)fRightPageViews.ItemAt(index));
 }
 
 
 int32
-OLEDApp::CountPageViews(bool left_side)
+OLEDApp::CountPageViews(bool left_side) const
 {
 	return(left_side ? fLeftPageViews.CountItems() : fRightPageViews.CountItems());
 }
@@ -105,34 +114,79 @@ OLEDApp::CountPageViews(bool left_side)
 void
 OLEDApp::ActivatePageView(int32 index, bool left_side)
 {
-	// TODO
+	OLEDView *newView = PageViewAt(index, left_side);
+	OLEDView *oldView = GetActivatedPageView();
+
+	if(oldView == newView || newView == NULL) return;
+
+	if(oldView)
+		oldView->SetActivated(false);
+
+	fActivatedPage = index;
+	fLeftSide = left_side;
+
+	newView->SetActivated(true);
 }
 
 
-bool
-OLEDApp::Lock()
+OLEDView*
+OLEDApp::GetActivatedPageView() const
 {
-	return fLocker.Lock();
+	return PageViewAt(fActivatedPage, fLeftSide);
 }
 
 
 void
-OLEDApp::Unlock()
+OLEDApp::Go()
 {
-	fLocker.Unlock();
-}
+	if(fOLEDFD < 0 || fInputFD < 0)
+	{
+		printf("Invalid file handle !\n");
+		return;
+	}
 
+	Lock();
+	Run();
+	ActivatePageView(0, false);
+	Unlock();
 
-status_t
-OLEDApp::LockWithTimeout(bigtime_t microseconds)
-{
-	return fLocker.LockWithTimeout(microseconds);
-}
+	while(IsRunning())
+	{
+		struct input_event event;
+		int n = read(fInputFD, &event, sizeof(event));
 
+		if(n <= 0)
+		{
+			perror("Unable to get event from input device");
+			break;
+		}
 
-void
-OLEDApp::Run()
-{
-	// TODO
+		if(n != sizeof(event))
+		{
+			printf("Unable to process input event !\n");
+			continue;
+		}
+
+		if(event.type != EV_KEY)
+		{
+			DBGOUT("Event.type != EV_KEY.\n");
+			continue;
+		}
+
+		BMessage msg(event.value == 0 ? B_KEY_UP : B_KEY_DOWN);
+		msg.AddInt32("key", event.code);
+		msg.AddInt64("when", (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) + (bigtime_t)event.time.tv_usec);
+#ifdef OLED_DEBUG
+		msg.PrintToStream();
+#endif
+
+		Lock();
+		PostMessage(&msg);
+		Unlock();
+	}
+
+	Lock();
+	PostMessage(B_QUIT_REQUESTED);
+	Unlock();
 }
 

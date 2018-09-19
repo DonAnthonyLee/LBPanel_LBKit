@@ -170,7 +170,7 @@ OLEDView::FontSize() const
 void
 OLEDView::SetFontSize(uint8 size)
 {
-	if(!((size >= 12 && size <= 16) || size == 24 || size == 32)) return;
+	if(!(size == 12 || size == 14 || size == 16 || size == 24 || size == 32)) return;
 	fFontSize = size;
 }
 
@@ -238,17 +238,20 @@ OLEDView::SetPowerState(bool state)
 	if(ioctl(fFD, OLED_SSD1306_IOC_POWER, &data) == 0) fTimestamp = data.ts;
 }
 
+
 BRect
 OLEDView::Bounds() const
 {
 	return BRect(0, 0, OLED_SCREEN_WIDTH - 1, OLED_SCREEN_HEIGHT - 1);
 }
 
+
 void
 OLEDView::Draw(BRect updateRect)
 {
 	// Empty
 }
+
 
 void
 OLEDView::KeyDown(uint8 key, uint8 clicks)
@@ -282,6 +285,7 @@ OLEDView::MessageReceived(BMessage *msg)
 	}
 }
 
+
 void
 OLEDView::SetActivated(bool state)
 {
@@ -292,11 +296,13 @@ OLEDView::SetActivated(bool state)
 	}
 }
 
+
 bool
 OLEDView::IsActivated() const
 {
 	return fActivated;
 }
+
 
 void
 OLEDView::Activated(bool state)
