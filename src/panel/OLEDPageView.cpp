@@ -144,6 +144,8 @@ OLEDPageView::Bounds() const
 void
 OLEDPageView::Draw(BRect r)
 {
+	FillRect(r, B_SOLID_LOW);
+
 	// TODO
 }
 

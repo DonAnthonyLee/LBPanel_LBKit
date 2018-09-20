@@ -59,6 +59,11 @@ public:
 private:
 	int fOLEDFD;
 	int fInputFD;
+	int fPipes[2];
+
+	uint8 fKeyState;
+	bigtime_t fKeyTimestamps[8];
+	uint8 fKeyClicks[8];
 
 	BList fLeftPageViews;
 	BList fRightPageViews;

@@ -29,12 +29,15 @@
  * --------------------------------------------------------------------------*/
 
 #include <stdio.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <linux/input.h>
+#include <sys/select.h>
 
+#include "OLEDConfig.h"
 #include "OLEDApp.h"
 
-#define OLED_DEBUG
+//#define OLED_DEBUG
 
 #ifdef OLED_DEBUG
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
@@ -44,17 +47,25 @@
 
 
 OLEDApp::OLEDApp(int oled_fd, int input_fd)
-	: fOLEDFD(oled_fd), fInputFD(input_fd)
+	: BLooper(),
+	  fOLEDFD(oled_fd), fInputFD(input_fd),
+	  fKeyState(0)
 {
+	bzero(fKeyTimestamps, sizeof(fKeyTimestamps));
+	bzero(fKeyClicks, sizeof(fKeyClicks));
+
+	fPipes[0] = fPipes[1] = -1;
 }
 
 
 OLEDApp::~OLEDApp()
 {
 	OLEDView *view;
-
 	while((view = (OLEDView*)fLeftPageViews.RemoveItem(0)) != NULL) delete view;
 	while((view = (OLEDView*)fRightPageViews.RemoveItem(0)) != NULL) delete view;
+
+	if(fPipes[0] >= 0) close(fPipes[0]);
+	if(fPipes[1] >= 0) close(fPipes[1]);
 }
 
 
@@ -136,9 +147,21 @@ OLEDApp::GetActivatedPageView() const
 void
 OLEDApp::Go()
 {
+	if(IsRunning())
+	{
+		printf("[OLEDApp]: It's forbidden to run Go() more than ONE time !\n");
+		return;
+	}
+
 	if(fOLEDFD < 0 || fInputFD < 0)
 	{
-		printf("Invalid file handle !\n");
+		printf("[OLEDApp]: Invalid file handle !\n");
+		return;
+	}
+
+	if(pipe(fPipes) < 0)
+	{
+		perror("[OLEDApp]: Unable to create pipe");
 		return;
 	}
 
@@ -147,38 +170,72 @@ OLEDApp::Go()
 	ActivatePageView(0, false);
 	Unlock();
 
+	fd_set rset;
+	struct timeval timeout;
+	uint32 count = 0;
+	bigtime_t pulse_sent_time = 0;
+
+	timeout.tv_sec = 0;
 	while(IsRunning())
 	{
+		timeout.tv_usec = (count == 0 ? 500000 : OLED_BUTTON_INTERVAL / 2);
+
+		FD_ZERO(&rset);
+		FD_SET(fInputFD, &rset);
+		FD_SET(fPipes[0], &rset);
+		int status = select(max_c(fInputFD, fPipes[0]) + 1, &rset, NULL, NULL, &timeout);
+		if(status < 0)
+		{
+			perror("[OLEDApp]: Unable to get event from input device");
+			break;
+		}
+
+		if(status > 0 && FD_ISSET(fPipes[0], &rset))
+		{
+			uint8 byte = 0x00;
+			if(read(fPipes[0], &byte, 1) == 1 && byte == 0xab) count++;
+		}
+
+		if(count > 0 && real_time_clock_usecs() - pulse_sent_time >= (bigtime_t)(OLED_BUTTON_INTERVAL / 2))
+		{
+			count--;
+			Lock();
+			PostMessage(B_PULSE, this);
+			Unlock();
+			pulse_sent_time = real_time_clock_usecs();
+		}
+
+		if(status == 0) continue;
+
+		if(!FD_ISSET(fInputFD, &rset)) continue;
+
 		struct input_event event;
 		int n = read(fInputFD, &event, sizeof(event));
 
 		if(n <= 0)
 		{
-			perror("Unable to get event from input device");
+			perror("[OLEDApp]: Unable to get event from input device");
 			break;
 		}
 
 		if(n != sizeof(event))
 		{
-			printf("Unable to process input event !\n");
+			printf("[OLEDApp]: Unable to process input event !\n");
 			continue;
 		}
 
 		if(event.type != EV_KEY)
 		{
-			DBGOUT("Event.type != EV_KEY.\n");
+			DBGOUT("[OLEDAPP]: event.type(%u) != EV_KEY.\n", event.type);
 			continue;
 		}
 
 		BMessage msg(event.value == 0 ? B_KEY_UP : B_KEY_DOWN);
 		msg.AddInt32("key", event.code);
 		msg.AddInt64("when", (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) + (bigtime_t)event.time.tv_usec);
-#ifdef OLED_DEBUG
-		msg.PrintToStream();
-#endif
 
 		Lock();
-		PostMessage(&msg);
+		PostMessage(&msg, this);
 		Unlock();
 	}
 
@@ -191,11 +248,124 @@ OLEDApp::Go()
 void
 OLEDApp::MessageReceived(BMessage *msg)
 {
+	int32 key;
+	bigtime_t when;
+	uint8 nKey;
+	bool stopRunner;
+
 	switch(msg->what)
 	{
-		// TODO
-		default:
+		case B_KEY_DOWN:
+		case B_KEY_UP:
+			if(PreferredHandler() == NULL) break;
+			if(msg->FindInt32("key", &key) != B_OK) break;
+			if(msg->FindInt64("when", &when) != B_OK) break;
+			if(key == OLED_BUTTON1) nKey = 0;
+#if OLED_BUTTONS_NUM > 1
+			else if(key == OLED_BUTTON2) nKey = 1;
+#endif
+#if OLED_BUTTONS_NUM > 2
+			else if(key == OLED_BUTTON3) nKey = 2;
+#endif
+#if OLED_BUTTONS_NUM > 3
+			else if(key == OLED_BUTTON4) nKey = 3;
+#endif
+#if OLED_BUTTONS_NUM > 4
+			else if(key == OLED_BUTTON5) nKey = 4;
+#endif
+#if OLED_BUTTONS_NUM > 5
+			else if(key == OLED_BUTTON6) nKey = 5;
+#endif
+#if OLED_BUTTONS_NUM > 6
+			else if(key == OLED_BUTTON7) nKey = 6;
+#endif
+#if OLED_BUTTONS_NUM > 7
+			else if(key == OLED_BUTTON8) nKey = 7;
+#endif
+			else break;
+			if(msg->what == B_KEY_DOWN)
+			{
+				if((fKeyState & (0x01 << nKey)) != 0) break; // already DOWN
+				if(fKeyClicks[nKey] > 0 && when < fKeyTimestamps[nKey]) break;
+				if(fKeyClicks[nKey] < 0xff) fKeyClicks[nKey]++;
+				fKeyTimestamps[nKey] = when;
+
+				BMessage aMsg(B_KEY_DOWN);
+				aMsg.AddInt8("key", *((int8*)&nKey));
+				aMsg.AddInt8("clicks", *((int8*)&fKeyClicks[nKey]));
+				aMsg.AddInt64("when", when);
+				PostMessage(&aMsg, PreferredHandler());
+
+				fKeyState |= (0x1 << nKey);
+			}
+			else
+			{
+				uint8 byte = 0xab;
+
+				if((fKeyState & (0x01 << nKey)) == 0) break; // already UP
+				if(when < fKeyTimestamps[nKey]) break;
+				if(write(fPipes[1], &byte, 1) <= 0)
+				{
+					DBGOUT("[OLEDApp]: Failed to notice the main thread.\n");
+					BMessage aMsg(B_KEY_UP);
+					aMsg.AddInt8("key", *((int8*)&nKey));
+					aMsg.AddInt8("clicks", *((int8*)&fKeyClicks[nKey]));
+					aMsg.AddInt64("when", when);
+					PostMessage(&aMsg, PreferredHandler());
+
+					fKeyState &= ~(0x01 << nKey);
+					fKeyClicks[nKey] = 0;
+					fKeyTimestamps[nKey] = 0;
+				}
+				else
+				{
+					fKeyState &= ~(0x01 << nKey);
+					fKeyTimestamps[nKey] = when;
+				}
+			}
 			break;
+
+		case B_PULSE:
+			DBGOUT("[OLEDApp]: B_PULSE received.\n");
+			stopRunner = true;
+			when = real_time_clock_usecs();
+			for(uint8 k = 0; k < OLED_BUTTONS_NUM; k++)
+			{
+				if((fKeyState & (0x01 << k)) != 0) continue; // DOWN, no need
+				if(fKeyClicks[k] == 0 || fKeyTimestamps[k] == 0) continue; // no UP before
+				if(when < fKeyTimestamps[k]) continue; // should never happern
+				if(when - fKeyTimestamps[k] < (bigtime_t)OLED_BUTTON_INTERVAL)
+				{
+					stopRunner = false;
+					continue;
+				}
+
+				if(PreferredHandler() != NULL)
+				{
+					BMessage aMsg(B_KEY_UP);
+					aMsg.AddInt8("key", *((int8*)&k));
+					aMsg.AddInt8("clicks", *((int8*)&fKeyClicks[k]));
+					aMsg.AddInt64("when", fKeyTimestamps[k]);
+					PostMessage(&aMsg, PreferredHandler());
+				}
+
+				fKeyState &= ~(0x01 << k);
+				fKeyClicks[k] = 0;
+				fKeyTimestamps[k] = 0;
+			}
+			if(stopRunner == false)
+			{
+				uint8 byte = 0xab;
+				if(write(fPipes[1], &byte, 1) <= 0)
+				{
+					DBGOUT("[OLEDApp]: Failed to notice the main thread.\n");
+					PostMessage(B_PULSE, this); // try again
+				}
+			}
+			break;
+
+		default:
+			BLooper::MessageReceived(msg);
 	}
 }
 

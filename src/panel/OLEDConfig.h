@@ -37,5 +37,11 @@
 /* OLED_BUTTONS_NUM <= 8 */
 #define OLED_BUTTONS_NUM	3
 
+#define OLED_BUTTON1		105	/* KEY_LEFT */
+#define OLED_BUTTON2		161	/* KEY_SELECT */
+#define OLED_BUTTON3		106	/* KEY_RIGHT */
+
+#define OLED_BUTTON_INTERVAL	160000	/* 16ms */
+
 #endif /* __OLED_CONFIG_H__ */
 
