@@ -268,18 +268,40 @@ OLEDView::KeyUp(uint8 key, uint8 clicks)
 
 
 uint8
-OLEDView::KeyState(bool *pressed) const
+OLEDView::KeyState(uint8 *down_state) const
 {
-	if(pressed) *pressed = (fKeyState & (0x01 << 8)) == 0 ? false : true;
+	if(down_state) *down_state = (fKeyState >> 8);
 	return fKeyState;
 }
 
 void
 OLEDView::MessageReceived(BMessage *msg)
 {
+	uint8 key = 0xff;
+	uint8 clicks = 0;
+
 	switch(msg->what)
 	{
-		// TODO: handling key events from app's looper
+		case B_KEY_DOWN:
+		case B_KEY_UP:
+			if(msg->FindInt8("key", (int8*)&key) != B_OK) break;
+			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
+			if(key >= OLED_BUTTONS_NUM || clicks == 0) break;
+
+			fKeyState |= (0x01 << key);
+			if(msg->what == B_KEY_DOWN)
+			{
+				fKeyState |= (0x0100 << key);
+				KeyDown(key, clicks);
+			}
+			else
+			{
+				fKeyState &= ~(0x0100 << key);
+				KeyUp(key, clicks);
+				fKeyState &= ~(0x01 << key);
+			}
+			break;
+
 		default:
 			BHandler::MessageReceived(msg);
 	}
@@ -291,6 +313,7 @@ OLEDView::SetActivated(bool state)
 {
 	if(fActivated != state)
 	{
+		fKeyState = 0;
 		fActivated = state;
 		Activated(state);
 	}
@@ -307,6 +330,11 @@ OLEDView::IsActivated() const
 void
 OLEDView::Activated(bool state)
 {
-	if(state) Draw(OLEDView::Bounds());
+	if(state)
+	{
+		EnableUpdate(false);
+		Draw(OLEDView::Bounds());
+		EnableUpdate(true);
+	}
 }
 
