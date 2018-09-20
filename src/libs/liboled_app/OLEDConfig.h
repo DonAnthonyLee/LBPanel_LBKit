@@ -23,20 +23,25 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDMainPage.cpp
+ * File: OLEDConfig.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#include "OLEDMainPageView.h"
+#ifndef __OLED_CONFIG_H__
+#define __OLED_CONFIG_H__
 
-OLEDMainPageView::OLEDMainPageView()
-	: OLEDPageView(0)
-{
-	// TODO
-}
+#define OLED_SCREEN_WIDTH	128
+#define OLED_SCREEN_HEIGHT	64
 
-OLEDMainPageView::~OLEDMainPageView()
-{
-}
+/* OLED_BUTTONS_NUM <= 8 */
+#define OLED_BUTTONS_NUM	3
+
+#define OLED_BUTTON1		105	/* KEY_LEFT */
+#define OLED_BUTTON2		102	/* KEY_HOME */
+#define OLED_BUTTON3		106	/* KEY_RIGHT */
+
+#define OLED_BUTTON_INTERVAL	150000	/* 150ms */
+
+#endif /* __OLED_CONFIG_H__ */
 

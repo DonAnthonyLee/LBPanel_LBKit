@@ -23,25 +23,40 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDConfig.h
+ * File: TMainPageView.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_CONFIG_H__
-#define __OLED_CONFIG_H__
+#ifndef __OLED_MAIN_PAGE_VIEW_H__
+#define __OLED_MAIN_PAGE_VIEW_H__
 
-#define OLED_SCREEN_WIDTH	128
-#define OLED_SCREEN_HEIGHT	64
+#include <OLEDPageView.h>
 
-/* OLED_BUTTONS_NUM <= 8 */
-#define OLED_BUTTONS_NUM	3
+#ifdef __cplusplus /* Just for C++ */
 
-#define OLED_BUTTON1		105	/* KEY_LEFT */
-#define OLED_BUTTON2		161	/* KEY_SELECT */
-#define OLED_BUTTON3		106	/* KEY_RIGHT */
+class TMainPageView : public OLEDPageView {
+public:
+	TMainPageView(const char *name = NULL);
+	virtual ~TMainPageView();
 
-#define OLED_BUTTON_INTERVAL	160000	/* 16ms */
+	virtual void	Draw(BRect updateRect);
+	virtual void	KeyDown(uint8 key, uint8 clicks);
+	virtual void	KeyUp(uint8 key, uint8 clicks);
 
-#endif /* __OLED_CONFIG_H__ */
+	// TODO
+
+private:
+	int32 fTabIndex;
+	bool f24Hours;
+	bool fShowSeconds;
+
+	void DrawBoardInfo(BRect r);
+	void DrawClock(BRect r);
+	void DrawClientsInfo(BRect r);
+};
+
+#endif /* __cplusplus */
+
+#endif /* __OLED_MAIN_PAGE_VIEW_H__ */
 

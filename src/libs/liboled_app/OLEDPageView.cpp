@@ -168,5 +168,6 @@ void
 OLEDPageView::Activated(bool state)
 {
 	// TODO
+	OLEDView::Activated(state);
 }
 
