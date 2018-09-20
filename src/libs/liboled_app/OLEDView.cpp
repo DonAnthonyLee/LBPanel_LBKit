@@ -115,8 +115,10 @@ OLEDView::DrawString(const char *str, BPoint pt, bool erase)
 {
 	_oled_ssd1306_show_t data;
 
+	if (str == NULL || *str == 0) return;
 	if (fFD < 0 || fActivated == false) return;
 
+	bzero(&data, sizeof(data));
 	data.x = (uint8_t)pt.x;
 	data.y = (uint8_t)pt.y;
 	data.size = fFontSize;
@@ -180,13 +182,14 @@ OLEDView::StringWidth(const char *str) const
 {
 	_oled_ssd1306_string_width_t data;
 
-	if (fFD < 0) return 0;
+	if (fFD < 0 || str == NULL || *str == 0) return 0;
 
+	bzero(&data, sizeof(data));
 	data.w = data.h = 0;
 	data.size = fFontSize;
 	strncpy(data.str, str, sizeof(data.str));
 
-	return((ioctl(fFD, OLED_SSD1306_IOC_SHOW, &data) == 0) ? data.w : 0);
+	return((ioctl(fFD, OLED_SSD1306_IOC_STRING_WIDTH, &data) == 0) ? data.w : 0);
 }
 
 
