@@ -11,7 +11,7 @@ enum {
 };
 
 typedef struct {
-	bool last_action;
+	int last_action;
 	uint64_t ts;
 } _oled_ssd1306_get_ts_t;
 
@@ -28,21 +28,21 @@ typedef struct {
 	uint8_t x;
 	uint8_t y;
 	uint8_t size;
+	uint8_t erase_mode;
 	char str[128];
-	bool erase_mode;
 	uint64_t ts;
 } _oled_ssd1306_show_t;
 
 typedef struct {
-	uint8_t size;
-	char str[128];
-
 	uint16_t w;
 	uint16_t h;
+	char str[128];
+	uint8_t size;
+	uint8_t reserved;
 } _oled_ssd1306_string_width_t;
 
 typedef struct {
-	uint8_t state; // 0 and 1 for controling, others for accessing
+	int state; // 0 and 1 for controling, others for accessing
 	uint64_t ts;
 } _oled_ssd1306_power_t;
 
