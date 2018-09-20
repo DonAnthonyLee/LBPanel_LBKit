@@ -69,7 +69,7 @@ public:
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	// Empty functions END
 
-	uint8		KeyState(bool *pressed = NULL) const;
+	uint8		KeyState(uint8 *down_state = NULL) const;
 
 	bool		IsActivated() const;
 	virtual void	Activated(bool state);
