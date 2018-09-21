@@ -270,6 +270,13 @@ OLEDView::KeyUp(uint8 key, uint8 clicks)
 }
 
 
+void
+OLEDView::Pulse()
+{
+	// Empty
+}
+
+
 uint8
 OLEDView::KeyState(uint8 *down_state) const
 {
@@ -303,6 +310,10 @@ OLEDView::MessageReceived(BMessage *msg)
 				KeyUp(key, clicks);
 				fKeyState &= ~(0x01 << key);
 			}
+			break;
+
+		case B_PULSE:
+			Pulse();
 			break;
 
 		default:

@@ -19,8 +19,8 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I ../include
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I ../include
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../include -I../libs/include
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../include -I../libs/include
 LDFLAGS =
 
 all: targets $(TARGET)

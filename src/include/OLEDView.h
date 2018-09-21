@@ -67,6 +67,7 @@ public:
 	virtual void	Draw(BRect updateRect);
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
+	virtual void	Pulse();
 	// Empty functions END
 
 	uint8		KeyState(uint8 *down_state = NULL) const;
