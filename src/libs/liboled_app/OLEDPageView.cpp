@@ -33,34 +33,10 @@
 #include "OLEDPageView.h"
 
 
-OLEDPageView::OLEDPageView(uint8 num, const char *name)
+OLEDPageView::OLEDPageView(const char *name)
 	: OLEDView(name),
 	  fNavButtonsState(0)
 {
-	num = min_c(OLED_BUTTONS_NUM, num);
-	switch(num)
-	{
-		case 1:
-			fButtonIcons[1] = OLED_ICON_OK;
-			fNavButtonsState = (0x01 << 1);
-			break;
-
-		case 2:
-			fButtonIcons[0] = OLED_ICON_YES;
-			fButtonIcons[2] = OLED_ICON_NO;
-			fNavButtonsState = (0x01 << 0) | (0x01 << 2);
-			break;
-
-		case 3:
-			fButtonIcons[0] = OLED_ICON_UP;
-			fButtonIcons[1] = OLED_ICON_OK;
-			fButtonIcons[2] = OLED_ICON_DOWN;
-			fNavButtonsState = 0x07;
-			break;
-
-		default:
-			break;
-	}
 }
 
 
@@ -78,12 +54,11 @@ OLEDPageView::ShowNavButton(uint8 idBtn)
 	{
 		fNavButtonsState |= (0x01 << idBtn);
 
+		// It's unnesssary to draw single icon, here we draw all
 		BRect r = OLEDView::Bounds();
 		r.top = r.bottom - 15;
 
-		EnableUpdate(false);
-		Draw(r);
-		EnableUpdate(true);
+		InvalidRect(r);
 	}
 }
 
@@ -97,12 +72,11 @@ OLEDPageView::HideNavButton(uint8 idBtn)
 	{
 		fNavButtonsState &= ~(0x01 << idBtn);
 
+		// It's unnesssary to draw single icon, here we draw all
 		BRect r = OLEDView::Bounds();
 		r.top = r.bottom - 15;
 
-		EnableUpdate(false);
-		Draw(r);
-		EnableUpdate(true);
+		InvalidRect(r);
 	}
 }
 
@@ -124,13 +98,14 @@ OLEDPageView::SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon)
 	if(fButtonIcons[idBtn] != idIcon)
 	{
 		fButtonIcons[idBtn] = idIcon;
+		if(IsNavButtonHidden(idBtn) == false)
+		{
+			// It's unnesssary to draw single icon, here we draw all
+			BRect r = OLEDView::Bounds();
+			r.top = r.bottom - 15;
 
-		BRect r = OLEDView::Bounds();
-		r.top = r.bottom - 15;
-
-		EnableUpdate(false);
-		Draw(r);
-		EnableUpdate(true);
+			InvalidRect(r);
+		}
 	}
 }
 
@@ -172,15 +147,14 @@ OLEDPageView::Draw(BRect rect)
 
 	for(int k = 0; k < OLED_BUTTONS_NUM; k++)
 	{
-		if(fNavButtonsState & (0x01 << k) && r.Intersects(rect))
+		if(IsNavButtonHidden(k) == false && r.Intersects(rect))
 		{
-			BPoint pt = r.Center() - BPoint(8, 8);
+			BPoint pt = r.Center() - BPoint(7, 7);
 			uint8 pressed = 0;
 
 			KeyState(&pressed);
 			if(pressed & (0x01 << k)) pt += BPoint(1, 1);
 
-			FillRect(rect & r, B_SOLID_LOW);
 			DrawNavButton(fButtonIcons[k], pt);
 		}
 		r.OffsetBy(r.Width() + 1, 0);
@@ -191,17 +165,13 @@ OLEDPageView::Draw(BRect rect)
 void
 OLEDPageView::KeyDown(uint8 key, uint8 clicks)
 {
-	if(fNavButtonsState == 0) return;
-
-	if(clicks == 1 && (fNavButtonsState & (0x01 << key)))
+	if(clicks == 1 && IsNavButtonHidden(key) == false)
 	{
 		// It's unnesssary to draw single icon, here we draw all
 		BRect r = OLEDView::Bounds();
 		r.top = r.bottom - 15;
 
-		EnableUpdate(false);
-		Draw(r);
-		EnableUpdate(true);
+		InvalidRect(r);
 	}
 }
 
@@ -209,17 +179,13 @@ OLEDPageView::KeyDown(uint8 key, uint8 clicks)
 void
 OLEDPageView::KeyUp(uint8 key, uint8 clicks)
 {
-	if(fNavButtonsState == 0) return;
-
-	if(fNavButtonsState & (0x01 << key))
+	if(IsNavButtonHidden(key) == false)
 	{
 		// It's unnesssary to draw single icon, here we draw all
 		BRect r = OLEDView::Bounds();
 		r.top = r.bottom - 15;
 
-		EnableUpdate(false);
-		Draw(r);
-		EnableUpdate(true);
+		InvalidRect(r);
 	}
 }
 

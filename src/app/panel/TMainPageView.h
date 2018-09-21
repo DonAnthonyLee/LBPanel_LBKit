@@ -45,12 +45,16 @@ public:
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	Pulse();
 
+	void		Set24Hours(bool state = true);
+	void		ShowSeconds(bool state = true);
+
 	// TODO
 
 private:
 	int32 fTabIndex;
 	bool f24Hours;
 	bool fShowSeconds;
+	bigtime_t fShowTimestamp;
 
 	void DrawBoardInfo(BRect r);
 	void DrawClock(BRect r);

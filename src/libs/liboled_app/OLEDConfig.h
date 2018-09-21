@@ -41,7 +41,7 @@
 #define OLED_BUTTON2		102	/* KEY_HOME */
 #define OLED_BUTTON3		106	/* KEY_RIGHT */
 
-#define OLED_BUTTON_INTERVAL	150000	/* 150ms */
+#define OLED_BUTTON_INTERVAL	140000	/* 140ms */
 
 #endif /* __OLED_CONFIG_H__ */
 
