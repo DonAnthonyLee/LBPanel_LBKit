@@ -47,7 +47,7 @@
 
 
 OLEDApp::OLEDApp(int oled_fd, int input_fd)
-	: BLooper(),
+	: BLooper(NULL, B_DISPLAY_PRIORITY),
 	  fOLEDFD(oled_fd), fInputFD(input_fd),
 	  fPulseRate(0),
 	  fKeyState(0)
@@ -208,9 +208,7 @@ OLEDApp::Go()
 						break;
 
 					default:
-						Lock();
 						pulse_rate = this->PulseRate();
-						Unlock();
 				}
 			}
 		}
