@@ -37,7 +37,7 @@
 
 class OLEDPageView : public OLEDView {
 public:
-	OLEDPageView(uint8 num_of_nav_buttons, const char *name = NULL);
+	OLEDPageView(const char *name = NULL);
 	virtual ~OLEDPageView();
 
 	virtual void	ShowNavButton(uint8 idBtn);

@@ -36,8 +36,11 @@
 
 
 TMainPageView::TMainPageView(const char *name)
-	: OLEDPageView(0, name), fTabIndex(0), f24Hours(true), fShowSeconds(true)
+	: OLEDPageView(name), fTabIndex(0), f24Hours(true), fShowSeconds(false), fShowTimestamp(0)
 {
+	SetNavButtonIcon(0, OLED_ICON_UP);
+	SetNavButtonIcon(2, OLED_ICON_DOWN);
+
 	// TODO
 }
 
@@ -56,10 +59,13 @@ TMainPageView::Pulse()
 	BRect r = OLEDView::Bounds();
 	r.top = 14;
 	r.bottom -= 13;
+	InvalidRect(r);
 
-	EnableUpdate(false);
-	DrawClock(r);
-	EnableUpdate(true);
+	if(fTabIndex == 0 && real_time_clock_usecs() - fShowTimestamp > 3000000) // 3s
+	{
+		HideNavButton(0);
+		HideNavButton(2);
+	}
 }
 
 
@@ -81,7 +87,6 @@ TMainPageView::DrawClock(BRect rect)
 			 1900 + t.tm_year, 1 + t.tm_mon, t.tm_mday);
 		SetFontSize(12);
 		w = StringWidth(buf);
-		FillRect(r, B_SOLID_LOW);
 		DrawString(buf, BPoint(r.Center().x - w / 2.f, 1));
 	}
 
@@ -99,7 +104,6 @@ TMainPageView::DrawClock(BRect rect)
 				 t.tm_min);
 		SetFontSize(fShowSeconds ? 24 : 32);
 		w = StringWidth(buf);
-		FillRect(r, B_SOLID_LOW);
 		DrawString(buf, r.Center() - BPoint(w / 2.f, (fShowSeconds ? 23 : 31) / 2.f));
 	}
 
@@ -111,7 +115,6 @@ TMainPageView::DrawClock(BRect rect)
 		snprintf(buf, sizeof(buf), "星期%s", desc[t.tm_wday]);
 		SetFontSize(12);
 		w = StringWidth(buf);
-		FillRect(r, B_SOLID_LOW);
 		DrawString(buf, BPoint(r.Center().x - w / 2.f, r.top + 1));
 	}
 }
@@ -122,12 +125,10 @@ TMainPageView::DrawBoardInfo(BRect rect)
 {
 #if 1
 	// TEST
-	FillRect(rect, B_SOLID_LOW);
-
 	int k;
 	BPoint pt(0, 0);
 
-	for(k = 0; k < OLED_ICON_RIGHT + 1; k++)
+	for(k = 0; k <= OLED_ICON_RIGHT; k++)
 	{
 		DrawIcon((oled_icon_id)k, pt);
 		pt.x += 17;
@@ -148,12 +149,11 @@ TMainPageView::DrawClientsInfo(BRect rect)
 	// TEST
 	BString aStr("Nothing yet");
 
-	FillRect(rect, B_SOLID_LOW);
 	SetFontSize(16);
 
 	uint16 w = StringWidth(aStr.String());
 	DrawString(aStr.String(),
-		   rect.Center() - BPoint(w / 2.f, 15 / 2.f));
+		   OLEDView::Bounds().Center() - BPoint(w / 2.f, 15 / 2.f));
 #endif
 }
 
@@ -161,6 +161,8 @@ TMainPageView::DrawClientsInfo(BRect rect)
 void
 TMainPageView::Draw(BRect updateRect)
 {
+	OLEDPageView::Draw(updateRect);
+
 	if(fTabIndex == 0)
 	{
 		DrawClock(updateRect);
@@ -181,11 +183,24 @@ TMainPageView::Draw(BRect updateRect)
 void
 TMainPageView::KeyDown(uint8 key, uint8 clicks)
 {
+	OLEDPageView::KeyDown(key, clicks);
+
 	if(clicks == 0xff) // long press
 	{
 		// TODO: confirm to power off
 		printf("[TMainPageView]: Power off requested.\n");
 	}
+
+	fShowTimestamp = real_time_clock_usecs();
+	if(fTabIndex > -1)
+		ShowNavButton(0);
+	else
+		HideNavButton(0);
+
+	if(fTabIndex < 1)
+		ShowNavButton(2);
+	else
+		HideNavButton(2);
 
 	// TODO
 }
@@ -194,6 +209,8 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 void
 TMainPageView::KeyUp(uint8 key, uint8 clicks)
 {
+	OLEDPageView::KeyUp(key, clicks);
+
 	int32 saveIndex = fTabIndex;
 
 	if(clicks == 1)
@@ -229,15 +246,47 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 
 	if(saveIndex != fTabIndex)
 	{
-		EnableUpdate(false);
-		FillRect(OLEDView::Bounds(), B_SOLID_LOW);
-		Draw(OLEDView::Bounds());
-		EnableUpdate(true);
-
 		if(fTabIndex == 0)
-			cast_as(Looper(), OLEDApp)->SetPulseRate(fShowSeconds ? 1000000 : 60000000);
+			cast_as(Looper(), OLEDApp)->SetPulseRate(fShowSeconds ? 1000000 : 10000000);
 		else
 			cast_as(Looper(), OLEDApp)->SetPulseRate(0);
+
+		fShowTimestamp = real_time_clock_usecs();
+		if(fTabIndex > -1)
+			ShowNavButton(0);
+		else
+			HideNavButton(0);
+
+		if(fTabIndex < 1)
+			ShowNavButton(2);
+		else
+			HideNavButton(2);
+
+		InvalidRect();
+	}
+}
+
+
+void
+TMainPageView::Set24Hours(bool state)
+{
+	if(f24Hours != state)
+	{
+		f24Hours = state;
+		if(IsActivated())
+			InvalidRect(OLEDView::Bounds());
+	}
+}
+
+
+void
+TMainPageView::ShowSeconds(bool state)
+{
+	if(fShowSeconds != state)
+	{
+		fShowSeconds = state;
+		if(IsActivated())
+			InvalidRect(OLEDView::Bounds());
 	}
 }
 

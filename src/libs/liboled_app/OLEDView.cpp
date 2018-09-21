@@ -45,8 +45,10 @@ OLEDView::OLEDView(const char *name)
 	  fFD(-1), fTimestamp(0),
 	  fActivated(false),
 	  fFontSize(12),
-	  fKeyState(0)
+	  fKeyState(0),
+	  fUpdateCount(0)
 {
+	fUpdateRect = BRect();
 }
 
 
@@ -198,8 +200,22 @@ OLEDView::EnableUpdate(bool state)
 {
 	uint8_t st = state;
 
-	if (fFD < 0 || fActivated == false) return;
-	ioctl(fFD, OLED_SSD1306_IOC_UPDATE, &st);
+	if(fFD < 0 || fActivated == false) return;
+
+	if(state == false)
+	{
+		if(fUpdateCount == 0)
+			if(ioctl(fFD, OLED_SSD1306_IOC_UPDATE, &st) != 0) return;
+
+		fUpdateCount++;
+	}
+	else if(fUpdateCount > 0)
+	{
+		if(fUpdateCount == 1)
+			if(ioctl(fFD, OLED_SSD1306_IOC_UPDATE, &st) != 0) return;
+
+		fUpdateCount--;
+	}
 }
 
 
@@ -208,7 +224,7 @@ OLEDView::IsNeededToRegen() const
 {
 	_oled_ssd1306_get_ts_t data;
 
-	if (fFD < 0 || fActivated == false) return false;
+	if(fFD < 0 || fActivated == false) return false;
 
 	data.last_action = 0;
 	if(ioctl(fFD, OLED_SSD1306_IOC_TIMESTAMP, &data) != 0) return false;
@@ -316,6 +332,24 @@ OLEDView::MessageReceived(BMessage *msg)
 			Pulse();
 			break;
 
+		case '_UPN': // like _UPDATE_IF_NEEDED_ in BeOS API
+			if(IsActivated() == false) break;
+			if(IsNeededToRegen())
+				fUpdateRect = OLEDView::Bounds();
+			else
+				fUpdateRect &= OLEDView::Bounds();
+
+			if(fUpdateRect.IsValid())
+			{
+				EnableUpdate(false);
+				FillRect(fUpdateRect, B_SOLID_LOW); // auto clear
+				Draw(fUpdateRect);
+				EnableUpdate(true);
+
+				fUpdateRect = BRect();
+			}
+			break;
+
 		default:
 			BHandler::MessageReceived(msg);
 	}
@@ -346,9 +380,30 @@ OLEDView::Activated(bool state)
 {
 	if(state)
 	{
-		EnableUpdate(false);
-		Draw(OLEDView::Bounds());
-		EnableUpdate(true);
+		fUpdateRect = BRect();
+		fUpdateCount = 0;
+		InvalidRect(); // redraw later
 	}
+}
+
+
+void
+OLEDView::InvalidRect()
+{
+	InvalidRect(OLEDView::Bounds());
+}
+
+
+void
+OLEDView::InvalidRect(BRect r)
+{
+	if(Looper() == NULL) return;
+	if(r.IsValid() == false) return;
+
+	if(fUpdateRect.IsValid())
+		fUpdateRect |= r;
+	else
+		fUpdateRect = r;
+	Looper()->PostMessage('_UPN', this); // like _UPDATE_IF_NEEDED_ in BeOS API
 }
 
