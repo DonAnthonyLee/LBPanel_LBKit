@@ -19,8 +19,8 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I ../../include
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../include
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../include
 LDFLAGS =  $(shell lite-beapi-config --libs)
 
 all: targets $(TARGET)
