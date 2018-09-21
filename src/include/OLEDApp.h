@@ -54,12 +54,17 @@ public:
 
 	// TODO
 
+
+	bigtime_t	PulseRate() const;
+	void		SetPulseRate(bigtime_t rate);
+
 	virtual void	MessageReceived(BMessage *msg);
 
 private:
 	int fOLEDFD;
 	int fInputFD;
 	int fPipes[2];
+	bigtime_t fPulseRate;
 
 	uint8 fKeyState;
 	bigtime_t fKeyTimestamps[8];

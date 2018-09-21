@@ -31,17 +31,35 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <OLEDApp.h>
 #include "TMainPageView.h"
 
 
 TMainPageView::TMainPageView(const char *name)
-	: OLEDPageView(0, name), fTabIndex(1), f24Hours(true), fShowSeconds(true)
+	: OLEDPageView(0, name), fTabIndex(0), f24Hours(true), fShowSeconds(true)
 {
 	// TODO
 }
 
 TMainPageView::~TMainPageView()
 {
+}
+
+
+void
+TMainPageView::Pulse()
+{
+	if(fTabIndex != 0) return;
+
+	// TODO: check whether to redraw DATE & WEEK
+
+	BRect r = OLEDView::Bounds();
+	r.top = 14;
+	r.bottom -= 13;
+
+	EnableUpdate(false);
+	DrawClock(r);
+	EnableUpdate(true);
 }
 
 
@@ -59,7 +77,7 @@ TMainPageView::DrawClock(BRect rect)
 	r.bottom = 13;
 	if(r.Intersects(rect))
 	{
-		snprintf(buf, sizeof(buf), "%d 年 %d 月 %d 日",
+		snprintf(buf, sizeof(buf), "%d年%d月%d日",
 			 1900 + t.tm_year, 1 + t.tm_mon, t.tm_mday);
 		SetFontSize(12);
 		w = StringWidth(buf);
@@ -102,21 +120,33 @@ TMainPageView::DrawClock(BRect rect)
 void
 TMainPageView::DrawBoardInfo(BRect rect)
 {
-	BString aStr("Nothing yet <");
-
+#if 1
+	// TEST
 	FillRect(rect, B_SOLID_LOW);
-	SetFontSize(16);
 
-	uint16 w = StringWidth(aStr.String());
-	DrawString(aStr.String(),
-		   rect.Center() - BPoint(w / 2.f, 15 / 2.f));
+	int k;
+	BPoint pt(0, 0);
+
+	for(k = 0; k < OLED_ICON_RIGHT + 1; k++)
+	{
+		DrawIcon((oled_icon_id)k, pt);
+		pt.x += 17;
+		if(pt.x + 16 > OLEDView::Bounds().right)
+		{
+			pt.x = 0;
+			pt.y += 17;
+		}
+	}
+#endif
 }
 
 
 void
 TMainPageView::DrawClientsInfo(BRect rect)
 {
-	BString aStr("> Nothing yet");
+#if 1
+	// TEST
+	BString aStr("Nothing yet");
 
 	FillRect(rect, B_SOLID_LOW);
 	SetFontSize(16);
@@ -124,13 +154,14 @@ TMainPageView::DrawClientsInfo(BRect rect)
 	uint16 w = StringWidth(aStr.String());
 	DrawString(aStr.String(),
 		   rect.Center() - BPoint(w / 2.f, 15 / 2.f));
+#endif
 }
 
 
 void
 TMainPageView::Draw(BRect updateRect)
 {
-	if(fTabIndex == 1)
+	if(fTabIndex == 0)
 	{
 		DrawClock(updateRect);
 	}
@@ -139,7 +170,7 @@ TMainPageView::Draw(BRect updateRect)
 		OLEDPageView::Draw(updateRect);
 		updateRect &= Bounds();
 
-		if(fTabIndex == 0)
+		if(fTabIndex == -1)
 			DrawBoardInfo(updateRect);
 		else
 			DrawClientsInfo(updateRect);
@@ -150,6 +181,12 @@ TMainPageView::Draw(BRect updateRect)
 void
 TMainPageView::KeyDown(uint8 key, uint8 clicks)
 {
+	if(clicks == 0xff) // long press
+	{
+		// TODO: confirm to power off
+		printf("[TMainPageView]: Power off requested.\n");
+	}
+
 	// TODO
 }
 
@@ -161,12 +198,11 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 
 	if(clicks == 1)
 	{
-		int32 saveIndex = fTabIndex;
-		if(key == 0 && fTabIndex > 0) // Up
+		if(key == 0 && fTabIndex > -1) // Up
 		{
 			fTabIndex--;
 		}
-		else if(key == 2 && fTabIndex < 2) // Down
+		else if(key == 2 && fTabIndex < 1) // Down
 		{
 			fTabIndex++;
 		}
@@ -174,20 +210,12 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 		{
 			// TODO
 		}
-
-		if(saveIndex != fTabIndex)
-		{
-			EnableUpdate(false);
-			FillRect(OLEDView::Bounds(), B_SOLID_LOW);
-			Draw(OLEDView::Bounds());
-			EnableUpdate(true);
-		}
 	}
-	else
+	else if(clicks != 0xff)
 	{
 		if(key == 1) // Home
 		{ 
-			fTabIndex = 1;
+			fTabIndex = 0;
 		}
 		else if(key == 0) // Left
 		{
@@ -205,6 +233,11 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 		FillRect(OLEDView::Bounds(), B_SOLID_LOW);
 		Draw(OLEDView::Bounds());
 		EnableUpdate(true);
+
+		if(fTabIndex == 0)
+			cast_as(Looper(), OLEDApp)->SetPulseRate(fShowSeconds ? 1000000 : 60000000);
+		else
+			cast_as(Looper(), OLEDApp)->SetPulseRate(0);
 	}
 }
 

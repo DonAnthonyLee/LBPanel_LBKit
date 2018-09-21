@@ -49,6 +49,7 @@
 OLEDApp::OLEDApp(int oled_fd, int input_fd)
 	: BLooper(),
 	  fOLEDFD(oled_fd), fInputFD(input_fd),
+	  fPulseRate(0),
 	  fKeyState(0)
 {
 	bzero(fKeyTimestamps, sizeof(fKeyTimestamps));
@@ -91,7 +92,9 @@ OLEDApp::RemovePageView(OLEDView *view)
 	if(fLeftPageViews.RemoveItem(view) == false)
 		fRightPageViews.RemoveItem(view);
 
-	// TODO: handling when it's activated one
+	if(view->fActivated)
+		SetPreferredHandler(NULL);
+
 	view->fActivated = false;
 	view->fFD = -1;
 
@@ -173,12 +176,15 @@ OLEDApp::Go()
 	fd_set rset;
 	struct timeval timeout;
 	uint32 count = 0;
-	bigtime_t pulse_sent_time = 0;
+	bigtime_t pulse_sent_time[2] = {0, 0};
+	bigtime_t pulse_rate = 0;
 
 	timeout.tv_sec = 0;
 	while(IsRunning())
 	{
-		timeout.tv_usec = (count == 0 ? 500000 : OLED_BUTTON_INTERVAL / 2);
+		timeout.tv_usec = (pulse_rate > 0 && pulse_rate < (bigtime_t)500000) ? pulse_rate : 500000;
+		if(count > 0 && timeout.tv_usec > OLED_BUTTON_INTERVAL / 2)
+			timeout.tv_usec = OLED_BUTTON_INTERVAL / 2;
 
 		FD_ZERO(&rset);
 		FD_SET(fInputFD, &rset);
@@ -193,16 +199,40 @@ OLEDApp::Go()
 		if(status > 0 && FD_ISSET(fPipes[0], &rset))
 		{
 			uint8 byte = 0x00;
-			if(read(fPipes[0], &byte, 1) == 1 && byte == 0xab) count++;
+			if(read(fPipes[0], &byte, 1) == 1)
+			{
+				switch(byte)
+				{
+					case 0xab:
+						count++;
+						break;
+
+					default:
+						Lock();
+						pulse_rate = this->PulseRate();
+						Unlock();
+				}
+			}
 		}
 
-		if(count > 0 && real_time_clock_usecs() - pulse_sent_time >= (bigtime_t)(OLED_BUTTON_INTERVAL / 2))
+		if(count > 0 && real_time_clock_usecs() - pulse_sent_time[0] >= (bigtime_t)(OLED_BUTTON_INTERVAL / 2))
 		{
 			count--;
 			Lock();
 			PostMessage(B_PULSE, this);
 			Unlock();
-			pulse_sent_time = real_time_clock_usecs();
+			pulse_sent_time[0] = real_time_clock_usecs();
+		}
+
+		if(pulse_rate > 0 && real_time_clock_usecs() - pulse_sent_time[1] >= pulse_rate)
+		{
+			BMessage aMsg(B_PULSE);
+			aMsg.AddBool("no_button_check", true);
+
+			Lock();
+			PostMessage(&aMsg, this);
+			Unlock();
+			pulse_sent_time[1] = real_time_clock_usecs();
 		}
 
 		if(status == 0) continue;
@@ -285,9 +315,19 @@ OLEDApp::MessageReceived(BMessage *msg)
 			else break;
 			if(msg->what == B_KEY_DOWN)
 			{
-				if((fKeyState & (0x01 << nKey)) != 0) break; // already DOWN
-				if(fKeyClicks[nKey] > 0 && when < fKeyTimestamps[nKey]) break;
-				if(fKeyClicks[nKey] < 0xff) fKeyClicks[nKey]++;
+				if((fKeyState & (0x01 << nKey)) != 0) // already DOWN
+				{
+					// auto-repeat (event.code = 2) event
+					if(when < fKeyTimestamps[nKey]) break;
+					if(when - fKeyTimestamps[nKey] < (bigtime_t)3000000) break; // 3s
+					if(fKeyClicks[nKey] == 0xff) break;
+					fKeyClicks[nKey] = 0xff; // long press
+				}
+				else
+				{
+					if(fKeyClicks[nKey] > 0 && when < fKeyTimestamps[nKey]) break;
+					if(fKeyClicks[nKey] < 0xff) fKeyClicks[nKey]++;
+				}
 				fKeyTimestamps[nKey] = when;
 
 				BMessage aMsg(B_KEY_DOWN);
@@ -327,13 +367,19 @@ OLEDApp::MessageReceived(BMessage *msg)
 
 		case B_PULSE:
 			DBGOUT("[OLEDApp]: B_PULSE received.\n");
+			if(msg->HasBool("no_button_check"))
+			{
+				if(PreferredHandler() != NULL)
+					PostMessage(B_PULSE, PreferredHandler());
+				break;
+			}
 			stopRunner = true;
 			when = real_time_clock_usecs();
 			for(uint8 k = 0; k < OLED_BUTTONS_NUM; k++)
 			{
 				if((fKeyState & (0x01 << k)) != 0) continue; // DOWN, no need
 				if(fKeyClicks[k] == 0 || fKeyTimestamps[k] == 0) continue; // no UP before
-				if(when < fKeyTimestamps[k]) continue; // should never happern
+				if(when < fKeyTimestamps[k]) continue; // should never happen
 				if(when - fKeyTimestamps[k] < (bigtime_t)OLED_BUTTON_INTERVAL)
 				{
 					stopRunner = false;
@@ -366,6 +412,34 @@ OLEDApp::MessageReceived(BMessage *msg)
 
 		default:
 			BLooper::MessageReceived(msg);
+	}
+}
+
+
+bigtime_t
+OLEDApp::PulseRate() const
+{
+	return fPulseRate;
+}
+
+
+void
+OLEDApp::SetPulseRate(bigtime_t rate)
+{
+	if(rate != 0 && rate < (bigtime_t)50000)
+		rate = (bigtime_t)50000;
+	else if(rate > (bigtime_t)10000000)
+		rate = (bigtime_t)10000000;
+
+	if(fPulseRate != rate)
+	{
+		fPulseRate = rate;
+
+		if(fPipes[1] >= 0)
+		{
+			uint8 byte = 0x01;
+			write(fPipes[1], &byte, 1);
+		}
 	}
 }
 
