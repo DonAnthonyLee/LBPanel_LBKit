@@ -169,7 +169,6 @@ TMainPageView::Draw(BRect updateRect)
 	}
 	else
 	{
-		OLEDPageView::Draw(updateRect);
 		updateRect &= Bounds();
 
 		if(fTabIndex == -1)
@@ -236,11 +235,13 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 		}
 		else if(key == 0) // Left
 		{
-			// TODO
+			SwitchToPrevPage();
+			return;
 		}
 		else if(key == 2) // Right
 		{
-			// TODO
+			SwitchToNextPage();
+			return;
 		}
 	}
 
@@ -274,7 +275,7 @@ TMainPageView::Set24Hours(bool state)
 	{
 		f24Hours = state;
 		if(IsActivated())
-			InvalidRect(OLEDView::Bounds());
+			InvalidRect();
 	}
 }
 
@@ -286,7 +287,7 @@ TMainPageView::ShowSeconds(bool state)
 	{
 		fShowSeconds = state;
 		if(IsActivated())
-			InvalidRect(OLEDView::Bounds());
+			InvalidRect();
 	}
 }
 

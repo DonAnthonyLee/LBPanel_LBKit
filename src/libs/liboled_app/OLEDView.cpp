@@ -62,6 +62,7 @@ OLEDView::FillRect(BRect r, pattern p)
 {
 	_oled_ssd1306_clear_t data;
 
+	r &= OLEDView::Bounds();
 	if (fFD < 0 || fActivated == false || r.IsValid() == false) return;
 
 	data.x = (uint8_t)r.left;
@@ -117,8 +118,9 @@ OLEDView::DrawString(const char *str, BPoint pt, bool erase)
 {
 	_oled_ssd1306_show_t data;
 
-	if (str == NULL || *str == 0) return;
-	if (fFD < 0 || fActivated == false) return;
+	if(str == NULL || *str == 0) return;
+	if(fFD < 0 || fActivated == false) return;
+	if(pt.x < 0 || pt.y < 0) return;
 
 	bzero(&data, sizeof(data));
 	data.x = (uint8_t)pt.x;
@@ -136,8 +138,9 @@ OLEDView::DrawIcon(const oled_icon *icon, BPoint pt)
 {
 	_oled_ssd1306_clear_t data;
 
-	if (fFD < 0 || fActivated == false) return;
-	if (icon == NULL || icon->type > 2 /*OLED_ICON_32x32*/) return;
+	if(fFD < 0 || fActivated == false) return;
+	if(icon == NULL || icon->type > 2 /*OLED_ICON_32x32*/) return;
+	if(pt.x < 0 || pt.y < 0) return;
 
 	data.w = 8;
 	data.h = 8;
