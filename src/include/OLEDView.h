@@ -75,6 +75,9 @@ public:
 	bool		IsActivated() const;
 	virtual void	Activated(bool state);
 
+	void		InvalidRect();
+	void		InvalidRect(BRect r);
+
 	virtual void	MessageReceived(BMessage *msg);
 
 private:
@@ -86,6 +89,8 @@ private:
 
 	uint8 fFontSize;
 	uint16 fKeyState;
+	uint32 fUpdateCount;
+	BRect fUpdateRect;
 
 	void		SetActivated(bool state);
 };
