@@ -54,7 +54,11 @@ public:
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 
-	virtual void	Activated(bool state);
+	void		SwitchToNextPage();
+	void		SwitchToPrevPage();
+
+	bool		IsFarLeftPage() const;
+	bool		IsFarRightPage() const;
 
 	// TODO
 

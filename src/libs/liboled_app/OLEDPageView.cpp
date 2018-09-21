@@ -29,6 +29,7 @@
  * --------------------------------------------------------------------------*/
 
 #include "OLEDConfig.h"
+#include "OLEDApp.h"
 #include "OLEDPageView.h"
 
 
@@ -76,7 +77,13 @@ OLEDPageView::ShowNavButton(uint8 idBtn)
 	if((fNavButtonsState & (0x01 << idBtn)) == 0)
 	{
 		fNavButtonsState |= (0x01 << idBtn);
-		// TODO
+
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 15;
+
+		EnableUpdate(false);
+		Draw(r);
+		EnableUpdate(true);
 	}
 }
 
@@ -89,7 +96,13 @@ OLEDPageView::HideNavButton(uint8 idBtn)
 	if((fNavButtonsState & (0x01 << idBtn)) != 0)
 	{
 		fNavButtonsState &= ~(0x01 << idBtn);
-		// TODO
+
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 15;
+
+		EnableUpdate(false);
+		Draw(r);
+		EnableUpdate(true);
 	}
 }
 
@@ -111,7 +124,13 @@ OLEDPageView::SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon)
 	if(fButtonIcons[idBtn] != idIcon)
 	{
 		fButtonIcons[idBtn] = idIcon;
-		// TODO
+
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 15;
+
+		EnableUpdate(false);
+		Draw(r);
+		EnableUpdate(true);
 	}
 }
 
@@ -126,7 +145,7 @@ OLEDPageView::GetNavButtonIcon(int32 idBtn) const
 void
 OLEDPageView::DrawNavButton(oled_icon_id idIcon, BPoint location)
 {
-	// TODO
+	DrawIcon(idIcon, location);
 }
 
 
@@ -135,39 +154,164 @@ OLEDPageView::Bounds() const
 {
 	BRect r = OLEDView::Bounds();
 
-	// TODO
+	if(fNavButtonsState != 0)
+		r.bottom -= 16;
 
 	return r;
 }
 
 
 void
-OLEDPageView::Draw(BRect r)
+OLEDPageView::Draw(BRect rect)
 {
-	FillRect(r, B_SOLID_LOW);
+	if(fNavButtonsState == 0) return;
 
-	// TODO
+	BRect r = OLEDView::Bounds();
+	r.right = r.Width() / (float)OLED_BUTTONS_NUM - 1.f;
+	r.top = r.bottom - 15;
+
+	for(int k = 0; k < OLED_BUTTONS_NUM; k++)
+	{
+		if(fNavButtonsState & (0x01 << k) && r.Intersects(rect))
+		{
+			BPoint pt = r.Center() - BPoint(8, 8);
+			uint8 pressed = 0;
+
+			KeyState(&pressed);
+			if(pressed & (0x01 << k)) pt += BPoint(1, 1);
+
+			FillRect(rect & r, B_SOLID_LOW);
+			DrawNavButton(fButtonIcons[k], pt);
+		}
+		r.OffsetBy(r.Width() + 1, 0);
+	}
 }
 
 
 void
 OLEDPageView::KeyDown(uint8 key, uint8 clicks)
 {
-	// TODO
+	if(fNavButtonsState == 0) return;
+
+	if(clicks == 1 && (fNavButtonsState & (0x01 << key)))
+	{
+		// It's unnesssary to draw single icon, here we draw all
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 15;
+
+		EnableUpdate(false);
+		Draw(r);
+		EnableUpdate(true);
+	}
 }
 
 
 void
 OLEDPageView::KeyUp(uint8 key, uint8 clicks)
 {
-	// TODO
+	if(fNavButtonsState == 0) return;
+
+	if(fNavButtonsState & (0x01 << key))
+	{
+		// It's unnesssary to draw single icon, here we draw all
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 15;
+
+		EnableUpdate(false);
+		Draw(r);
+		EnableUpdate(true);
+	}
 }
 
 
 void
-OLEDPageView::Activated(bool state)
+OLEDPageView::SwitchToNextPage()
 {
-	// TODO
-	OLEDView::Activated(state);
+	OLEDApp *app = cast_as(Looper(), OLEDApp);
+	if(app == NULL || IsActivated() == false) return;
+
+	if(IsFarRightPage()) return;
+
+	// Left side: 4 3 2 1 0
+	int32 count = app->CountPageViews(true);
+	for(int32 k = count - 1; k >= 0; k--)
+	{
+		OLEDView *view = app->PageViewAt(k, true);
+		if(view != this) continue;
+		if(k > 0)
+			app->ActivatePageView(k - 1, true);
+		else
+			app->ActivatePageView(0, false);
+		return;
+	}
+
+	// Right side: 0 1 2 3 4
+	count = app->CountPageViews(false);
+	for(int32 k = 0; k < count; k++)
+	{
+		OLEDView *view = app->PageViewAt(k, false);
+		if(view != this) continue;
+		app->ActivatePageView(k + 1, false);
+	}
+}
+
+
+void
+OLEDPageView::SwitchToPrevPage()
+{
+	OLEDApp *app = cast_as(Looper(), OLEDApp);
+	if(app == NULL || IsActivated() == false) return;
+
+	if(IsFarLeftPage()) return;
+
+	// Right side: 0 1 2 3 4
+	int32 count = app->CountPageViews(false);
+	for(int32 k = count - 1; k >= 0; k--)
+	{
+		OLEDView *view = app->PageViewAt(k, false);
+		if(view != this) continue;
+		if(k > 0)
+			app->ActivatePageView(k - 1, false);
+		else
+			app->ActivatePageView(0, true);
+		return;
+	}
+
+	// Left side: 4 3 2 1 0
+	count = app->CountPageViews(true);
+	for(int32 k = 0; k < count; k++)
+	{
+		OLEDView *view = app->PageViewAt(k, true);
+		if(view != this) continue;
+		app->ActivatePageView(k + 1, true);
+	}
+}
+
+
+bool
+OLEDPageView::IsFarLeftPage() const
+{
+	OLEDApp *app = cast_as(Looper(), OLEDApp);
+	if(app == NULL) return false;
+
+	int32 count = app->CountPageViews(true);
+	if(count > 0)
+		return(app->PageViewAt(count - 1, true) == this);
+	else
+		return(app->PageViewAt(0, false) == this);
+}
+
+
+bool
+OLEDPageView::IsFarRightPage() const
+{
+	OLEDApp *app = cast_as(Looper(), OLEDApp);
+	if(app == NULL) return false;
+
+	int32 count = app->CountPageViews(false);
+	if(count > 0)
+		return(app->PageViewAt(count - 1, false) == this);
+	else
+		return(app->PageViewAt(0, true) == this);
 }
 
