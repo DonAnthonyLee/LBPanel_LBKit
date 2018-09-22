@@ -455,7 +455,7 @@ OLEDView::StandIn()
 
 
 void
-OLEDView::StandBack(OLEDView *master)
+OLEDView::StandBack()
 {
 	// TODO
 }
