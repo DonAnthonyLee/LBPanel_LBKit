@@ -73,13 +73,15 @@ OLEDApp::~OLEDApp()
 bool
 OLEDApp::AddPageView(OLEDView *view, bool left_side)
 {
-	if(fOLEDFD < 0 || view == NULL || view->Looper() != NULL) return false;
+	if(fOLEDFD < 0 || view == NULL || view->Looper() != NULL || view->MasterView() != NULL) return false;
 
 	if((left_side ? fLeftPageViews.AddItem(view) : fRightPageViews.AddItem(view)) == false) return false;
 	AddHandler(view);
 
 	view->fActivated = false;
 	view->fFD = fOLEDFD;
+
+	view->Attached();
 
 	return true;
 }
@@ -88,7 +90,11 @@ OLEDApp::AddPageView(OLEDView *view, bool left_side)
 bool
 OLEDApp::RemovePageView(OLEDView *view)
 {
-	if(RemoveHandler(view) == false) return false;
+	if(view == NULL || view->Looper() != this || view->MasterView() != NULL) return false;
+
+	view->Detached();
+	RemoveHandler(view);
+
 	if(fLeftPageViews.RemoveItem(view) == false)
 		fRightPageViews.RemoveItem(view);
 
