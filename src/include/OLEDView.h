@@ -82,8 +82,12 @@ public:
 	OLEDView*	StickView() const;
 	OLEDView*	MasterView() const;
 
+	bool		IsStoodIn() const;
 	void		StandIn();
 	void		StandBack();
+
+	virtual void	Attached();
+	virtual void	Detached();
 
 	virtual void	MessageReceived(BMessage *msg);
 
@@ -101,7 +105,7 @@ private:
 
 	OLEDView *fMasterView;
 	OLEDView *fStickView;
-	bool fSticked;
+	bool fStoodIn;
 
 	void		SetActivated(bool state);
 };

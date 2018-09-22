@@ -49,7 +49,7 @@ OLEDView::OLEDView(const char *name)
 	  fUpdateCount(0),
 	  fMasterView(NULL),
 	  fStickView(NULL),
-	  fSticked(false)
+	  fStoodIn(false)
 {
 	fUpdateRect = BRect();
 }
@@ -63,6 +63,13 @@ OLEDView::~OLEDView()
 void
 OLEDView::FillRect(BRect r, pattern p)
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			fMasterView->FillRect(r, p);
+		return;
+	}
+
 	_oled_ssd1306_clear_t data;
 
 	r &= OLEDView::Bounds();
@@ -88,6 +95,13 @@ OLEDView::FillRect(BRect r, pattern p)
 void
 OLEDView::StrokeRect(BRect rect, bool erase)
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			fMasterView->StrokeRect(rect, erase);
+		return;
+	}
+
 	BRect r;
 	pattern p = (erase ? B_SOLID_LOW : B_SOLID_HIGH);
 
@@ -119,6 +133,13 @@ OLEDView::StrokeRect(BRect rect, bool erase)
 void
 OLEDView::DrawString(const char *str, BPoint pt, bool erase)
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			fMasterView->DrawString(str, pt, erase);
+		return;
+	}
+
 	_oled_ssd1306_show_t data;
 
 	if(str == NULL || *str == 0) return;
@@ -139,6 +160,13 @@ OLEDView::DrawString(const char *str, BPoint pt, bool erase)
 void
 OLEDView::DrawIcon(const oled_icon *icon, BPoint pt)
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			fMasterView->DrawIcon(icon, pt);
+		return;
+	}
+
 	_oled_ssd1306_clear_t data;
 
 	if(fFD < 0 || fActivated == false) return;
@@ -173,6 +201,9 @@ OLEDView::DrawIcon(oled_icon_id id, BPoint pt)
 uint8
 OLEDView::FontSize() const
 {
+	if(fMasterView != NULL)
+		return fMasterView->FontSize();
+
 	return fFontSize;
 }
 
@@ -180,6 +211,13 @@ OLEDView::FontSize() const
 void
 OLEDView::SetFontSize(uint8 size)
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			fMasterView->SetFontSize(size);
+		return;
+	}
+
 	if(!(size == 12 || size == 14 || size == 16 || size == 24 || size == 32)) return;
 	fFontSize = size;
 }
@@ -188,6 +226,9 @@ OLEDView::SetFontSize(uint8 size)
 uint16
 OLEDView::StringWidth(const char *str) const
 {
+	if(fMasterView != NULL)
+		return fMasterView->StringWidth(str);
+
 	_oled_ssd1306_string_width_t data;
 
 	if (fFD < 0 || str == NULL || *str == 0) return 0;
@@ -204,6 +245,13 @@ OLEDView::StringWidth(const char *str) const
 void
 OLEDView::EnableUpdate(bool state)
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			fMasterView->EnableUpdate(state);
+		return;
+	}
+
 	uint8_t st = state;
 
 	if(fFD < 0 || fActivated == false) return;
@@ -228,6 +276,9 @@ OLEDView::EnableUpdate(bool state)
 bool
 OLEDView::IsNeededToRegen() const
 {
+	if(fMasterView != NULL)
+		return fMasterView->IsNeededToRegen();
+
 	_oled_ssd1306_get_ts_t data;
 
 	if(fFD < 0 || fActivated == false) return false;
@@ -242,6 +293,9 @@ OLEDView::IsNeededToRegen() const
 bool
 OLEDView::GetPowerState() const
 {
+	if(fMasterView != NULL)
+		return fMasterView->GetPowerState();
+
 	_oled_ssd1306_power_t data;
 
 	if (fFD < 0) return false;
@@ -255,6 +309,13 @@ OLEDView::GetPowerState() const
 void
 OLEDView::SetPowerState(bool state)
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			fMasterView->SetPowerState(state);
+		return;
+	}
+
 	_oled_ssd1306_power_t data;
 
 	if (fFD < 0 || fActivated == false) return;
@@ -302,6 +363,9 @@ OLEDView::Pulse()
 uint8
 OLEDView::KeyState(uint8 *down_state) const
 {
+	if(fMasterView != NULL)
+		return fMasterView->KeyState(down_state);
+
 	if(down_state) *down_state = (fKeyState >> 8);
 	return fKeyState;
 }
@@ -324,18 +388,27 @@ OLEDView::MessageReceived(BMessage *msg)
 			if(msg->what == B_KEY_DOWN)
 			{
 				fKeyState |= (0x0100 << key);
-				KeyDown(key, clicks);
+				if(fStoodIn && fStickView != NULL)
+					fStickView->KeyDown(key, clicks);
+				else
+					KeyDown(key, clicks);
 			}
 			else
 			{
 				fKeyState &= ~(0x0100 << key);
-				KeyUp(key, clicks);
+				if(fStoodIn && fStickView != NULL)
+					fStickView->KeyUp(key, clicks);
+				else
+					KeyUp(key, clicks);
 				fKeyState &= ~(0x01 << key);
 			}
 			break;
 
 		case B_PULSE:
-			Pulse();
+			if(fStoodIn && fStickView != NULL)
+				fStickView->Pulse();
+			else
+				Pulse();
 			break;
 
 		case '_UPN': // like _UPDATE_IF_NEEDED_ in BeOS API
@@ -349,7 +422,10 @@ OLEDView::MessageReceived(BMessage *msg)
 			{
 				EnableUpdate(false);
 				FillRect(fUpdateRect, B_SOLID_LOW); // auto clear
-				Draw(fUpdateRect);
+				if(fStoodIn && fStickView != NULL)
+					fStickView->Draw(fUpdateRect);
+				else
+					Draw(fUpdateRect);
 				EnableUpdate(true);
 
 				fUpdateRect = BRect();
@@ -377,6 +453,13 @@ OLEDView::SetActivated(bool state)
 bool
 OLEDView::IsActivated() const
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			return fMasterView->IsActivated();
+		return false;
+	}
+
 	return fActivated;
 }
 
@@ -403,6 +486,13 @@ OLEDView::InvalidRect()
 void
 OLEDView::InvalidRect(BRect r)
 {
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->IsStoodIn())
+			fMasterView->InvalidRect(r);
+		return;
+	}
+
 	if(Looper() == NULL) return;
 	if(r.IsValid() == false) return;
 
@@ -424,17 +514,34 @@ OLEDView::StickView() const
 bool
 OLEDView::SetStickView(OLEDView *view)
 {
-	if(view == NULL || view->Looper() == NULL) return false;
-	if(view->Looper() != this->Looper()) return false;
-	if(view->fMasterView != NULL) return false;
-
-	if(fStickView != view)
+	if(view != NULL)
 	{
-		if(fStickView != NULL)
-			fStickView->fMasterView = NULL;
-		view->fMasterView = this;
-		fStickView = view;
+		if(!(view->Looper() == NULL || view->Looper() == this->Looper())) return false;
+		if(view->fMasterView != NULL) return false;
 	}
+
+	if(fStickView != NULL)
+	{
+		if(Looper() != NULL)
+		{
+			fStickView->Detached();
+			Looper()->RemoveHandler(fStickView);
+		}
+		fStickView->fMasterView = NULL;
+	}
+
+	fStickView = view;
+	if(fStickView != NULL)
+	{
+		fStickView->fMasterView = this;
+		if(Looper() != NULL)
+		{
+			Looper()->AddHandler(fStickView);
+			fStickView->Attached();
+		}
+	}
+
+	// Here we keep "fStoodIn" state
 
 	return true;
 }
@@ -448,15 +555,44 @@ OLEDView::MasterView() const
 
 
 void
+OLEDView::Attached()
+{
+	if(fStickView == NULL || Looper() == NULL) return;
+	Looper()->AddHandler(fStickView);
+	fStickView->Attached();
+}
+
+
+void
+OLEDView::Detached()
+{
+	if(fStickView == NULL || Looper() == NULL) return;
+	fStickView->Detached();
+	Looper()->RemoveHandler(fStickView);
+}
+
+
+bool
+OLEDView::IsStoodIn() const
+{
+	return fStoodIn;
+}
+
+
+void
 OLEDView::StandIn()
 {
-	// TODO
+	if(fMasterView == NULL || fMasterView->fStoodIn) return;
+	fMasterView->fStoodIn = true;
+	fMasterView->InvalidRect();
 }
 
 
 void
 OLEDView::StandBack()
 {
-	// TODO
+	if(fMasterView == NULL || fMasterView->fStoodIn == false) return;
+	fMasterView->fStoodIn = false;
+	fMasterView->InvalidRect();
 }
 
