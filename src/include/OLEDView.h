@@ -78,6 +78,13 @@ public:
 	void		InvalidRect();
 	void		InvalidRect(BRect r);
 
+	bool		SetStickView(OLEDView *view);
+	OLEDView*	StickView() const;
+	OLEDView*	MasterView() const;
+
+	void		StandIn();
+	void		StandBack();
+
 	virtual void	MessageReceived(BMessage *msg);
 
 private:
@@ -91,6 +98,10 @@ private:
 	uint16 fKeyState;
 	uint32 fUpdateCount;
 	BRect fUpdateRect;
+
+	OLEDView *fMasterView;
+	OLEDView *fStickView;
+	bool fSticked;
 
 	void		SetActivated(bool state);
 };

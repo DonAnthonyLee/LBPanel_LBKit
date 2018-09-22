@@ -46,7 +46,10 @@ OLEDView::OLEDView(const char *name)
 	  fActivated(false),
 	  fFontSize(12),
 	  fKeyState(0),
-	  fUpdateCount(0)
+	  fUpdateCount(0),
+	  fMasterView(NULL),
+	  fStickView(NULL),
+	  fSticked(false)
 {
 	fUpdateRect = BRect();
 }
@@ -408,5 +411,52 @@ OLEDView::InvalidRect(BRect r)
 	else
 		fUpdateRect = r;
 	Looper()->PostMessage('_UPN', this); // like _UPDATE_IF_NEEDED_ in BeOS API
+}
+
+
+OLEDView*
+OLEDView::StickView() const
+{
+	return fStickView;
+}
+
+
+bool
+OLEDView::SetStickView(OLEDView *view)
+{
+	if(view == NULL || view->Looper() == NULL) return false;
+	if(view->Looper() != this->Looper()) return false;
+	if(view->fMasterView != NULL) return false;
+
+	if(fStickView != view)
+	{
+		if(fStickView != NULL)
+			fStickView->fMasterView = NULL;
+		view->fMasterView = this;
+		fStickView = view;
+	}
+
+	return true;
+}
+
+
+OLEDView*
+OLEDView::MasterView() const
+{
+	return fMasterView;
+}
+
+
+void
+OLEDView::StandIn()
+{
+	// TODO
+}
+
+
+void
+OLEDView::StandBack(OLEDView *master)
+{
+	// TODO
 }
 
