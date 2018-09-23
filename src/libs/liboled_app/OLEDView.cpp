@@ -56,6 +56,8 @@ OLEDView::OLEDView(const char *name)
 
 OLEDView::~OLEDView()
 {
+	OLEDView *view;
+	while((view = (OLEDView*)fStickViews.RemoveItem((int32)0)) != NULL) delete view; 
 }
 
 
