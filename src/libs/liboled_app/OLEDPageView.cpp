@@ -194,7 +194,7 @@ void
 OLEDPageView::SwitchToNextPage()
 {
 	OLEDApp *app = cast_as(Looper(), OLEDApp);
-	if(app == NULL || IsActivated() == false) return;
+	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarRightPage()) return;
 
@@ -226,7 +226,7 @@ void
 OLEDPageView::SwitchToPrevPage()
 {
 	OLEDApp *app = cast_as(Looper(), OLEDApp);
-	if(app == NULL || IsActivated() == false) return;
+	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarLeftPage()) return;
 
@@ -257,6 +257,12 @@ OLEDPageView::SwitchToPrevPage()
 bool
 OLEDPageView::IsFarLeftPage() const
 {
+	if(MasterView() != NULL)
+	{
+		OLEDPageView *view = cast_as(TopView(), OLEDPageView);
+		return(view == NULL ? false : view->IsFarLeftPage());
+	}
+
 	OLEDApp *app = cast_as(Looper(), OLEDApp);
 	if(app == NULL) return false;
 
@@ -271,6 +277,12 @@ OLEDPageView::IsFarLeftPage() const
 bool
 OLEDPageView::IsFarRightPage() const
 {
+	if(MasterView() != NULL)
+	{
+		OLEDPageView *view = cast_as(TopView(), OLEDPageView);
+		return(view == NULL ? false : view->IsFarRightPage());
+	}
+
 	OLEDApp *app = cast_as(Looper(), OLEDApp);
 	if(app == NULL) return false;
 

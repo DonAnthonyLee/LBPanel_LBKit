@@ -43,7 +43,7 @@ public:
 	OLEDView(const char *name = NULL);
 	virtual ~OLEDView();
 
-	// Bounds(): A derived class should draw only in this region.
+	// Bounds(): A derived class usually draw within it.
 	virtual BRect	Bounds() const;
 
 	void		FillRect(BRect r, pattern p = B_SOLID_HIGH);
@@ -63,7 +63,7 @@ public:
 	bool		GetPowerState() const;
 	void		SetPowerState(bool state);
 
-	// Empty functions BEGIN --- just for derivative class
+	// Empty functions BEGIN --- just for derived class
 	virtual void	Draw(BRect updateRect);
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
@@ -78,13 +78,19 @@ public:
 	void		InvalidRect();
 	void		InvalidRect(BRect r);
 
-	bool		SetStickView(OLEDView *view);
-	OLEDView*	StickView() const;
-	OLEDView*	MasterView() const;
+	bool		AddStickView(OLEDView *view);
+	bool		RemoveStickView(OLEDView *view);
+	OLEDView*	RemoveStickView(int32 index);
+	int32		CountStickViews() const;
+	OLEDView*	StickViewAt(int32 index) const;
 
 	bool		IsStoodIn() const;
+	OLEDView*	StandingInView() const;
 	void		StandIn();
 	void		StandBack();
+
+	OLEDView*	MasterView() const;
+	OLEDView*	TopView() const;
 
 	virtual void	Attached();
 	virtual void	Detached();
@@ -104,8 +110,8 @@ private:
 	BRect fUpdateRect;
 
 	OLEDView *fMasterView;
-	OLEDView *fStickView;
-	bool fStoodIn;
+	OLEDView *fStandingInView;
+	BList fStickViews;
 
 	void		SetActivated(bool state);
 };

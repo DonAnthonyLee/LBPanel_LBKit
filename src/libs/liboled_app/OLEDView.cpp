@@ -48,8 +48,7 @@ OLEDView::OLEDView(const char *name)
 	  fKeyState(0),
 	  fUpdateCount(0),
 	  fMasterView(NULL),
-	  fStickView(NULL),
-	  fStoodIn(false)
+	  fStandingInView(NULL)
 {
 	fUpdateRect = BRect();
 }
@@ -388,16 +387,16 @@ OLEDView::MessageReceived(BMessage *msg)
 			if(msg->what == B_KEY_DOWN)
 			{
 				fKeyState |= (0x0100 << key);
-				if(fStoodIn && fStickView != NULL)
-					fStickView->KeyDown(key, clicks);
+				if(fStandingInView != NULL)
+					fStandingInView->KeyDown(key, clicks);
 				else
 					KeyDown(key, clicks);
 			}
 			else
 			{
 				fKeyState &= ~(0x0100 << key);
-				if(fStoodIn && fStickView != NULL)
-					fStickView->KeyUp(key, clicks);
+				if(fStandingInView != NULL)
+					fStandingInView->KeyUp(key, clicks);
 				else
 					KeyUp(key, clicks);
 				fKeyState &= ~(0x01 << key);
@@ -405,8 +404,8 @@ OLEDView::MessageReceived(BMessage *msg)
 			break;
 
 		case B_PULSE:
-			if(fStoodIn && fStickView != NULL)
-				fStickView->Pulse();
+			if(fStandingInView != NULL)
+				fStandingInView->Pulse();
 			else
 				Pulse();
 			break;
@@ -422,8 +421,8 @@ OLEDView::MessageReceived(BMessage *msg)
 			{
 				EnableUpdate(false);
 				FillRect(fUpdateRect, B_SOLID_LOW); // auto clear
-				if(fStoodIn && fStickView != NULL)
-					fStickView->Draw(fUpdateRect);
+				if(fStandingInView != NULL)
+					fStandingInView->Draw(fUpdateRect);
 				else
 					Draw(fUpdateRect);
 				EnableUpdate(true);
@@ -467,6 +466,11 @@ OLEDView::IsActivated() const
 void
 OLEDView::Activated(bool state)
 {
+	if(fStandingInView != NULL) // for derived class
+		fStandingInView->Activated(state);
+
+	if(fMasterView != NULL) return;
+
 	if(state)
 	{
 		fUpdateRect = BRect();
@@ -505,45 +509,72 @@ OLEDView::InvalidRect(BRect r)
 
 
 OLEDView*
-OLEDView::StickView() const
+OLEDView::StandingInView() const
 {
-	return fStickView;
+	return fStandingInView;
 }
 
 
 bool
-OLEDView::SetStickView(OLEDView *view)
+OLEDView::AddStickView(OLEDView *view)
 {
-	if(view != NULL)
-	{
-		if(!(view->Looper() == NULL || view->Looper() == this->Looper())) return false;
-		if(view->fMasterView != NULL) return false;
-	}
+	if(view == NULL) return false;
+	if(!(view->Looper() == NULL || view->Looper() == this->Looper())) return false;
+	if(view->fMasterView != NULL) return false;
 
-	if(fStickView != NULL)
+	if(fStickViews.AddItem(view) == false) return false;
+	view->fMasterView = this;
+	if(Looper() != NULL)
 	{
-		if(Looper() != NULL)
-		{
-			fStickView->Detached();
-			Looper()->RemoveHandler(fStickView);
-		}
-		fStickView->fMasterView = NULL;
+		Looper()->AddHandler(view);
+		view->Attached();
 	}
-
-	fStickView = view;
-	if(fStickView != NULL)
-	{
-		fStickView->fMasterView = this;
-		if(Looper() != NULL)
-		{
-			Looper()->AddHandler(fStickView);
-			fStickView->Attached();
-		}
-	}
-
-	// Here we keep "fStoodIn" state
 
 	return true;
+}
+
+
+bool
+OLEDView::RemoveStickView(OLEDView *view)
+{
+	if(view == NULL) return false;
+	if(view->fMasterView != this) return false;
+
+	if(fStickViews.RemoveItem(view) == false) return false;
+	if(Looper() != NULL)
+	{
+		view->Detached();
+		Looper()->RemoveHandler(view);
+	}
+	view->fMasterView = NULL;
+
+	if(view == fStandingInView)
+		fStandingInView = NULL;
+
+	return true;
+}
+
+
+OLEDView*
+OLEDView::RemoveStickView(int32 index)
+{
+	OLEDView *view = (OLEDView*)fStickViews.ItemAt(index);
+	if(view == NULL || RemoveStickView(view) == false) return NULL;
+	return view;
+}
+
+
+int32
+OLEDView::CountStickViews() const
+{
+	return fStickViews.CountItems();
+}
+
+
+OLEDView*
+OLEDView::StickViewAt(int32 index) const
+{
+	return((OLEDView*)fStickViews.ItemAt(index));
 }
 
 
@@ -554,36 +585,60 @@ OLEDView::MasterView() const
 }
 
 
+OLEDView*
+OLEDView::TopView() const
+{
+	OLEDView *view = fMasterView;
+
+	while(!(view == NULL || view->fMasterView == NULL))
+		view = view->fMasterView;
+
+	return view;
+}
+
+
 void
 OLEDView::Attached()
 {
-	if(fStickView == NULL || Looper() == NULL) return;
-	Looper()->AddHandler(fStickView);
-	fStickView->Attached();
+	if(Looper() == NULL) return;
+
+	for(int32 k = 0; k < fStickViews.CountItems(); k++)
+	{
+		OLEDView *view = (OLEDView*)fStickViews.ItemAt(k);
+
+		Looper()->AddHandler(view);
+		view->Attached();
+	}
 }
 
 
 void
 OLEDView::Detached()
 {
-	if(fStickView == NULL || Looper() == NULL) return;
-	fStickView->Detached();
-	Looper()->RemoveHandler(fStickView);
+	if(Looper() == NULL) return;
+
+	for(int32 k = 0; k < fStickViews.CountItems(); k++)
+	{
+		OLEDView *view = (OLEDView*)fStickViews.ItemAt(k);
+
+		view->Detached();
+		Looper()->RemoveHandler(view);
+	}
 }
 
 
 bool
 OLEDView::IsStoodIn() const
 {
-	return fStoodIn;
+	return(fStandingInView != NULL);
 }
 
 
 void
 OLEDView::StandIn()
 {
-	if(fMasterView == NULL || fMasterView->fStoodIn) return;
-	fMasterView->fStoodIn = true;
+	if(fMasterView == NULL || fMasterView->fStandingInView == this) return;
+	fMasterView->fStandingInView = this;
 	fMasterView->InvalidRect();
 }
 
@@ -591,8 +646,8 @@ OLEDView::StandIn()
 void
 OLEDView::StandBack()
 {
-	if(fMasterView == NULL || fMasterView->fStoodIn == false) return;
-	fMasterView->fStoodIn = false;
+	if(fMasterView == NULL || fMasterView->fStandingInView != this) return;
+	fMasterView->fStandingInView = NULL;
 	fMasterView->InvalidRect();
 }
 
