@@ -37,6 +37,7 @@ OLEDPageView::OLEDPageView(const char *name)
 	: OLEDView(name),
 	  fNavButtonsState(0)
 {
+	memset(fButtonIcons, OLED_ICON_NONE, sizeof(fButtonIcons));
 }
 
 
@@ -94,6 +95,7 @@ void
 OLEDPageView::SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon)
 {
 	if(idBtn >= OLED_BUTTONS_NUM) return;
+	if(!(idBtn == OLED_ICON_NONE || idIcon < OLED_ICON_ID_16x16_MAX)) return;
 
 	if(fButtonIcons[idBtn] != idIcon)
 	{

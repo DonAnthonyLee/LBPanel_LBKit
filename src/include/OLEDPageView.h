@@ -60,8 +60,6 @@ public:
 	bool		IsFarLeftPage() const;
 	bool		IsFarRightPage() const;
 
-	// TODO
-
 private:
 	uint8 fNavButtonsState;
 	oled_icon_id fButtonIcons[8]; // enough
