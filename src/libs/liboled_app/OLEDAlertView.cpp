@@ -39,22 +39,36 @@ OLEDAlertView::OLEDAlertView(const char *title,
 			     alert_type type)
 	: OLEDView(NULL),
 	  fTitle(title),
-	  fText(text)
+	  fText(text),
+	  fButtonMask(0),
+	  fInvoker(NULL)
 {
 	fIcons[0] = icon1;
 	fIcons[1] = icon2;
 	fIcons[2] = icon3;
 	switch(type)
 	{
+#if 0
 		// TODO
+		case B_IDEA_ALERT:
+		case B_INFO_ALERT:
+		case B_STOP_ALERT:
+#endif
+		case B_WARNING_ALERT:
+			fIcons[3] = OLED_ICON_WARNING;
+			break;
+
 		default:
 			fIcons[3] = OLED_ICON_NONE;
 	}
+
+	SetButtonAlignment(B_ALIGN_RIGHT);
 }
 
 
 OLEDAlertView::~OLEDAlertView()
 {
+	if(fInvoker != NULL) delete fInvoker;
 }
 
 
@@ -62,8 +76,11 @@ void
 OLEDAlertView::SetTitle(const char *title)
 {
 	fTitle.Truncate(0);
-	fTitle.SetTo(title);
-	InvalidRect();
+	fTitle.SetTo(title, 128);
+
+	BRect r = OLEDView::Bounds();
+	r.bottom = 13;
+	InvalidRect(r);
 }
 
 
@@ -72,41 +89,212 @@ OLEDAlertView::SetText(const char *text)
 {
 	fText.Truncate(0);
 	fText.SetTo(text);
+
+	BRect r = OLEDView::Bounds();
+	r.left = (fIcons[3] == OLED_ICON_NONE ? 11 : 43);
+	r.top = 14;
+	r.bottom -= 18;
+	r.InsetBy(0, 2);
 	InvalidRect();
 }
 
 
 void
-OLEDAlertView::SetButtonIcon(int32 index, oled_icon_id icon)
+OLEDAlertView::SetButtonIcon(int32 index, oled_icon_id idIcon)
 {
 	if(index < 0 || index > 2) return;
-	if(icon >= OLED_ICON_ID_16x16_MAX) return;
+	if(!(idIcon == OLED_ICON_NONE || idIcon < OLED_ICON_ID_16x16_MAX)) return;
 
-	if(fIcons[index] != icon)
+	if(fIcons[index] != idIcon)
 	{
-		fIcons[index] = icon;
-		InvalidRect();
+		fIcons[index] = idIcon;
+
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 17;
+		InvalidRect(r);
 	}
 }
 
 
-int32
-OLEDAlertView::Go()
+status_t
+OLEDAlertView::SetInvoker(BInvoker *invoker)
 {
-	if(MasterView() != NULL) return -1;
+	if(invoker == fInvoker) return B_BAD_VALUE;
 
-	// TODO
-	return -1;
+	if(fInvoker != NULL)
+		delete fInvoker;
+	fInvoker = invoker;
+
+	return B_OK;
 }
 
 
-status_t
-OLEDAlertView::Go(BInvoker *invoker)
+void
+OLEDAlertView::SetButtonAlignment(alignment align)
 {
-	if(invoker == NULL) return B_BAD_VALUE;
-	if(MasterView() != NULL) return B_BAD_TYPE;
+	uint8 mask = 0xff;
+	mask <<= OLED_BUTTONS_NUM;
+	mask = ~mask;
 
-	// TODO
-	return B_ERROR;
+	switch(align)
+	{
+		case B_ALIGN_LEFT:
+			mask &= 0x07;
+			break;
+
+		case B_ALIGN_CENTER:
+			mask &= (0x07 << max_c(0, (OLED_BUTTONS_NUM - 3) / 2));
+			break;
+
+		default:
+			mask &= (0x07 << max_c(0, OLED_BUTTONS_NUM - 3));
+	}
+
+	if(fButtonMask != mask)
+	{
+		fButtonMask = mask;
+
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 17;
+		InvalidRect(r);
+	}
+}
+
+
+void
+OLEDAlertView::Draw(BRect rect)
+{
+	uint16 w;
+	BRect r;
+
+	// title
+	r = OLEDView::Bounds();
+	r.bottom = 13;
+	if(fTitle.Length() > 0 && r.Intersects(rect))
+	{
+		SetFontSize(12);
+		w = StringWidth(fTitle);
+		DrawString(fTitle.String(), BPoint(r.Center().x - w / 2.f, 1));
+	}
+
+	// message area
+	r.OffsetBy(0, r.Height() + 1);
+	r.bottom = OLEDView::Bounds().bottom - 18;
+	if(r.Intersects(rect))
+	{
+		FillRect(r & rect);
+	}
+
+	// type icon
+	if(fIcons[3] != OLED_ICON_NONE)
+	{
+		const oled_icon *icon = oled_get_icon_data(fIcons[3]);
+
+		BRect tRect = r;
+		tRect.right = 32;
+		tRect.OffsetBy(10, 0);
+
+		if(icon != NULL && tRect.Intersects(rect))
+		{
+			oled_icon icon_inverse;
+			icon_inverse.type = icon->type;
+			for(size_t k = 0; k < sizeof(icon_inverse.data); k++)
+				icon_inverse.data[k] = ~(icon->data[k]);
+			DrawIcon(&icon_inverse, tRect.LeftTop());
+		}
+	}
+
+	// text
+	if(fText.Length() > 0)
+	{
+		BRect tRect = r;
+		tRect.left = (fIcons[3] == OLED_ICON_NONE ? 11 : 43);
+		tRect.InsetBy(0, 2);
+		if(tRect.Intersects(rect))
+		{
+			BString tmpStr(fText);
+			int32 found = tmpStr.FindFirst("\n");
+
+			SetFontSize(12);
+			if(found > 0)
+				tmpStr.Truncate(found);
+			DrawString(tmpStr.String(),
+				   found > 0 ? tRect.LeftTop() : (tRect.LeftTop() + BPoint(0, 8)),
+				   true);
+			if(found > 0)
+			{
+				tmpStr.SetTo(fText.String() + found + 1);
+				DrawString(tmpStr.String(), tRect.LeftTop() + BPoint(0, 4), true);
+			}
+		}
+	}
+
+	// icon
+	r = OLEDView::Bounds();
+	r.top = r.bottom - 16;
+	r.bottom -= 1;
+	r.right = r.Width() / (float)OLED_BUTTONS_NUM - 1.f;
+
+	int32 idBtn = 0;
+	for(int k = 0; k < OLED_BUTTONS_NUM && idBtn < 3; k++)
+	{
+		if((fButtonMask & (0x01 << k)) != 0)
+		{
+			if(r.Intersects(rect))
+			{
+				BPoint pt = r.Center() - BPoint(7, 7);
+				uint8 pressed = 0;
+
+				KeyState(&pressed);
+				if(pressed & (0x01 << k)) pt += BPoint(1, 1);
+
+				DrawIcon(fIcons[idBtn], pt);
+			}
+			idBtn++;
+		}
+		r.OffsetBy(r.Width() + 1, 0);
+	}
+}
+
+
+void
+OLEDAlertView::KeyDown(uint8 key, uint8 clicks)
+{
+	if(clicks == 1 && (fButtonMask & (0x01 << key)) != 0)
+	{
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 17;
+
+		InvalidRect(r);
+	}
+}
+
+
+void
+OLEDAlertView::KeyUp(uint8 key, uint8 clicks)
+{
+	if((fButtonMask & (0x01 << key)) != 0)
+	{
+		int32 idBtn = 0;
+		for(int k = 0; k < OLED_BUTTONS_NUM && idBtn < 3; k++)
+		{
+			if((fButtonMask & (0x01 << k)) == 0) continue;
+			if(k == key) break;
+			idBtn++;
+		}
+		if(fIcons[idBtn] >= OLED_ICON_ID_16x16_MAX) return;
+
+		if(fInvoker != NULL)
+		{
+			BMessage aMsg = *(fInvoker->Message());
+			aMsg.AddInt32("which", idBtn);
+			fInvoker->Invoke(&aMsg);
+		}
+
+		BRect r = OLEDView::Bounds();
+		r.top = r.bottom - 17;
+
+		InvalidRect(r);
+	}
 }
 
