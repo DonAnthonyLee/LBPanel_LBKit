@@ -23,23 +23,49 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDAppKit.h
+ * File: OLEDMenuView.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_APP_KIT_H__
-#define __OLED_APP_KIT_H__
+#ifndef __OLED_MENU_VIEW_H__
+#define __OLED_MENU_VIEW_H__
 
-#include <OLEDIconDefs.h>
-#include <OLEDView.h>
 #include <OLEDPageView.h>
-#include <OLEDApp.h>
-
-#include <OLEDAlertView.h>
-//#include <OLEDListView.h>
 #include <OLEDMenuItem.h>
-#include <OLEDMenuView.h>
 
-#endif /* __OLED_APP_KIT_H__ */
+#ifdef __cplusplus /* Just for C++ */
+
+class OLEDMenuView : public OLEDPageView {
+public:
+	OLEDMenuView(const char *name = NULL);
+	virtual ~OLEDMenuView();
+
+	bool		AddItem(OLEDMenuItem *item);
+	bool		AddItem(OLEDMenuItem *item, int32 index);
+	bool		RemoveItem(OLEDMenuItem *item);
+	OLEDMenuItem*	RemoveItem(int32 index);
+
+	OLEDMenuItem*	ItemAt(int32 index);
+	int32		CountItems() const;
+	int32		IndexOf(OLEDMenuItem *item) const;
+
+	OLEDMenuItem*	FindItem(uint32 command) const;
+	OLEDMenuItem*	CurrentSelection() const;
+
+	virtual void	Draw(BRect updateRect);
+	virtual void	KeyDown(uint8 key, uint8 clicks);
+	virtual void	KeyUp(uint8 key, uint8 clicks);
+
+protected:
+	virtual void	ItemInvoked(OLEDMenuItem *item);
+
+private:
+	BList fItems;
+	int32 fSelected;
+};
+
+#endif /* __cplusplus */
+
+#endif /* __OLED_MENU_VIEW_H__ */
 
