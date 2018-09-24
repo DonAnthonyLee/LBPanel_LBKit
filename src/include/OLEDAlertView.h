@@ -45,17 +45,27 @@ public:
 		      alert_type type = B_INFO_ALERT);
 	virtual ~OLEDAlertView();
 
-	int32		Go();
-	status_t	Go(BInvoker *invoker);
+	/*
+	 * SetInvoker():
+	 * 	the "invoker" will be deleted automatically when new invoker set
+	 */
+	status_t	SetInvoker(BInvoker *invoker);
 
 	void		SetTitle(const char *title);
 	void		SetText(const char *text);
-	void		SetButtonIcon(int32 index, oled_icon_id icon);
+	void		SetButtonIcon(int32 index, oled_icon_id idIcon);
+	void		SetButtonAlignment(alignment align);
+
+	virtual void	Draw(BRect updateRect);
+	virtual void	KeyDown(uint8 key, uint8 clicks);
+	virtual void	KeyUp(uint8 key, uint8 clicks);
 
 private:
 	BString fTitle;
 	BString fText;
 	oled_icon_id fIcons[4];
+	uint8 fButtonMask;
+	BInvoker *fInvoker;
 };
 
 #endif /* __cplusplus */
