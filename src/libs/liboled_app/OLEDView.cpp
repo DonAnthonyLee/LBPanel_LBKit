@@ -38,7 +38,7 @@
 #include <oled_ssd1306_ioctl.h>
 
 #include "OLEDConfig.h"
-#include "OLEDView.h"
+#include <OLEDView.h>
 
 OLEDView::OLEDView(const char *name)
 	: BHandler(name),

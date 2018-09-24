@@ -32,7 +32,8 @@
 #define __OLED_APP_H__
 
 #include <be/Be.h>
-#include "OLEDView.h"
+
+#include <OLEDView.h>
 
 #ifdef __cplusplus /* Just for C++ */
 

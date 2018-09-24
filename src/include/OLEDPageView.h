@@ -31,7 +31,7 @@
 #ifndef __OLED_PAGE_VIEW_H__
 #define __OLED_PAGE_VIEW_H__
 
-#include "OLEDView.h"
+#include <OLEDView.h>
 
 #ifdef __cplusplus /* Just for C++ */
 

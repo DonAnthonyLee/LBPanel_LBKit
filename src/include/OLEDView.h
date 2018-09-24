@@ -32,6 +32,7 @@
 #define __OLED_VIEW_H__
 
 #include <be/Be.h>
+
 #include <OLEDIconDefs.h>
 
 #ifdef __cplusplus /* Just for C++ */
