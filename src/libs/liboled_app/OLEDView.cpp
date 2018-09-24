@@ -581,6 +581,26 @@ OLEDView::StickViewAt(int32 index) const
 
 
 OLEDView*
+OLEDView::FindStickView(const char *name) const
+{
+	for(int32 k = 0; k < fStickViews.CountItems(); k++)
+	{
+		OLEDView *view = (OLEDView*)fStickViews.ItemAt(k);
+
+		if(name == NULL)
+		{
+			if(view->Name() == NULL) return view;
+			continue;
+		}
+		if(view->Name() == NULL) continue;
+		if(strcmp(name, view->Name()) == 0) return view;
+	}
+
+	return NULL;
+}
+
+
+OLEDView*
 OLEDView::MasterView() const
 {
 	return fMasterView;

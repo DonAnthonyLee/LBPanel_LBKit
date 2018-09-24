@@ -84,11 +84,12 @@ public:
 	OLEDView*	RemoveStickView(int32 index);
 	int32		CountStickViews() const;
 	OLEDView*	StickViewAt(int32 index) const;
+	OLEDView*	FindStickView(const char *name) const;
 
 	bool		IsStoodIn() const;
 	OLEDView*	StandingInView() const;
-	void		StandIn();
-	void		StandBack();
+	virtual void	StandIn();
+	virtual void	StandBack();
 
 	OLEDView*	MasterView() const;
 	OLEDView*	TopView() const;
