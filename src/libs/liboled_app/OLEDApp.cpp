@@ -35,7 +35,7 @@
 #include <sys/select.h>
 
 #include "OLEDConfig.h"
-#include "OLEDApp.h"
+#include <OLEDApp.h>
 
 //#define OLED_DEBUG
 
@@ -149,7 +149,8 @@ OLEDApp::ActivatePageView(int32 index, bool left_side)
 OLEDView*
 OLEDApp::GetActivatedPageView() const
 {
-	return cast_as(PreferredHandler(), OLEDView);
+	// ignore NULL to make it compatible with old BeOS API
+	return(PreferredHandler() ? cast_as(PreferredHandler(), OLEDView) : NULL);
 }
 
 
