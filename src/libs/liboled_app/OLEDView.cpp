@@ -51,6 +51,7 @@ OLEDView::OLEDView(const char *name)
 	  fStandingInView(NULL)
 {
 	fUpdateRect = BRect();
+	fStandInTimestamp = (bigtime_t)-1;
 }
 
 
@@ -662,6 +663,7 @@ OLEDView::StandIn()
 	if(fMasterView == NULL || fMasterView->fStandingInView == this) return;
 	fMasterView->fStandingInView = this;
 	fMasterView->InvalidRect();
+	fStandInTimestamp = real_time_clock_usecs();
 }
 
 
@@ -671,5 +673,16 @@ OLEDView::StandBack()
 	if(fMasterView == NULL || fMasterView->fStandingInView != this) return;
 	fMasterView->fStandingInView = NULL;
 	fMasterView->InvalidRect();
+	fStandInTimestamp = (bigtime_t)-1;
+}
+
+
+bigtime_t
+OLEDView::GetStandInTime() const
+{
+	bigtime_t when = real_time_clock_usecs();
+
+	if(fStandInTimestamp < (bigtime_t)0) return -1;
+	return(when - fStandInTimestamp);
 }
 

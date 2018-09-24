@@ -99,6 +99,9 @@ public:
 
 	virtual void	MessageReceived(BMessage *msg);
 
+protected:
+	bigtime_t	GetStandInTime() const;
+
 private:
 	friend class OLEDApp;
 
@@ -114,6 +117,7 @@ private:
 	OLEDView *fMasterView;
 	OLEDView *fStandingInView;
 	BList fStickViews;
+	bigtime_t fStandInTimestamp;
 
 	void		SetActivated(bool state);
 };
