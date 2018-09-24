@@ -30,6 +30,7 @@ typedef struct {
 	uint8_t size;
 	uint8_t erase_mode;
 	char str[128];
+	uint8_t reserved[4];
 	uint64_t ts;
 } _oled_ssd1306_show_t;
 
@@ -37,8 +38,8 @@ typedef struct {
 	uint16_t w;
 	uint16_t h;
 	char str[128];
+	uint8_t reserved[5];
 	uint8_t size;
-	uint8_t reserved;
 } _oled_ssd1306_string_width_t;
 
 typedef struct {
