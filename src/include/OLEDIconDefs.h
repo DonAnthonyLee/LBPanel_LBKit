@@ -49,6 +49,7 @@ typedef struct {
 } oled_icon;
 
 typedef enum {
+	/* 16x16 */
 	OLED_ICON_OK = 0,
 	OLED_ICON_YES,
 	OLED_ICON_NO,
@@ -57,6 +58,14 @@ typedef enum {
 	OLED_ICON_DOWN,
 	OLED_ICON_LEFT,
 	OLED_ICON_RIGHT,
+	OLED_ICON_ID_16x16_MAX,
+
+	/* 32x32 */
+	OLED_ICON_WARNING = 0x80,
+	OLED_ICON_REBOOT,
+	OLED_ICON_POWER_OFF,
+	OLED_ICON_ID_32x32_MAX,
+
 	OLED_ICON_NONE = 0xff,
 } oled_icon_id;
 

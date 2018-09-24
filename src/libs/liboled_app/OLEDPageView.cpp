@@ -29,8 +29,8 @@
  * --------------------------------------------------------------------------*/
 
 #include "OLEDConfig.h"
-#include "OLEDApp.h"
-#include "OLEDPageView.h"
+#include <OLEDApp.h>
+#include <OLEDPageView.h>
 
 
 OLEDPageView::OLEDPageView(const char *name)
@@ -193,7 +193,7 @@ OLEDPageView::KeyUp(uint8 key, uint8 clicks)
 void
 OLEDPageView::SwitchToNextPage()
 {
-	OLEDApp *app = cast_as(Looper(), OLEDApp);
+	OLEDApp *app = (Looper() ? cast_as(Looper(), OLEDApp) : NULL);
 	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarRightPage()) return;
@@ -225,7 +225,7 @@ OLEDPageView::SwitchToNextPage()
 void
 OLEDPageView::SwitchToPrevPage()
 {
-	OLEDApp *app = cast_as(Looper(), OLEDApp);
+	OLEDApp *app = (Looper() ? cast_as(Looper(), OLEDApp) : NULL);
 	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarLeftPage()) return;
@@ -263,7 +263,7 @@ OLEDPageView::IsFarLeftPage() const
 		return(view == NULL ? false : view->IsFarLeftPage());
 	}
 
-	OLEDApp *app = cast_as(Looper(), OLEDApp);
+	OLEDApp *app = (Looper() ? cast_as(Looper(), OLEDApp) : NULL);
 	if(app == NULL) return false;
 
 	int32 count = app->CountPageViews(true);
@@ -283,7 +283,7 @@ OLEDPageView::IsFarRightPage() const
 		return(view == NULL ? false : view->IsFarRightPage());
 	}
 
-	OLEDApp *app = cast_as(Looper(), OLEDApp);
+	OLEDApp *app = (Looper() ? cast_as(Looper(), OLEDApp) : NULL);
 	if(app == NULL) return false;
 
 	int32 count = app->CountPageViews(false);
