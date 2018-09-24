@@ -23,23 +23,49 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDAppKit.h
+ * File: OLEDMenuItem.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_APP_KIT_H__
-#define __OLED_APP_KIT_H__
+#ifndef __OLED_MENU_ITEM_H__
+#define __OLED_MENU_ITEM_H__
 
+#include <be/Be.h>
 #include <OLEDIconDefs.h>
-#include <OLEDView.h>
-#include <OLEDPageView.h>
-#include <OLEDApp.h>
 
-#include <OLEDAlertView.h>
-//#include <OLEDListView.h>
-#include <OLEDMenuItem.h>
-#include <OLEDMenuView.h>
+#ifdef __cplusplus /* Just for C++ */
 
-#endif /* __OLED_APP_KIT_H__ */
+class OLEDMenuView;
+
+class OLEDMenuItem : public EInvoker {
+public:
+	OLEDMenuItem(const char *label,
+		     BMessage *message,
+		     oled_icon_id idIcon);
+	virtual ~OLEDMenuItem();
+
+	const char*	Label() const;
+	void		SetLabel(const char *label);
+
+	oled_icon_id	Icon() const;
+	void		SetIcon(oled_icon_id idIcon);
+
+	void		Show();
+	void		Hide();
+	bool		IsHidden() const;
+
+private:
+	friend OLEDMenuView;
+
+	BString fLabel;
+	oled_icon_id fIcon;
+	bool fHidden;
+
+	OLEDMenuView *fMenuView;
+};
+
+#endif /* __cplusplus */
+
+#endif /* __OLED_MENU_ITEM_H__ */
 
