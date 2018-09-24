@@ -281,6 +281,7 @@ OLEDAlertView::KeyUp(uint8 key, uint8 clicks)
 
 	if((fButtonMask & (0x01 << key)) == 0) return;
 	if(clicks > 1) return;
+	if(GetStandInTime() < (bigtime_t)OLED_BUTTON_INTERVAL) return;
 
 	int32 idBtn = 0;
 	for(int k = 0; k < OLED_BUTTONS_NUM && idBtn < 3; k++)
