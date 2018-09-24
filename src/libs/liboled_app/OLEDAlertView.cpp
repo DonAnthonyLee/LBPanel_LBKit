@@ -43,9 +43,8 @@ OLEDAlertView::OLEDAlertView(const char *title,
 	  fButtonMask(0),
 	  fInvoker(NULL)
 {
-	fIcons[0] = icon1;
-	fIcons[1] = icon2;
-	fIcons[2] = icon3;
+	memset(fIcons, OLED_ICON_NONE, sizeof(fIcons));
+
 	switch(type)
 	{
 #if 0
@@ -59,9 +58,12 @@ OLEDAlertView::OLEDAlertView(const char *title,
 			break;
 
 		default:
-			fIcons[3] = OLED_ICON_NONE;
+			break;
 	}
 
+	SetButtonIcon(0, icon1);
+	SetButtonIcon(1, icon2);
+	SetButtonIcon(2, icon3);
 	SetButtonAlignment(B_ALIGN_RIGHT);
 }
 
@@ -76,7 +78,7 @@ void
 OLEDAlertView::SetTitle(const char *title)
 {
 	fTitle.Truncate(0);
-	fTitle.SetTo(title, 128);
+	fTitle.SetTo(title);
 
 	BRect r = OLEDView::Bounds();
 	r.bottom = 13;
@@ -91,7 +93,7 @@ OLEDAlertView::SetText(const char *text)
 	fText.SetTo(text);
 
 	BRect r = OLEDView::Bounds();
-	r.left = (fIcons[3] == OLED_ICON_NONE ? 11 : 43);
+	r.left = (fIcons[3] == OLED_ICON_NONE ? 13 : 45);
 	r.top = 14;
 	r.bottom -= 18;
 	r.InsetBy(0, 2);
@@ -208,7 +210,7 @@ OLEDAlertView::Draw(BRect rect)
 	if(fText.Length() > 0)
 	{
 		BRect tRect = r;
-		tRect.left = (fIcons[3] == OLED_ICON_NONE ? 11 : 43);
+		tRect.left = (fIcons[3] == OLED_ICON_NONE ? 13 : 45);
 		tRect.InsetBy(0, 2);
 		if(tRect.Intersects(rect))
 		{
@@ -224,7 +226,7 @@ OLEDAlertView::Draw(BRect rect)
 			if(found > 0)
 			{
 				tmpStr.SetTo(fText.String() + found + 1);
-				DrawString(tmpStr.String(), tRect.LeftTop() + BPoint(0, 4), true);
+				DrawString(tmpStr.String(), tRect.LeftTop() + BPoint(0, 16), true);
 			}
 		}
 	}
@@ -240,7 +242,7 @@ OLEDAlertView::Draw(BRect rect)
 	{
 		if((fButtonMask & (0x01 << k)) != 0)
 		{
-			if(r.Intersects(rect))
+			if(fIcons[idBtn] < OLED_ICON_ID_16x16_MAX && r.Intersects(rect))
 			{
 				BPoint pt = r.Center() - BPoint(7, 7);
 				uint8 pressed = 0;
@@ -273,28 +275,27 @@ OLEDAlertView::KeyDown(uint8 key, uint8 clicks)
 void
 OLEDAlertView::KeyUp(uint8 key, uint8 clicks)
 {
-	if((fButtonMask & (0x01 << key)) != 0)
+	BRect r = OLEDView::Bounds();
+	r.top = r.bottom - 17;
+	InvalidRect(r);
+
+	if((fButtonMask & (0x01 << key)) == 0) return;
+	if(clicks > 1) return;
+
+	int32 idBtn = 0;
+	for(int k = 0; k < OLED_BUTTONS_NUM && idBtn < 3; k++)
 	{
-		int32 idBtn = 0;
-		for(int k = 0; k < OLED_BUTTONS_NUM && idBtn < 3; k++)
-		{
-			if((fButtonMask & (0x01 << k)) == 0) continue;
-			if(k == key) break;
-			idBtn++;
-		}
-		if(fIcons[idBtn] >= OLED_ICON_ID_16x16_MAX) return;
+		if((fButtonMask & (0x01 << k)) == 0) continue;
+		if(k == key) break;
+		idBtn++;
+	}
+	if(fIcons[idBtn] >= OLED_ICON_ID_16x16_MAX) return;
 
-		if(fInvoker != NULL)
-		{
-			BMessage aMsg = *(fInvoker->Message());
-			aMsg.AddInt32("which", idBtn);
-			fInvoker->Invoke(&aMsg);
-		}
-
-		BRect r = OLEDView::Bounds();
-		r.top = r.bottom - 17;
-
-		InvalidRect(r);
+	if(fInvoker != NULL)
+	{
+		BMessage aMsg = *(fInvoker->Message());
+		aMsg.AddInt32("which", idBtn);
+		fInvoker->Invoke(&aMsg);
 	}
 }
 
