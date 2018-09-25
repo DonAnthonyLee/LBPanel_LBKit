@@ -31,6 +31,11 @@
 #include "OLEDConfig.h"
 #include <OLEDAlertView.h>
 
+// Comment the line below out when it's SURE to use it
+#if OLED_BUTTONS_NUM < 2
+#error "OLEDMenuView: Usually, it's useless when number of buttons less than 2 !!!"
+#endif
+
 OLEDAlertView::OLEDAlertView(const char *title,
 			     const char *text,
 			     oled_icon_id icon3,
@@ -104,7 +109,7 @@ OLEDAlertView::SetText(const char *text)
 void
 OLEDAlertView::SetButtonIcon(int32 index, oled_icon_id idIcon)
 {
-	if(index < 0 || index > 2) return;
+	if(index < 0 || index > min_c(2, OLED_BUTTONS_NUM - 1)) return;
 	if(!(idIcon == OLED_ICON_NONE || idIcon < OLED_ICON_ID_16x16_MAX)) return;
 
 	if(fIcons[index] != idIcon)
@@ -160,6 +165,14 @@ OLEDAlertView::SetButtonAlignment(alignment align)
 		r.top = r.bottom - 17;
 		InvalidRect(r);
 	}
+}
+
+
+void
+OLEDAlertView::DrawButtonIcon(oled_icon_id idIcon, BPoint location)
+{
+	// for OLED_BUTTONS_NUM <= 2, so on
+	DrawIcon(idIcon, location);
 }
 
 
@@ -250,7 +263,7 @@ OLEDAlertView::Draw(BRect rect)
 				KeyState(&pressed);
 				if(pressed & (0x01 << k)) pt += BPoint(1, 1);
 
-				DrawIcon(fIcons[idBtn], pt);
+				DrawButtonIcon(fIcons[idBtn], pt);
 			}
 			idBtn++;
 		}
@@ -280,11 +293,6 @@ OLEDAlertView::KeyUp(uint8 key, uint8 clicks)
 	InvalidRect(r);
 
 	if((fButtonMask & (0x01 << key)) == 0) return;
-	if(clicks > 1) return;
-	if(MasterView() != NULL)
-	{
-		if(GetStandInTime() < (bigtime_t)OLED_BUTTON_INTERVAL) return;
-	}
 
 	int32 idBtn = 0;
 	for(int k = 0; k < OLED_BUTTONS_NUM && idBtn < 3; k++)
@@ -299,6 +307,7 @@ OLEDAlertView::KeyUp(uint8 key, uint8 clicks)
 	{
 		BMessage aMsg = *(fInvoker->Message());
 		aMsg.AddInt32("which", idBtn);
+		aMsg.AddInt8("clicks", *((int8*)&clicks));
 		fInvoker->Invoke(&aMsg);
 	}
 }
