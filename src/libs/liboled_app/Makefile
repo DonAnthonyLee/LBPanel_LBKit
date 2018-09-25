@@ -9,7 +9,15 @@ TARGET_1 = liboled_app.so
 TARGET_2 =
 TARGET_3 =
 
-OBJECTS_1 = OLEDView.o OLEDPageView.o OLEDApp.o OLEDIconData.o OLEDAlertView.o
+OBJECTS_1 = \
+	OLEDView.o \
+	OLEDPageView.o \
+	OLEDApp.o \
+	OLEDIconData.o \
+	OLEDAlertView.o \
+	OLEDMenuItem.o \
+	OLEDMenuView.o
+
 OBJECTS_2 =
 OBJECTS_3 =
 
