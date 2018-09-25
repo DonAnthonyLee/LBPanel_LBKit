@@ -37,15 +37,21 @@ OLEDMenuItem::OLEDMenuItem(const char *label,
 			   oled_icon_id idIcon)
 	: BInvoker(message, NULL),
 	  fLabel(NULL),
-	  fIcon(idIcon),
-	  fHidden(false)
+	  fIcon(OLED_ICON_NONE),
+	  fHidden(false),
+	  fMenuView(NULL)
 {
 	SetLabel(label);
+	SetIcon(idIcon);
 }
 
 
 OLEDMenuItem::~OLEDMenuItem()
 {
+	/*
+	 * WARNING: NO GUARANTEE for MenuView !!!
+	 * 	item should be remove form MenuView before deleting
+	 */
 	if(fLabel != NULL) free(fLabel);
 }
 
@@ -77,26 +83,10 @@ OLEDMenuItem::Icon() const
 void
 OLEDMenuItem::SetIcon(oled_icon_id idIcon)
 {
-	fIcon = idIcon;
+	// only 32x32
+	fIcon = (idIcon > OLED_ICON_ID_16x16_MAX ? idIcon : OLED_ICON_NONE);
+
 	// NO REDRAW
-}
-
-
-void
-OLEDMenuItem::Show()
-{
-	if(fHidden == false) return;
-	fHidden = false;
-	if(fMenuView != NULL) fMenuView->InvalidRect();
-}
-
-
-void
-OLEDMenuItem::Hide()
-{
-	if(fHidden) return;
-	fHidden = true;
-	if(fMenuView != NULL) fMenuView->InvalidRect();
 }
 
 
