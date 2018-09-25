@@ -23,49 +23,86 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDMenuItem.h
+ * File: OLEDMenuItem.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_MENU_ITEM_H__
-#define __OLED_MENU_ITEM_H__
+#include <string.h>
+#include <OLEDMenuItem.h>
+#include <OLEDMenuView.h>
 
-#include <be/Be.h>
-#include <OLEDIconDefs.h>
+OLEDMenuItem::OLEDMenuItem(const char *label,
+			   BMessage *message,
+			   oled_icon_id idIcon)
+	: BInvoker(message, NULL),
+	  fLabel(NULL),
+	  fIcon(idIcon),
+	  fHidden(false)
+{
+	SetLabel(label);
+}
 
-#ifdef __cplusplus /* Just for C++ */
 
-class OLEDMenuView;
+OLEDMenuItem::~OLEDMenuItem()
+{
+	if(fLabel != NULL) free(fLabel);
+}
 
-class OLEDMenuItem : public BInvoker {
-public:
-	OLEDMenuItem(const char *label,
-		     BMessage *message,
-		     oled_icon_id idIcon);
-	virtual ~OLEDMenuItem();
 
-	const char*	Label() const;
-	void		SetLabel(const char *label);
+const char*
+OLEDMenuItem::Label() const
+{
+	return fLabel;
+}
 
-	oled_icon_id	Icon() const;
-	void		SetIcon(oled_icon_id idIcon);
 
-	void		Show();
-	void		Hide();
-	bool		IsHidden() const;
+void
+OLEDMenuItem::SetLabel(const char *label)
+{
+	if(fLabel != NULL) free(fLabel);
+	fLabel = (label != NULL ? strdup(label) : NULL);
 
-private:
-	friend class OLEDMenuView;
+	// NO REDRAW
+}
 
-	char *fLabel;
-	oled_icon_id fIcon;
-	bool fHidden;
 
-	OLEDMenuView *fMenuView;
-};
+oled_icon_id
+OLEDMenuItem::Icon() const
+{
+	return fIcon;
+}
 
-#endif /* __cplusplus */
 
-#endif /* __OLED_MENU_ITEM_H__ */
+void
+OLEDMenuItem::SetIcon(oled_icon_id idIcon)
+{
+	fIcon = idIcon;
+	// NO REDRAW
+}
+
+
+void
+OLEDMenuItem::Show()
+{
+	if(fHidden == false) return;
+	fHidden = false;
+	if(fMenuView != NULL) fMenuView->InvalidRect();
+}
+
+
+void
+OLEDMenuItem::Hide()
+{
+	if(fHidden) return;
+	fHidden = true;
+	if(fMenuView != NULL) fMenuView->InvalidRect();
+}
+
+
+bool
+OLEDMenuItem::IsHidden() const
+{
+	return fHidden;
+}
 
