@@ -60,6 +60,8 @@ public:
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 
+	virtual void	DrawButtonIcon(oled_icon_id idIcon, BPoint location);
+
 private:
 	BString fTitle;
 	BString fText;
