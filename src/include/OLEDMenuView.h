@@ -46,16 +46,21 @@ public:
 	bool		RemoveItem(OLEDMenuItem *item);
 	OLEDMenuItem*	RemoveItem(int32 index);
 
-	OLEDMenuItem*	ItemAt(int32 index);
+	OLEDMenuItem*	ItemAt(int32 index) const;
 	int32		CountItems() const;
 	int32		IndexOf(OLEDMenuItem *item) const;
 
 	OLEDMenuItem*	FindItem(uint32 command) const;
 	OLEDMenuItem*	CurrentSelection() const;
 
+	void		ShowItem(int32 index);
+	void		HideItem(int32 index);
+
 	virtual void	Draw(BRect updateRect);
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
+	virtual void	StandIn();
+	virtual void	Activated(bool state);
 
 protected:
 	virtual void	ItemInvoked(OLEDMenuItem *item);
@@ -63,6 +68,15 @@ protected:
 private:
 	BList fItems;
 	int32 fSelected;
+	int32 fOffset;
+
+	int32		CountVisibleItems(int32 fromIndex, int32 n) const;
+	OLEDMenuItem*	PrevVisibleItem(int32 &index) const;
+	OLEDMenuItem*	NextVisibleItem(int32 &index) const;
+	OLEDMenuItem*	FirstVisibleItem(int32 &index) const;
+	OLEDMenuItem*	LastVisibleItem(int32 &index) const;
+	void		RefreshNavButtons();
+	void		ResetOffsetIfNeeded();
 };
 
 #endif /* __cplusplus */
