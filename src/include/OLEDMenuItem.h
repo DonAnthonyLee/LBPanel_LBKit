@@ -51,8 +51,6 @@ public:
 	oled_icon_id	Icon() const;
 	void		SetIcon(oled_icon_id idIcon);
 
-	void		Show();
-	void		Hide();
 	bool		IsHidden() const;
 
 private:
