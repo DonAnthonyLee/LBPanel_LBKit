@@ -365,9 +365,6 @@ OLEDView::Pulse()
 uint8
 OLEDView::KeyState(uint8 *down_state) const
 {
-	if(fMasterView != NULL)
-		return fMasterView->KeyState(down_state);
-
 	if(down_state) *down_state = (fKeyState >> 8);
 	return fKeyState;
 }
@@ -382,6 +379,12 @@ OLEDView::MessageReceived(BMessage *msg)
 	{
 		case B_KEY_DOWN:
 		case B_KEY_UP:
+			if(fStandingInView != NULL)
+			{
+				// let the view handle the message itself
+				Looper()->PostMessage(msg, fStandingInView);
+				break;
+			}
 			if(msg->FindInt8("key", (int8*)&key) != B_OK) break;
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
 			if(key >= OLED_BUTTONS_NUM || clicks == 0) break;
@@ -390,16 +393,14 @@ OLEDView::MessageReceived(BMessage *msg)
 			if(msg->what == B_KEY_DOWN)
 			{
 				fKeyState |= (0x0100 << key);
-				if(fStandingInView != NULL)
-					fStandingInView->KeyDown(key, clicks);
-				else
-					KeyDown(key, clicks);
+				if(GetPowerState() == false) break;
+				KeyDown(key, clicks);
 			}
-			else
+			else if((fKeyState & (0x0100 << key)) != 0) // must be DOWN before
 			{
 				fKeyState &= ~(0x0100 << key);
-				if(fStandingInView != NULL)
-					fStandingInView->KeyUp(key, clicks);
+				if(GetPowerState() == false)
+					SetPowerState(true);
 				else
 					KeyUp(key, clicks);
 				fKeyState &= ~(0x01 << key);
@@ -408,9 +409,12 @@ OLEDView::MessageReceived(BMessage *msg)
 
 		case B_PULSE:
 			if(fStandingInView != NULL)
-				fStandingInView->Pulse();
-			else
-				Pulse();
+			{
+				// let the view handle the message itself
+				Looper()->PostMessage(msg, fStandingInView);
+				break;
+			}
+			Pulse();
 			break;
 
 		case '_UPN': // like _UPDATE_IF_NEEDED_ in BeOS API
@@ -447,7 +451,7 @@ OLEDView::SetActivated(bool state)
 	{
 		fKeyState = 0;
 		fActivated = state;
-		Activated(state);
+		this->Activated(state);
 	}
 }
 
@@ -663,6 +667,7 @@ OLEDView::StandIn()
 	if(fMasterView == NULL || fMasterView->fStandingInView == this) return;
 	fMasterView->fStandingInView = this;
 	fMasterView->InvalidRect();
+	fKeyState = 0;
 	fStandInTimestamp = real_time_clock_usecs();
 }
 
@@ -680,9 +685,7 @@ OLEDView::StandBack()
 bigtime_t
 OLEDView::GetStandInTime() const
 {
-	bigtime_t when = real_time_clock_usecs();
-
 	if(fStandInTimestamp < (bigtime_t)0) return -1;
-	return(when - fStandInTimestamp);
+	return(real_time_clock_usecs() - fStandInTimestamp);
 }
 
