@@ -46,7 +46,6 @@ public:
 
 	void		SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon);
 	oled_icon_id	GetNavButtonIcon(int32 idBtn) const;
-	virtual void	DrawNavButton(oled_icon_id idIcon, BPoint location);
 
 	virtual BRect	Bounds() const;
 
@@ -59,6 +58,8 @@ public:
 
 	bool		IsFarLeftPage() const;
 	bool		IsFarRightPage() const;
+
+	virtual void	DrawNavButtonIcon(oled_icon_id idIcon, BPoint location);
 
 private:
 	uint8 fNavButtonsState;

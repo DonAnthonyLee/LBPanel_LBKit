@@ -120,8 +120,9 @@ OLEDPageView::GetNavButtonIcon(int32 idBtn) const
 
 
 void
-OLEDPageView::DrawNavButton(oled_icon_id idIcon, BPoint location)
+OLEDPageView::DrawNavButtonIcon(oled_icon_id idIcon, BPoint location)
 {
+	// for OLED_BUTTONS_NUM <= 2, so on
 	DrawIcon(idIcon, location);
 }
 
@@ -157,7 +158,7 @@ OLEDPageView::Draw(BRect rect)
 			KeyState(&pressed);
 			if(pressed & (0x01 << k)) pt += BPoint(1, 1);
 
-			DrawNavButton(fButtonIcons[k], pt);
+			DrawNavButtonIcon(fButtonIcons[k], pt);
 		}
 		r.OffsetBy(r.Width() + 1, 0);
 	}
