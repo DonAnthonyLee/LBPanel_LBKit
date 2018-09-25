@@ -190,8 +190,8 @@ OLEDApp::Go()
 	while(IsRunning())
 	{
 		timeout.tv_usec = (pulse_rate > 0 && pulse_rate < (bigtime_t)500000) ? pulse_rate : 500000;
-		if(count > 0 && timeout.tv_usec > OLED_BUTTON_INTERVAL / 2)
-			timeout.tv_usec = OLED_BUTTON_INTERVAL / 2;
+		if(count > 0 && timeout.tv_usec > OLED_BUTTON_INTERVAL / 3)
+			timeout.tv_usec = OLED_BUTTON_INTERVAL / 3;
 
 		FD_ZERO(&rset);
 		FD_SET(fInputFD, &rset);
@@ -324,7 +324,7 @@ OLEDApp::MessageReceived(BMessage *msg)
 				{
 					// auto-repeat (event.code = 2) event
 					if(when < fKeyTimestamps[nKey]) break;
-					if(when - fKeyTimestamps[nKey] < (bigtime_t)3000000) break; // 3s
+					if(when - fKeyTimestamps[nKey] < (bigtime_t)2000000) break; // 2s
 					if(fKeyClicks[nKey] == 0xff) break;
 					fKeyClicks[nKey] = 0xff; // long press
 				}
