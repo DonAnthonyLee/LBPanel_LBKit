@@ -64,18 +64,19 @@ public:
 
 protected:
 	virtual void	ItemInvoked(OLEDMenuItem *item);
-
-private:
-	BList fItems;
-	int32 fSelected;
-	int32 fOffset;
+	virtual void	RefreshNavButtonIcons();
 
 	int32		CountVisibleItems(int32 fromIndex, int32 n) const;
 	OLEDMenuItem*	PrevVisibleItem(int32 &index) const;
 	OLEDMenuItem*	NextVisibleItem(int32 &index) const;
 	OLEDMenuItem*	FirstVisibleItem(int32 &index) const;
 	OLEDMenuItem*	LastVisibleItem(int32 &index) const;
-	void		RefreshNavButtons();
+
+private:
+	BList fItems;
+	int32 fSelected;
+	int32 fOffset;
+
 	void		ResetOffsetIfNeeded();
 };
 
