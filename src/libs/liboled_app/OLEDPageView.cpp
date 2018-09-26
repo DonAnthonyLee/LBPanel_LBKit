@@ -32,6 +32,9 @@
 #include <OLEDApp.h>
 #include <OLEDPageView.h>
 
+#define ICON_IS_16x16(id)	((id) > OLED_ICON_ID_16x16_BEGIN && (id) < OLED_ICON_ID_16x16_END)
+#define ICON_IS_VALID(id)	((id) == OLED_ICON_NONE || ICON_IS_16x16(id))
+
 
 OLEDPageView::OLEDPageView(const char *name)
 	: OLEDView(name),
@@ -95,7 +98,7 @@ void
 OLEDPageView::SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon)
 {
 	if(idBtn >= OLED_BUTTONS_NUM) return;
-	if(!(idIcon == OLED_ICON_NONE || idIcon < OLED_ICON_ID_16x16_MAX)) return;
+	if(!ICON_IS_VALID(idIcon)) return;
 
 	if(fButtonIcons[idBtn] != idIcon)
 	{

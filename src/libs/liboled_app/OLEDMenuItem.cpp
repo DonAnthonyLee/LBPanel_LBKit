@@ -32,6 +32,9 @@
 #include <OLEDMenuItem.h>
 #include <OLEDMenuView.h>
 
+#define ICON_IS_32x32(id)	((id) > OLED_ICON_ID_32x32_BEGIN && (id) < OLED_ICON_ID_32x32_END)
+
+
 OLEDMenuItem::OLEDMenuItem(const char *label,
 			   BMessage *message,
 			   oled_icon_id idIcon)
@@ -50,7 +53,7 @@ OLEDMenuItem::~OLEDMenuItem()
 {
 	/*
 	 * WARNING: NO GUARANTEE for MenuView !!!
-	 * 	item should be remove form MenuView before deleting
+	 * 	item should be removed from MenuView before deleting
 	 */
 	if(fLabel != NULL) free(fLabel);
 }
@@ -84,7 +87,7 @@ void
 OLEDMenuItem::SetIcon(oled_icon_id idIcon)
 {
 	// only 32x32
-	fIcon = (idIcon > OLED_ICON_ID_16x16_MAX ? idIcon : OLED_ICON_NONE);
+	fIcon = (ICON_IS_32x32(idIcon) ? idIcon : OLED_ICON_NONE);
 
 	// NO REDRAW
 }
