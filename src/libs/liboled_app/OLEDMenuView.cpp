@@ -366,7 +366,6 @@ OLEDMenuView::KeyDown(uint8 key, uint8 clicks)
 	if(IsNavButtonHidden(key)) return;
 
 	oled_icon_id btnIcon = GetNavButtonIcon((int32)key);
-	if(btnIcon == OLED_ICON_NONE) return;
 
 	int32 saveSelected = fSelected;
 	switch(btnIcon)
@@ -403,7 +402,7 @@ OLEDMenuView::KeyUp(uint8 key, uint8 clicks)
 	if(clicks == 1 && btnIcon == OLED_ICON_OK)
 #else // OLED_BUTTONS_NUM < 3
 	if((clicks == 1 && btnIcon == OLED_ICON_OK) ||
-	   ((clicks > 1 && clicks != 0xff) btnIcon == OLED_ICON_LEFT))
+	   ((clicks > 1 && clicks != 0xff) && btnIcon == OLED_ICON_LEFT))
 #endif
 	{
 		OLEDMenuItem *curItem = CurrentSelection();
