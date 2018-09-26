@@ -36,6 +36,10 @@
 #error "OLEDMenuView: Usually, it's useless when number of buttons less than 2 !!!"
 #endif
 
+#define ICON_IS_16x16(id)	((id) > OLED_ICON_ID_16x16_BEGIN && (id) < OLED_ICON_ID_16x16_END)
+#define ICON_IS_VALID(id)	((id) == OLED_ICON_NONE || ICON_IS_16x16(id))
+
+
 OLEDAlertView::OLEDAlertView(const char *title,
 			     const char *text,
 			     oled_icon_id icon3,
@@ -110,7 +114,7 @@ void
 OLEDAlertView::SetButtonIcon(int32 index, oled_icon_id idIcon)
 {
 	if(index < 0 || index > min_c(2, OLED_BUTTONS_NUM - 1)) return;
-	if(!(idIcon == OLED_ICON_NONE || idIcon < OLED_ICON_ID_16x16_MAX)) return;
+	if(!ICON_IS_VALID(idIcon)) return;
 
 	if(fIcons[index] != idIcon)
 	{
@@ -255,7 +259,7 @@ OLEDAlertView::Draw(BRect rect)
 	{
 		if((fButtonMask & (0x01 << k)) != 0)
 		{
-			if(fIcons[idBtn] < OLED_ICON_ID_16x16_MAX && r.Intersects(rect))
+			if(ICON_IS_16x16(fIcons[idBtn]) && r.Intersects(rect))
 			{
 				BPoint pt = r.Center() - BPoint(7, 7);
 				uint8 pressed = 0;
@@ -301,7 +305,7 @@ OLEDAlertView::KeyUp(uint8 key, uint8 clicks)
 		if(k == key) break;
 		idBtn++;
 	}
-	if(fIcons[idBtn] >= OLED_ICON_ID_16x16_MAX) return;
+	if(!ICON_IS_16x16(fIcons[idBtn])) return;
 
 	if(fInvoker != NULL)
 	{
