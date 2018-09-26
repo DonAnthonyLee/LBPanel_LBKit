@@ -324,7 +324,7 @@ OLEDApp::MessageReceived(BMessage *msg)
 				{
 					// auto-repeat (event.code = 2) event
 					if(when < fKeyTimestamps[nKey]) break;
-					if(when - fKeyTimestamps[nKey] < (bigtime_t)2000000) break; // 2s
+					if(when - fKeyTimestamps[nKey] < (bigtime_t)1000000) break; // 1s
 					if(fKeyClicks[nKey] == 0xff) break;
 					fKeyClicks[nKey] = 0xff; // long press
 				}
