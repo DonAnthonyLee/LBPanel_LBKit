@@ -33,7 +33,7 @@
 
 // Comment the line below out when it's SURE to use it
 #if OLED_BUTTONS_NUM < 2
-#error "OLEDMenuView: Usually, it's useless when number of buttons less than 2 !!!"
+#error "OLEDAlertView: Usually, it's useless when number of buttons less than 2 !!!"
 #endif
 
 #define ICON_IS_16x16(id)	((id) > OLED_ICON_ID_16x16_BEGIN && (id) < OLED_ICON_ID_16x16_END)
