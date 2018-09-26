@@ -384,7 +384,7 @@ OLEDMenuView::KeyDown(uint8 key, uint8 clicks)
 	if(saveSelected == fSelected) return;
 
 	ResetOffsetIfNeeded();
-	RefreshNavButtons();
+	RefreshNavButtonIcons();
 	InvalidRect(Bounds());
 }
 
@@ -432,7 +432,7 @@ OLEDMenuView::KeyUp(uint8 key, uint8 clicks)
 	if(saveSelected == fSelected) return;
 
 	ResetOffsetIfNeeded();
-	RefreshNavButtons();
+	RefreshNavButtonIcons();
 	InvalidRect(Bounds());
 }
 
@@ -447,7 +447,7 @@ OLEDMenuView::StandIn()
 		FirstVisibleItem(fSelected);
 		fOffset = max_c(0, fSelected);
 
-		RefreshNavButtons();
+		RefreshNavButtonIcons();
 	}
 }
 
@@ -462,13 +462,13 @@ OLEDMenuView::Activated(bool state)
 		FirstVisibleItem(fSelected);
 		fOffset = max_c(0, fSelected);
 
-		RefreshNavButtons();
+		RefreshNavButtonIcons();
 	}
 }
 
 
 void
-OLEDMenuView::RefreshNavButtons()
+OLEDMenuView::RefreshNavButtonIcons()
 {
 	int32 n = (fSelected <= 0 ? 0 : CountVisibleItems(0, fSelected));
 
