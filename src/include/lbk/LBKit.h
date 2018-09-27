@@ -28,13 +28,15 @@
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __LBK_APP_KIT_H__
-#define __LBK_APP_KIT_H__
+#ifndef __LBK_KIT_H__
+#define __LBK_KIT_H__
+
+#include <lbk/LBKConfig.h>
 
 #include <lbk/LBLBIconDefs.h>
 #include <lbk/LBView.h>
 #include <lbk/LBPageView.h>
-#include <lbk/LBApp.h>
+#include <lbk/LBApplication.h>
 
 #include <lbk/LBAlertView.h>
 #include <lbk/LBListItem.h>
@@ -42,5 +44,5 @@
 #include <lbk/LBMenuItem.h>
 #include <lbk/LBMenuView.h>
 
-#endif /* __LBK_APP_KIT_H__ */
+#endif /* __LBK_KIT_H__ */
 

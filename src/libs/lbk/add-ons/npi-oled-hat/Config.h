@@ -31,17 +31,16 @@
 #ifndef __NPI_OLED_HAT_CONFIG_H__
 #define __NPI_OLED_HAT_CONFIG_H__
 
+#define DEFAULT_OLED_DEVICE	"/dev/oled-003c"
+#define DEFAULT_INPUT_EVENT	"/dev/input/event0"
+
 #define OLED_SCREEN_WIDTH	128
 #define OLED_SCREEN_HEIGHT	64
 
-/* OLED_BUTTONS_NUM <= 8 */
-#define OLED_BUTTONS_NUM	3
-
-#define OLED_BUTTON1		105	/* KEY_LEFT */
-#define OLED_BUTTON2		102	/* KEY_HOME */
-#define OLED_BUTTON3		106	/* KEY_RIGHT */
-
-#define OLED_BUTTON_INTERVAL	130000	/* 130ms */
+#define OLED_KEY_COUNT		3
+#define OLED_KEY1_CODE		105	/* KEY_LEFT */
+#define OLED_KEY2_CODE		102	/* KEY_HOME */
+#define OLED_KEY3_CODE		106	/* KEY_RIGHT */
 
 #endif /* __NPI_OLED_HAT_CONFIG_H__ */
 
