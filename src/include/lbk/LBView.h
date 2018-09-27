@@ -34,10 +34,11 @@
 #include <be/Be.h>
 
 #include <lbk/LBIconDefs.h>
+#include <lbk/add-ons/LBPanelDevice.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class LBApp;
+class LBApplication;
 
 class LBView : public BHandler {
 public:
@@ -101,12 +102,13 @@ public:
 
 protected:
 	bigtime_t	GetStandInTime() const;
+	uint8		CountKeys() const;
 
 private:
-	friend class LBApp;
+	friend class LBApplication;
 
-	int fFD;
-	uint64 fTimestamp;
+	LBPanelDevice *fDev;
+	bigtime_t fTimestamp;
 	bool fActivated;
 
 	uint8 fFontSize;

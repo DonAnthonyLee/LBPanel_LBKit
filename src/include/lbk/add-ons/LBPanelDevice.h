@@ -31,8 +31,8 @@
 #ifndef __LBK_PANEL_DEVICE_H__
 #define __LBK_PANEL_DEVICE_H__
 
+#include <be/Be.h>
 #include <lbk/LBKConfig.h>
-#include <lbk/LBApplication.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -40,6 +40,8 @@
 // 	Addon must have C function like below and all the null virtual functions
 // 	of class must be implemented.
 // 		extern "C" LBPanelDevice* instantiate_panel_device();
+
+class LBApplication;
 
 class LBPanelDevice : public BLocker {
 public:
