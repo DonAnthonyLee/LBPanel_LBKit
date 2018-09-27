@@ -103,7 +103,7 @@ NPIHat::~NPIHat()
 		if(fPipes[0] >= 0)
 		{
 			e_status_t status;
-			uint8_t t = 0xff;
+			uint8 t = 0xff;
 			write(fPipes[1], &t, 1);
 			etk_wait_for_thread(fThread, &status);
 		}
@@ -123,7 +123,7 @@ NPIHat::~NPIHat()
 status_t
 NPIHat::InitCheck()
 {
-	return((fOLEDFD < 0 || fInputFD < 0) ? B_ERROR : B_OK);
+	return((fOLEDFD < 0 || fInputFD < 0 || fPipes[0] < 0 || fThread == NULL) ? B_ERROR : B_OK);
 }
 
 
@@ -310,7 +310,7 @@ status_t
 NPIHat::GetCountOfKeys(uint8 &count)
 {
 	if(fInputFD < 0) return B_ERROR;
-	count = OLED_KEY_COUNT;
+	count = OLED_KEYS_COUNT;
 	return B_OK;
 }
 
@@ -435,7 +435,7 @@ NPIHat::InputEventsObserver(void *arg)
 		if(status > 0 && FD_ISSET(pipe_fd, &rset))
 		{
 			uint8 byte = 0x00;
-			doingGood = (read(pipe_fd, &byte, 1) == 1 && byte == 0xff);
+			doingGood = !(read(pipe_fd, &byte, 1) != 1 || byte == 0xff);
 		}
 
 		if(status == 0) continue;
@@ -465,25 +465,25 @@ NPIHat::InputEventsObserver(void *arg)
 
 		uint8 nKey;
 		if(event.code == OLED_KEY1_CODE) nKey = 0;
-#if OLED_KEY_COUNT > 1
+#if OLED_KEYS_COUNT > 1
 		else if(event.code == OLED_KEY2_CODE) nKey = 1;
 #endif
-#if OLED_KEY_COUNT > 2
+#if OLED_KEYS_COUNT > 2
 		else if(event.code == OLED_KEY3_CODE) nKey = 2;
 #endif
-#if OLED_KEY_COUNT > 3
+#if OLED_KEYS_COUNT > 3
 		else if(event.code == OLED_KEY4_CODE) nKey = 3;
 #endif
-#if OLED_KEY_COUNT > 4
+#if OLED_KEYS_COUNT > 4
 		else if(event.code == OLED_KEY5_CODE) nKey = 4;
 #endif
-#if OLED_KEY_COUNT > 5
+#if OLED_KEYS_COUNT > 5
 		else if(event.code == OLED_KEY6_CODE) nKey = 5;
 #endif
-#if OLED_KEY_COUNT > 6
+#if OLED_KEYS_COUNT > 6
 		else if(event.code == OLED_KEY7_CODE) nKey = 6;
 #endif
-#if OLED_KEY_COUNT > 7
+#if OLED_KEYS_COUNT > 7
 		else if(event.code == OLED_KEY8_CODE) nKey = 7;
 #endif
 		else continue;
