@@ -37,12 +37,12 @@
 #include <stdint.h>
 #include <oled_ssd1306_ioctl.h>
 
-#include "OLEDConfig.h"
+#include <lbk/LBKConfig.h>
 #include <lbk/LBView.h>
 
 LBView::LBView(const char *name)
 	: BHandler(name),
-	  fFD(-1), fTimestamp(0),
+	  fDev(NULL), fTimestamp(0),
 	  fActivated(false),
 	  fFontSize(12),
 	  fKeyState(0),
@@ -72,25 +72,10 @@ LBView::FillRect(BRect r, pattern p)
 		return;
 	}
 
-	_lbk_ssd1306_clear_t data;
-
 	r &= LBView::Bounds();
-	if (fFD < 0 || fActivated == false || r.IsValid() == false) return;
+	if (fDev == NULL || fActivated == false || r.IsValid() == false) return;
 
-	data.x = (uint8_t)r.left;
-	data.y = (uint8_t)r.top;
-	data.w = (uint8_t)(r.Width() + 1);
-	data.h = (uint8_t)(r.Height() + 1);
-	bzero(data.patterns, sizeof(data.patterns));
-	for(int k = 0; k < 8; k++)
-	{
-		if(p.data[k] == 0x00 || p.data[k] == 0xff)
-			data.patterns[k] = p.data[k];
-		else for(int m = 0; m < 8; m++)
-			data.patterns[k] |= ((p.data[m] >> (7 - k + m)) & (0x01 << m));
-	}
-
-	if(ioctl(fFD, LBK_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
+	fDev->FillRect(r, p, false, fTimestamp);
 }
 
 
@@ -107,7 +92,7 @@ LBView::StrokeRect(BRect rect, bool erase)
 	BRect r;
 	pattern p = (erase ? B_SOLID_LOW : B_SOLID_HIGH);
 
-	if (fFD < 0 || fActivated == false || r.IsValid() == false) return;
+	if (fDev == NULL || fActivated == false || r.IsValid() == false) return;
 
 	r = rect;
 	r.bottom = r.top;
@@ -142,20 +127,9 @@ LBView::DrawString(const char *str, BPoint pt, bool erase)
 		return;
 	}
 
-	_lbk_ssd1306_show_t data;
+	if(fDev == NULL || fActivated == false) return;
 
-	if(str == NULL || *str == 0) return;
-	if(fFD < 0 || fActivated == false) return;
-	if(pt.x < 0 || pt.y < 0) return;
-
-	bzero(&data, sizeof(data));
-	data.x = (uint8_t)pt.x;
-	data.y = (uint8_t)pt.y;
-	data.size = fFontSize;
-	strncpy(data.str, str, sizeof(data.str));
-	data.erase_mode = erase ? 1 : 0;
-
-	if(ioctl(fFD, LBK_SSD1306_IOC_SHOW, &data) == 0) fTimestamp = data.ts;
+	fDev->DrawString(str, pt, fFontSize, erase, fTimestamp);
 }
 
 
@@ -169,25 +143,25 @@ LBView::DrawIcon(const lbk_icon *icon, BPoint pt)
 		return;
 	}
 
-	_lbk_ssd1306_clear_t data;
-
-	if(fFD < 0 || fActivated == false) return;
+	if(fDev == NULL || fActivated == false) return;
 	if(icon == NULL || icon->type > 2 /*LBK_ICON_32x32*/) return;
-	if(pt.x < 0 || pt.y < 0) return;
 
-	data.w = 8;
-	data.h = 8;
+	BRect r;
+	pattern p;
 	for(int k = 0; k < (1 << icon->type); k++) // y
 	{
 		for(int m = 0; m < (1 << icon->type); m++) // x
 		{
-			data.x = (m << 3) + (uint8_t)pt.x;
-			data.y = (k << 3) + (uint8_t)pt.y;
-			memcpy(data.patterns,
-			       icon->data + ((k * (1 << icon->type) + m) << 3),
-			       sizeof(data.patterns));
+			r.left = pt.x + (m << 3);
+			r.top = pt.y + (k << 3);
+			r.right = r.left + 7;
+			r.bottom = r.top + 7;
 
-			if(ioctl(fFD, LBK_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
+			memcpy(p.data,
+			       icon->data + ((k * (1 << icon->type) + m) << 3),
+			       sizeof(p.data));
+
+			fDev->FillRect(r, p, true, fTimestamp);
 		}
 	}
 }
@@ -220,8 +194,8 @@ LBView::SetFontSize(uint8 size)
 		return;
 	}
 
-	if(!(size == 12 || size == 14 || size == 16 || size == 24 || size == 32)) return;
-	fFontSize = size;
+	if(fDev == NULL) return;
+	if(fDev->IsFontHeightSupported(size)) fFontSize = size;
 }
 
 
@@ -231,16 +205,11 @@ LBView::StringWidth(const char *str) const
 	if(fMasterView != NULL)
 		return fMasterView->StringWidth(str);
 
-	_lbk_ssd1306_string_width_t data;
+	if(fDev == NULL || str == NULL || *str == 0) return 0;
 
-	if (fFD < 0 || str == NULL || *str == 0) return 0;
-
-	bzero(&data, sizeof(data));
-	data.w = data.h = 0;
-	data.size = fFontSize;
-	strncpy(data.str, str, sizeof(data.str));
-
-	return((ioctl(fFD, LBK_SSD1306_IOC_STRING_WIDTH, &data) == 0) ? data.w : 0);
+	uint16 w = 0;
+	fDev->MeasureStringWidth(str, fFontSize, w);
+	return w;
 }
 
 
@@ -254,21 +223,19 @@ LBView::EnableUpdate(bool state)
 		return;
 	}
 
-	uint8_t st = state;
-
-	if(fFD < 0 || fActivated == false) return;
+	if(fDev == NULL || fActivated == false) return;
 
 	if(state == false)
 	{
 		if(fUpdateCount == 0)
-			if(ioctl(fFD, LBK_SSD1306_IOC_UPDATE, &st) != 0) return;
+			if(fDev->DisableUpdate() != B_OK) return;
 
 		fUpdateCount++;
 	}
 	else if(fUpdateCount > 0)
 	{
 		if(fUpdateCount == 1)
-			if(ioctl(fFD, LBK_SSD1306_IOC_UPDATE, &st) != 0) return;
+			if(fDev->EnableUpdate() != B_OK) return;
 
 		fUpdateCount--;
 	}
@@ -281,14 +248,11 @@ LBView::IsNeededToRegen() const
 	if(fMasterView != NULL)
 		return fMasterView->IsNeededToRegen();
 
-	_lbk_ssd1306_get_ts_t data;
+	if(fDev == NULL || fActivated == false) return false;
 
-	if(fFD < 0 || fActivated == false) return false;
-
-	data.last_action = 0;
-	if(ioctl(fFD, LBK_SSD1306_IOC_TIMESTAMP, &data) != 0) return false;
-
-	return(data.ts > fTimestamp);
+	bigtime_t ts = 0;
+	fDev->GetTimestamp(ts);
+	return(ts > fTimestamp);
 }
 
 
@@ -298,13 +262,11 @@ LBView::GetPowerState() const
 	if(fMasterView != NULL)
 		return fMasterView->GetPowerState();
 
-	_lbk_ssd1306_power_t data;
+	if(fDev == NULL) return false;
 
-	if (fFD < 0) return false;
-
-	data.state = 2;
-	if(ioctl(fFD, LBK_SSD1306_IOC_POWER, &data) != 0) return false;
-	return(data.state == 1);
+	bool state = false;
+	fDev->GetPowerState(state);
+	return state;
 }
 
 
@@ -318,19 +280,23 @@ LBView::SetPowerState(bool state)
 		return;
 	}
 
-	_lbk_ssd1306_power_t data;
-
-	if (fFD < 0 || fActivated == false) return;
-
-	data.state = (state ? 1 : 0);
-	if(ioctl(fFD, LBK_SSD1306_IOC_POWER, &data) == 0) fTimestamp = data.ts;
+	if(fDev == NULL || fActivated == false) return;
+	fDev->SetPowerState(state, fTimestamp);
 }
 
 
 BRect
 LBView::Bounds() const
 {
-	return BRect(0, 0, OLED_SCREEN_WIDTH - 1, OLED_SCREEN_HEIGHT - 1);
+	BRect r(0, 0, 0, 0);
+
+	if(fDev != NULL)
+	{
+		r.right = (float)fDev->ScreenWidth() - 1;
+		r.bottom = (float)fDev->ScreenHeight() - 1;
+	}
+
+	return r;
 }
 
 
@@ -387,7 +353,7 @@ LBView::MessageReceived(BMessage *msg)
 			}
 			if(msg->FindInt8("key", (int8*)&key) != B_OK) break;
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
-			if(key >= OLED_BUTTONS_NUM || clicks == 0) break;
+			if(key >= CountKeys() || clicks == 0) break;
 
 			fKeyState |= (0x01 << key);
 			if(msg->what == B_KEY_DOWN)
@@ -667,6 +633,7 @@ LBView::StandIn()
 	if(fMasterView == NULL || fMasterView->fStandingInView == this) return;
 	fMasterView->fStandingInView = this;
 	fMasterView->InvalidRect();
+	fMasterView->fKeyState = 0; // reset the key state of master view too !
 	fKeyState = 0;
 	fStandInTimestamp = real_time_clock_usecs();
 }
@@ -687,5 +654,18 @@ LBView::GetStandInTime() const
 {
 	if(fStandInTimestamp < (bigtime_t)0) return -1;
 	return(real_time_clock_usecs() - fStandInTimestamp);
+}
+
+
+uint8
+LBView::CountKeys() const
+{
+	// TODO & FIXME: I need to figure out how it should deal ...
+	uint8 n = 3;
+
+	if(fDev != NULL)
+		fDev->GetCountOfKeys(n);
+
+	return n;
 }
 

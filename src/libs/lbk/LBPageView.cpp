@@ -28,8 +28,8 @@
  *
  * --------------------------------------------------------------------------*/
 
-#include "OLEDConfig.h"
-#include <lbk/LBApp.h>
+#include <lbk/LBKConfig.h>
+#include <lbk/LBApplication.h>
 #include <lbk/LBPageView.h>
 
 #define ICON_IS_16x16(id)	((id) > LBK_ICON_ID_16x16_BEGIN && (id) < LBK_ICON_ID_16x16_END)
@@ -52,7 +52,7 @@ LBPageView::~LBPageView()
 void
 LBPageView::ShowNavButton(uint8 idBtn)
 {
-	if(idBtn >= OLED_BUTTONS_NUM) return;
+	if(idBtn >= CountKeys()) return;
 
 	if((fNavButtonsState & (0x01 << idBtn)) == 0)
 	{
@@ -70,7 +70,7 @@ LBPageView::ShowNavButton(uint8 idBtn)
 void
 LBPageView::HideNavButton(uint8 idBtn)
 {
-	if(idBtn >= OLED_BUTTONS_NUM) return;
+	if(idBtn >= CountKeys()) return;
 
 	if((fNavButtonsState & (0x01 << idBtn)) != 0)
 	{
@@ -88,7 +88,7 @@ LBPageView::HideNavButton(uint8 idBtn)
 bool
 LBPageView::IsNavButtonHidden(uint8 idBtn) const
 {
-	if(idBtn >= OLED_BUTTONS_NUM) return false;
+	if(idBtn >= CountKeys()) return false;
 
 	return((fNavButtonsState & (0x01 << idBtn)) == 0);
 }
@@ -97,7 +97,7 @@ LBPageView::IsNavButtonHidden(uint8 idBtn) const
 void
 LBPageView::SetNavButtonIcon(int32 idBtn, lbk_icon_id idIcon)
 {
-	if(idBtn >= OLED_BUTTONS_NUM) return;
+	if(idBtn >= CountKeys()) return;
 	if(!ICON_IS_VALID(idIcon)) return;
 
 	if(fButtonIcons[idBtn] != idIcon)
@@ -125,7 +125,7 @@ LBPageView::GetNavButtonIcon(int32 idBtn) const
 void
 LBPageView::DrawNavButtonIcon(lbk_icon_id idIcon, BPoint location)
 {
-	// for OLED_BUTTONS_NUM <= 2, so on
+	// for CountKeys() <= 2, so on
 	DrawIcon(idIcon, location);
 }
 
@@ -145,13 +145,14 @@ LBPageView::Bounds() const
 void
 LBPageView::Draw(BRect rect)
 {
-	if(fNavButtonsState == 0) return;
+	uint8 nKeys = CountKeys();
+	if(nKeys == 0 || fNavButtonsState == 0) return;
 
 	BRect r = LBView::Bounds();
-	r.right = r.Width() / (float)OLED_BUTTONS_NUM - 1.f;
+	r.right = r.Width() / (float)nKeys - 1.f;
 	r.top = r.bottom - 15;
 
-	for(int k = 0; k < OLED_BUTTONS_NUM; k++)
+	for(int k = 0; k < nKeys; k++)
 	{
 		if(IsNavButtonHidden(k) == false && r.Intersects(rect))
 		{
@@ -199,7 +200,7 @@ LBPageView::KeyUp(uint8 key, uint8 clicks)
 void
 LBPageView::SwitchToNextPage()
 {
-	LBApp *app = (Looper() ? cast_as(Looper(), LBApp) : NULL);
+	LBApplication *app = (Looper() ? cast_as(Looper(), LBApplication) : NULL);
 	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarRightPage()) return;
@@ -231,7 +232,7 @@ LBPageView::SwitchToNextPage()
 void
 LBPageView::SwitchToPrevPage()
 {
-	LBApp *app = (Looper() ? cast_as(Looper(), LBApp) : NULL);
+	LBApplication *app = (Looper() ? cast_as(Looper(), LBApplication) : NULL);
 	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarLeftPage()) return;
@@ -269,7 +270,7 @@ LBPageView::IsFarLeftPage() const
 		return(view == NULL ? false : view->IsFarLeftPage());
 	}
 
-	LBApp *app = (Looper() ? cast_as(Looper(), LBApp) : NULL);
+	LBApplication *app = (Looper() ? cast_as(Looper(), LBApplication) : NULL);
 	if(app == NULL) return false;
 
 	int32 count = app->CountPageViews(true);
@@ -289,7 +290,7 @@ LBPageView::IsFarRightPage() const
 		return(view == NULL ? false : view->IsFarRightPage());
 	}
 
-	LBApp *app = (Looper() ? cast_as(Looper(), LBApp) : NULL);
+	LBApplication *app = (Looper() ? cast_as(Looper(), LBApplication) : NULL);
 	if(app == NULL) return false;
 
 	int32 count = app->CountPageViews(false);

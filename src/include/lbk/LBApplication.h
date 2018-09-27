@@ -37,7 +37,7 @@
 
 class LBApplication : public BLooper {
 public:
-	LBApplication(int oled_fd, int input_fd);
+	LBApplication(const BList *cfg);
 	virtual ~LBApplication();
 
 	bool		AddPageView(LBView *view, bool left_side = true);
@@ -59,9 +59,10 @@ public:
 
 	virtual void	MessageReceived(BMessage *msg);
 
+	uint8		CountKeys(int32 indexPanel) const;
+
 private:
-	int fOLEDFD;
-	int fInputFD;
+	BList fAddOnsList;
 	int fPipes[2];
 	bigtime_t fPulseRate;
 
@@ -71,6 +72,8 @@ private:
 
 	BList fLeftPageViews;
 	BList fRightPageViews;
+
+	void		InitPanelDevice(const char*);
 };
 
 #endif /* __cplusplus */
