@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,47 +23,47 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDMenuItem.h
+ * File: LBMenuItem.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_MENU_ITEM_H__
-#define __OLED_MENU_ITEM_H__
+#ifndef __LBK_MENU_ITEM_H__
+#define __LBK_MENU_ITEM_H__
 
 #include <be/Be.h>
-#include <OLEDIconDefs.h>
+#include <lbk/LBIconDefs.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class OLEDMenuView;
+class LBMenuView;
 
-class OLEDMenuItem : public BInvoker {
+class LBMenuItem : public BInvoker {
 public:
-	OLEDMenuItem(const char *label,
-		     BMessage *message,
-		     oled_icon_id idIcon);
-	virtual ~OLEDMenuItem();
+	LBMenuItem(const char *label,
+		   BMessage *message,
+		   lbk_icon_id idIcon);
+	virtual ~LBMenuItem();
 
 	const char*	Label() const;
 	void		SetLabel(const char *label);
 
-	oled_icon_id	Icon() const;
-	void		SetIcon(oled_icon_id idIcon);
+	lbk_icon_id	Icon() const;
+	void		SetIcon(lbk_icon_id idIcon);
 
 	bool		IsHidden() const;
 
 private:
-	friend class OLEDMenuView;
+	friend class LBMenuView;
 
 	char *fLabel;
-	oled_icon_id fIcon;
+	lbk_icon_id fIcon;
 	bool fHidden;
 
-	OLEDMenuView *fMenuView;
+	LBMenuView *fMenuView;
 };
 
 #endif /* __cplusplus */
 
-#endif /* __OLED_MENU_ITEM_H__ */
+#endif /* __LBK_MENU_ITEM_H__ */
 

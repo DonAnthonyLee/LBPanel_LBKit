@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,68 +23,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDIconDefs.h
+ * File: LBKit.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_ICON_DEFS_H__
-#define __OLED_ICON_DEFS_H__
+#ifndef __LBK_APP_KIT_H__
+#define __LBK_APP_KIT_H__
 
-#include <be/Be.h>
+#include <lbk/LBLBIconDefs.h>
+#include <lbk/LBView.h>
+#include <lbk/LBPageView.h>
+#include <lbk/LBApp.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <lbk/LBAlertView.h>
+#include <lbk/LBListItem.h>
+#include <lbk/LBListView.h>
+#include <lbk/LBMenuItem.h>
+#include <lbk/LBMenuView.h>
 
-enum {
-	OLED_ICON_8x8 = 0,
-	OLED_ICON_16x16,
-	OLED_ICON_32x32,
-};
-
-typedef struct {
-	uint8	type; 
-	uint8	data[128];
-} oled_icon;
-
-typedef enum {
-	/* 8x8 */
-	OLED_ICON_ID_8x8_BEGIN = 0x00,
-	OLED_ICON_FOLDER,
-	OLED_ICON_PLAIN_FILE,
-	OLED_ICON_UNKNOWN_FILE,
-	OLED_ICON_ID_8x8_END,
-
-	/* 16x16 */
-	OLED_ICON_ID_16x16_BEGIN = 0x40,
-	OLED_ICON_OK,
-	OLED_ICON_YES,
-	OLED_ICON_NO,
-	OLED_ICON_HOME,
-	OLED_ICON_UP,
-	OLED_ICON_DOWN,
-	OLED_ICON_LEFT,
-	OLED_ICON_RIGHT,
-	OLED_ICON_ID_16x16_END,
-
-	/* 32x32 */
-	OLED_ICON_ID_32x32_BEGIN = 0x80,
-	OLED_ICON_WARNING,
-	OLED_ICON_REBOOT,
-	OLED_ICON_POWER_OFF,
-	OLED_ICON_SCREEN,
-	OLED_ICON_ID_32x32_END,
-
-	OLED_ICON_NONE = 0xff,
-} oled_icon_id;
-
-
-const oled_icon* oled_get_icon_data(oled_icon_id id_icon);
-
-#ifdef __cplusplus
-} // extern "C"
-#endif /* __cplusplus */
-
-#endif /* __OLED_ICON_DEFS_H__ */
+#endif /* __LBK_APP_KIT_H__ */
 

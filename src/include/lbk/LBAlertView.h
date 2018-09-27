@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,25 +23,54 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDConfig.h
+ * File: LBAlertView.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_CONFIG_H__
-#define __OLED_CONFIG_H__
+#ifndef __LBK_ALERT_VIEW_H__
+#define __LBK_ALERT_VIEW_H__
 
-#define OLED_SCREEN_WIDTH	128
-#define OLED_SCREEN_HEIGHT	64
+#include <lbk/LBView.h>
 
-/* OLED_BUTTONS_NUM <= 8 */
-#define OLED_BUTTONS_NUM	3
+#ifdef __cplusplus /* Just for C++ */
 
-#define OLED_BUTTON1		105	/* KEY_LEFT */
-#define OLED_BUTTON2		102	/* KEY_HOME */
-#define OLED_BUTTON3		106	/* KEY_RIGHT */
+class LBAlertView : public LBView {
+public:
+	LBAlertView(const char *title,
+		    const char *text,
+		    lbk_icon_id button3_icon,
+		    lbk_icon_id button2_icon = LBK_ICON_NONE,
+		    lbk_icon_id button1_icon = LBK_ICON_NONE,
+		    alert_type type = B_INFO_ALERT);
+	virtual ~LBAlertView();
 
-#define OLED_BUTTON_INTERVAL	130000	/* 130ms */
+	/*
+	 * SetInvoker():
+	 * 	the "invoker" will be deleted automatically when new invoker set
+	 */
+	status_t	SetInvoker(BInvoker *invoker);
 
-#endif /* __OLED_CONFIG_H__ */
+	void		SetTitle(const char *title);
+	void		SetText(const char *text);
+	void		SetButtonIcon(int32 index, lbk_icon_id idIcon);
+	void		SetButtonAlignment(alignment align);
+
+	virtual void	Draw(BRect updateRect);
+	virtual void	KeyDown(uint8 key, uint8 clicks);
+	virtual void	KeyUp(uint8 key, uint8 clicks);
+
+	virtual void	DrawButtonIcon(lbk_icon_id idIcon, BPoint location);
+
+private:
+	BString fTitle;
+	BString fText;
+	lbk_icon_id fIcons[4];
+	uint8 fButtonMask;
+	BInvoker *fInvoker;
+};
+
+#endif /* __cplusplus */
+
+#endif /* __LBK_ALERT_VIEW_H__ */
 

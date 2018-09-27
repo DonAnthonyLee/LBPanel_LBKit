@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,34 +23,34 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDPageView.cpp
+ * File: LBPageView.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
 #include "OLEDConfig.h"
-#include <OLEDApp.h>
-#include <OLEDPageView.h>
+#include <lbk/LBApp.h>
+#include <lbk/LBPageView.h>
 
-#define ICON_IS_16x16(id)	((id) > OLED_ICON_ID_16x16_BEGIN && (id) < OLED_ICON_ID_16x16_END)
-#define ICON_IS_VALID(id)	((id) == OLED_ICON_NONE || ICON_IS_16x16(id))
+#define ICON_IS_16x16(id)	((id) > LBK_ICON_ID_16x16_BEGIN && (id) < LBK_ICON_ID_16x16_END)
+#define ICON_IS_VALID(id)	((id) == LBK_ICON_NONE || ICON_IS_16x16(id))
 
 
-OLEDPageView::OLEDPageView(const char *name)
-	: OLEDView(name),
+LBPageView::LBPageView(const char *name)
+	: LBView(name),
 	  fNavButtonsState(0)
 {
-	memset(fButtonIcons, OLED_ICON_NONE, sizeof(fButtonIcons));
+	memset(fButtonIcons, LBK_ICON_NONE, sizeof(fButtonIcons));
 }
 
 
-OLEDPageView::~OLEDPageView()
+LBPageView::~LBPageView()
 {
 }
 
 
 void
-OLEDPageView::ShowNavButton(uint8 idBtn)
+LBPageView::ShowNavButton(uint8 idBtn)
 {
 	if(idBtn >= OLED_BUTTONS_NUM) return;
 
@@ -59,7 +59,7 @@ OLEDPageView::ShowNavButton(uint8 idBtn)
 		fNavButtonsState |= (0x01 << idBtn);
 
 		// It's unnesssary to draw single icon, here we draw all
-		BRect r = OLEDView::Bounds();
+		BRect r = LBView::Bounds();
 		r.top = r.bottom - 15;
 
 		InvalidRect(r);
@@ -68,7 +68,7 @@ OLEDPageView::ShowNavButton(uint8 idBtn)
 
 
 void
-OLEDPageView::HideNavButton(uint8 idBtn)
+LBPageView::HideNavButton(uint8 idBtn)
 {
 	if(idBtn >= OLED_BUTTONS_NUM) return;
 
@@ -77,7 +77,7 @@ OLEDPageView::HideNavButton(uint8 idBtn)
 		fNavButtonsState &= ~(0x01 << idBtn);
 
 		// It's unnesssary to draw single icon, here we draw all
-		BRect r = OLEDView::Bounds();
+		BRect r = LBView::Bounds();
 		r.top = r.bottom - 15;
 
 		InvalidRect(r);
@@ -86,7 +86,7 @@ OLEDPageView::HideNavButton(uint8 idBtn)
 
 
 bool
-OLEDPageView::IsNavButtonHidden(uint8 idBtn) const
+LBPageView::IsNavButtonHidden(uint8 idBtn) const
 {
 	if(idBtn >= OLED_BUTTONS_NUM) return false;
 
@@ -95,7 +95,7 @@ OLEDPageView::IsNavButtonHidden(uint8 idBtn) const
 
 
 void
-OLEDPageView::SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon)
+LBPageView::SetNavButtonIcon(int32 idBtn, lbk_icon_id idIcon)
 {
 	if(idBtn >= OLED_BUTTONS_NUM) return;
 	if(!ICON_IS_VALID(idIcon)) return;
@@ -106,7 +106,7 @@ OLEDPageView::SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon)
 		if(IsNavButtonHidden(idBtn) == false)
 		{
 			// It's unnesssary to draw single icon, here we draw all
-			BRect r = OLEDView::Bounds();
+			BRect r = LBView::Bounds();
 			r.top = r.bottom - 15;
 
 			InvalidRect(r);
@@ -115,15 +115,15 @@ OLEDPageView::SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon)
 }
 
 
-oled_icon_id
-OLEDPageView::GetNavButtonIcon(int32 idBtn) const
+lbk_icon_id
+LBPageView::GetNavButtonIcon(int32 idBtn) const
 {
-	return(IsNavButtonHidden(idBtn) ? OLED_ICON_NONE : fButtonIcons[idBtn]);
+	return(IsNavButtonHidden(idBtn) ? LBK_ICON_NONE : fButtonIcons[idBtn]);
 }
 
 
 void
-OLEDPageView::DrawNavButtonIcon(oled_icon_id idIcon, BPoint location)
+LBPageView::DrawNavButtonIcon(lbk_icon_id idIcon, BPoint location)
 {
 	// for OLED_BUTTONS_NUM <= 2, so on
 	DrawIcon(idIcon, location);
@@ -131,9 +131,9 @@ OLEDPageView::DrawNavButtonIcon(oled_icon_id idIcon, BPoint location)
 
 
 BRect
-OLEDPageView::Bounds() const
+LBPageView::Bounds() const
 {
-	BRect r = OLEDView::Bounds();
+	BRect r = LBView::Bounds();
 
 	if(fNavButtonsState != 0)
 		r.bottom -= 16;
@@ -143,11 +143,11 @@ OLEDPageView::Bounds() const
 
 
 void
-OLEDPageView::Draw(BRect rect)
+LBPageView::Draw(BRect rect)
 {
 	if(fNavButtonsState == 0) return;
 
-	BRect r = OLEDView::Bounds();
+	BRect r = LBView::Bounds();
 	r.right = r.Width() / (float)OLED_BUTTONS_NUM - 1.f;
 	r.top = r.bottom - 15;
 
@@ -169,12 +169,12 @@ OLEDPageView::Draw(BRect rect)
 
 
 void
-OLEDPageView::KeyDown(uint8 key, uint8 clicks)
+LBPageView::KeyDown(uint8 key, uint8 clicks)
 {
 	if(clicks == 1 && IsNavButtonHidden(key) == false)
 	{
 		// It's unnesssary to draw single icon, here we draw all
-		BRect r = OLEDView::Bounds();
+		BRect r = LBView::Bounds();
 		r.top = r.bottom - 15;
 
 		InvalidRect(r);
@@ -183,12 +183,12 @@ OLEDPageView::KeyDown(uint8 key, uint8 clicks)
 
 
 void
-OLEDPageView::KeyUp(uint8 key, uint8 clicks)
+LBPageView::KeyUp(uint8 key, uint8 clicks)
 {
 	if(IsNavButtonHidden(key) == false)
 	{
 		// It's unnesssary to draw single icon, here we draw all
-		BRect r = OLEDView::Bounds();
+		BRect r = LBView::Bounds();
 		r.top = r.bottom - 15;
 
 		InvalidRect(r);
@@ -197,9 +197,9 @@ OLEDPageView::KeyUp(uint8 key, uint8 clicks)
 
 
 void
-OLEDPageView::SwitchToNextPage()
+LBPageView::SwitchToNextPage()
 {
-	OLEDApp *app = (Looper() ? cast_as(Looper(), OLEDApp) : NULL);
+	LBApp *app = (Looper() ? cast_as(Looper(), LBApp) : NULL);
 	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarRightPage()) return;
@@ -208,7 +208,7 @@ OLEDPageView::SwitchToNextPage()
 	int32 count = app->CountPageViews(true);
 	for(int32 k = count - 1; k >= 0; k--)
 	{
-		OLEDView *view = app->PageViewAt(k, true);
+		LBView *view = app->PageViewAt(k, true);
 		if(view != this) continue;
 		if(k > 0)
 			app->ActivatePageView(k - 1, true);
@@ -221,7 +221,7 @@ OLEDPageView::SwitchToNextPage()
 	count = app->CountPageViews(false);
 	for(int32 k = 0; k < count; k++)
 	{
-		OLEDView *view = app->PageViewAt(k, false);
+		LBView *view = app->PageViewAt(k, false);
 		if(view != this) continue;
 		app->ActivatePageView(k + 1, false);
 	}
@@ -229,9 +229,9 @@ OLEDPageView::SwitchToNextPage()
 
 
 void
-OLEDPageView::SwitchToPrevPage()
+LBPageView::SwitchToPrevPage()
 {
-	OLEDApp *app = (Looper() ? cast_as(Looper(), OLEDApp) : NULL);
+	LBApp *app = (Looper() ? cast_as(Looper(), LBApp) : NULL);
 	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarLeftPage()) return;
@@ -240,7 +240,7 @@ OLEDPageView::SwitchToPrevPage()
 	int32 count = app->CountPageViews(false);
 	for(int32 k = count - 1; k >= 0; k--)
 	{
-		OLEDView *view = app->PageViewAt(k, false);
+		LBView *view = app->PageViewAt(k, false);
 		if(view != this) continue;
 		if(k > 0)
 			app->ActivatePageView(k - 1, false);
@@ -253,7 +253,7 @@ OLEDPageView::SwitchToPrevPage()
 	count = app->CountPageViews(true);
 	for(int32 k = 0; k < count; k++)
 	{
-		OLEDView *view = app->PageViewAt(k, true);
+		LBView *view = app->PageViewAt(k, true);
 		if(view != this) continue;
 		app->ActivatePageView(k + 1, true);
 	}
@@ -261,15 +261,15 @@ OLEDPageView::SwitchToPrevPage()
 
 
 bool
-OLEDPageView::IsFarLeftPage() const
+LBPageView::IsFarLeftPage() const
 {
 	if(MasterView() != NULL)
 	{
-		OLEDPageView *view = cast_as(TopView(), OLEDPageView);
+		LBPageView *view = cast_as(TopView(), LBPageView);
 		return(view == NULL ? false : view->IsFarLeftPage());
 	}
 
-	OLEDApp *app = (Looper() ? cast_as(Looper(), OLEDApp) : NULL);
+	LBApp *app = (Looper() ? cast_as(Looper(), LBApp) : NULL);
 	if(app == NULL) return false;
 
 	int32 count = app->CountPageViews(true);
@@ -281,15 +281,15 @@ OLEDPageView::IsFarLeftPage() const
 
 
 bool
-OLEDPageView::IsFarRightPage() const
+LBPageView::IsFarRightPage() const
 {
 	if(MasterView() != NULL)
 	{
-		OLEDPageView *view = cast_as(TopView(), OLEDPageView);
+		LBPageView *view = cast_as(TopView(), LBPageView);
 		return(view == NULL ? false : view->IsFarRightPage());
 	}
 
-	OLEDApp *app = (Looper() ? cast_as(Looper(), OLEDApp) : NULL);
+	LBApp *app = (Looper() ? cast_as(Looper(), LBApp) : NULL);
 	if(app == NULL) return false;
 
 	int32 count = app->CountPageViews(false);

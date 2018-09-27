@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,79 +23,68 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDMenuItem.cpp
+ * File: LBIconDefs.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#include <string.h>
-#include <OLEDMenuItem.h>
-#include <OLEDMenuView.h>
+#ifndef __LBK_ICON_DEFS_H__
+#define __LBK_ICON_DEFS_H__
 
-#define ICON_IS_32x32(id)	((id) > OLED_ICON_ID_32x32_BEGIN && (id) < OLED_ICON_ID_32x32_END)
+#include <be/Be.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-OLEDMenuItem::OLEDMenuItem(const char *label,
-			   BMessage *message,
-			   oled_icon_id idIcon)
-	: BInvoker(message, NULL),
-	  fLabel(NULL),
-	  fIcon(OLED_ICON_NONE),
-	  fHidden(false),
-	  fMenuView(NULL)
-{
-	SetLabel(label);
-	SetIcon(idIcon);
-}
+enum {
+	LBK_ICON_8x8 = 0,
+	LBK_ICON_16x16,
+	LBK_ICON_32x32,
+};
 
+typedef struct {
+	uint8	type; 
+	uint8	data[128];
+} lbk_icon;
 
-OLEDMenuItem::~OLEDMenuItem()
-{
-	/*
-	 * WARNING: NO GUARANTEE for MenuView !!!
-	 * 	item should be removed from MenuView before deleting
-	 */
-	if(fLabel != NULL) free(fLabel);
-}
+typedef enum {
+	/* 8x8 */
+	LBK_ICON_ID_8x8_BEGIN = 0x00,
+	LBK_ICON_FOLDER,
+	LBK_ICON_PLAIN_FILE,
+	LBK_ICON_UNKNOWN_FILE,
+	LBK_ICON_ID_8x8_END,
 
+	/* 16x16 */
+	LBK_ICON_ID_16x16_BEGIN = 0x40,
+	LBK_ICON_OK,
+	LBK_ICON_YES,
+	LBK_ICON_NO,
+	LBK_ICON_HOME,
+	LBK_ICON_UP,
+	LBK_ICON_DOWN,
+	LBK_ICON_LEFT,
+	LBK_ICON_RIGHT,
+	LBK_ICON_ID_16x16_END,
 
-const char*
-OLEDMenuItem::Label() const
-{
-	return fLabel;
-}
+	/* 32x32 */
+	LBK_ICON_ID_32x32_BEGIN = 0x80,
+	LBK_ICON_WARNING,
+	LBK_ICON_REBOOT,
+	LBK_ICON_POWER_OFF,
+	LBK_ICON_SCREEN,
+	LBK_ICON_ID_32x32_END,
 
-
-void
-OLEDMenuItem::SetLabel(const char *label)
-{
-	if(fLabel != NULL) free(fLabel);
-	fLabel = (label != NULL ? strdup(label) : NULL);
-
-	// NO REDRAW
-}
-
-
-oled_icon_id
-OLEDMenuItem::Icon() const
-{
-	return fIcon;
-}
+	LBK_ICON_NONE = 0xff,
+} lbk_icon_id;
 
 
-void
-OLEDMenuItem::SetIcon(oled_icon_id idIcon)
-{
-	// only 32x32
-	fIcon = (ICON_IS_32x32(idIcon) ? idIcon : OLED_ICON_NONE);
+const lbk_icon* lbk_get_icon_data(lbk_icon_id id_icon);
 
-	// NO REDRAW
-}
+#ifdef __cplusplus
+} // extern "C"
+#endif /* __cplusplus */
 
-
-bool
-OLEDMenuItem::IsHidden() const
-{
-	return fHidden;
-}
+#endif /* __LBK_ICON_DEFS_H__ */
 

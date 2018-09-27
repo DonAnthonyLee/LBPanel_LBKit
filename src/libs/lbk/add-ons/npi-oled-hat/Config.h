@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,54 +23,25 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDAlertView.h
- * Description:
+ * File: Config.h
+ * Description: Configuration for NanoPi OLED Hat
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_ALERT_VIEW_H__
-#define __OLED_ALERT_VIEW_H__
+#ifndef __NPI_OLED_HAT_CONFIG_H__
+#define __NPI_OLED_HAT_CONFIG_H__
 
-#include <OLEDView.h>
+#define OLED_SCREEN_WIDTH	128
+#define OLED_SCREEN_HEIGHT	64
 
-#ifdef __cplusplus /* Just for C++ */
+/* OLED_BUTTONS_NUM <= 8 */
+#define OLED_BUTTONS_NUM	3
 
-class OLEDAlertView : public OLEDView {
-public:
-	OLEDAlertView(const char *title,
-		      const char *text,
-		      oled_icon_id button3_icon,
-		      oled_icon_id button2_icon = OLED_ICON_NONE,
-		      oled_icon_id button1_icon = OLED_ICON_NONE,
-		      alert_type type = B_INFO_ALERT);
-	virtual ~OLEDAlertView();
+#define OLED_BUTTON1		105	/* KEY_LEFT */
+#define OLED_BUTTON2		102	/* KEY_HOME */
+#define OLED_BUTTON3		106	/* KEY_RIGHT */
 
-	/*
-	 * SetInvoker():
-	 * 	the "invoker" will be deleted automatically when new invoker set
-	 */
-	status_t	SetInvoker(BInvoker *invoker);
+#define OLED_BUTTON_INTERVAL	130000	/* 130ms */
 
-	void		SetTitle(const char *title);
-	void		SetText(const char *text);
-	void		SetButtonIcon(int32 index, oled_icon_id idIcon);
-	void		SetButtonAlignment(alignment align);
-
-	virtual void	Draw(BRect updateRect);
-	virtual void	KeyDown(uint8 key, uint8 clicks);
-	virtual void	KeyUp(uint8 key, uint8 clicks);
-
-	virtual void	DrawButtonIcon(oled_icon_id idIcon, BPoint location);
-
-private:
-	BString fTitle;
-	BString fText;
-	oled_icon_id fIcons[4];
-	uint8 fButtonMask;
-	BInvoker *fInvoker;
-};
-
-#endif /* __cplusplus */
-
-#endif /* __OLED_ALERT_VIEW_H__ */
+#endif /* __NPI_OLED_HAT_CONFIG_H__ */
 
