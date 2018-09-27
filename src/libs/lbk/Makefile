@@ -5,18 +5,18 @@ SINGLE_C_FILE_PROGRAMS =
 SINGLE_CXX_FILE_PROGRAMS =
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
 
-TARGET_1 = liboled_app.so
+TARGET_1 = liblbk.so
 TARGET_2 =
 TARGET_3 =
 
 OBJECTS_1 = \
-	OLEDView.o \
-	OLEDPageView.o \
-	OLEDApp.o \
-	OLEDIconData.o \
-	OLEDAlertView.o \
-	OLEDMenuItem.o \
-	OLEDMenuView.o
+	LBView.o \
+	LBPageView.o \
+	LBApp.o \
+	LBIconData.o \
+	LBAlertView.o \
+	LBMenuItem.o \
+	LBMenuView.o
 
 OBJECTS_2 =
 OBJECTS_3 =

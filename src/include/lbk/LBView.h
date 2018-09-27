@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,26 +23,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDView.h
+ * File: LBView.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_VIEW_H__
-#define __OLED_VIEW_H__
+#ifndef __LBK_VIEW_H__
+#define __LBK_VIEW_H__
 
 #include <be/Be.h>
 
-#include <OLEDIconDefs.h>
+#include <lbk/LBIconDefs.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class OLEDApp;
+class LBApp;
 
-class OLEDView : public BHandler {
+class LBView : public BHandler {
 public:
-	OLEDView(const char *name = NULL);
-	virtual ~OLEDView();
+	LBView(const char *name = NULL);
+	virtual ~LBView();
 
 	// Bounds(): A derived class usually draw within it.
 	virtual BRect	Bounds() const;
@@ -50,9 +50,9 @@ public:
 	void		FillRect(BRect r, pattern p = B_SOLID_HIGH);
 	void		StrokeRect(BRect r, bool erase = false);
 	void		DrawString(const char *string, BPoint location, bool erase = false);
-	void		DrawIcon(const oled_icon *icon, BPoint location);
+	void		DrawIcon(const lbk_icon *icon, BPoint location);
 
-	virtual void	DrawIcon(oled_icon_id idIcon, BPoint location);
+	virtual void	DrawIcon(lbk_icon_id idIcon, BPoint location);
 
 	uint8		FontSize() const;
 	void		SetFontSize(uint8 size);
@@ -79,20 +79,20 @@ public:
 	void		InvalidRect();
 	void		InvalidRect(BRect r);
 
-	bool		AddStickView(OLEDView *view);
-	bool		RemoveStickView(OLEDView *view);
-	OLEDView*	RemoveStickView(int32 index);
+	bool		AddStickView(LBView *view);
+	bool		RemoveStickView(LBView *view);
+	LBView*		RemoveStickView(int32 index);
 	int32		CountStickViews() const;
-	OLEDView*	StickViewAt(int32 index) const;
-	OLEDView*	FindStickView(const char *name) const;
+	LBView*		StickViewAt(int32 index) const;
+	LBView*		FindStickView(const char *name) const;
 
 	bool		IsStoodIn() const;
-	OLEDView*	StandingInView() const;
+	LBView*		StandingInView() const;
 	virtual void	StandIn();
 	virtual void	StandBack();
 
-	OLEDView*	MasterView() const;
-	OLEDView*	TopView() const;
+	LBView*		MasterView() const;
+	LBView*		TopView() const;
 
 	virtual void	Attached();
 	virtual void	Detached();
@@ -103,7 +103,7 @@ protected:
 	bigtime_t	GetStandInTime() const;
 
 private:
-	friend class OLEDApp;
+	friend class LBApp;
 
 	int fFD;
 	uint64 fTimestamp;
@@ -114,8 +114,8 @@ private:
 	uint32 fUpdateCount;
 	BRect fUpdateRect;
 
-	OLEDView *fMasterView;
-	OLEDView *fStandingInView;
+	LBView *fMasterView;
+	LBView *fStandingInView;
 	BList fStickViews;
 	bigtime_t fStandInTimestamp;
 
@@ -124,5 +124,5 @@ private:
 
 #endif /* __cplusplus */
 
-#endif /* __OLED_VIEW_H__ */
+#endif /* __LBK_VIEW_H__ */
 

@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,7 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDApp.cpp
+ * File: LBApp.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
@@ -35,18 +35,18 @@
 #include <sys/select.h>
 
 #include "OLEDConfig.h"
-#include <OLEDApp.h>
+#include <lbk/LBApp.h>
 
-//#define OLED_DEBUG
+//#define LBK_DEBUG
 
-#ifdef OLED_DEBUG
+#ifdef LBK_DEBUG
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
 #else
 #define DBGOUT(msg...)		do {} while (0)
 #endif
 
 
-OLEDApp::OLEDApp(int oled_fd, int input_fd)
+LBApp::LBApp(int oled_fd, int input_fd)
 	: BLooper(NULL, B_DISPLAY_PRIORITY),
 	  fOLEDFD(oled_fd), fInputFD(input_fd),
 	  fPulseRate(0),
@@ -59,11 +59,11 @@ OLEDApp::OLEDApp(int oled_fd, int input_fd)
 }
 
 
-OLEDApp::~OLEDApp()
+LBApp::~LBApp()
 {
-	OLEDView *view;
-	while((view = (OLEDView*)fLeftPageViews.RemoveItem(0)) != NULL) delete view;
-	while((view = (OLEDView*)fRightPageViews.RemoveItem(0)) != NULL) delete view;
+	LBView *view;
+	while((view = (LBView*)fLeftPageViews.RemoveItem(0)) != NULL) delete view;
+	while((view = (LBView*)fRightPageViews.RemoveItem(0)) != NULL) delete view;
 
 	if(fPipes[0] >= 0) close(fPipes[0]);
 	if(fPipes[1] >= 0) close(fPipes[1]);
@@ -71,7 +71,7 @@ OLEDApp::~OLEDApp()
 
 
 bool
-OLEDApp::AddPageView(OLEDView *view, bool left_side)
+LBApp::AddPageView(LBView *view, bool left_side)
 {
 	if(fOLEDFD < 0 || view == NULL || view->Looper() != NULL || view->MasterView() != NULL) return false;
 
@@ -88,7 +88,7 @@ OLEDApp::AddPageView(OLEDView *view, bool left_side)
 
 
 bool
-OLEDApp::RemovePageView(OLEDView *view)
+LBApp::RemovePageView(LBView *view)
 {
 	if(view == NULL || view->Looper() != this || view->MasterView() != NULL) return false;
 
@@ -108,33 +108,33 @@ OLEDApp::RemovePageView(OLEDView *view)
 }
 
 
-OLEDView*
-OLEDApp::RemovePageView(int32 index, bool left_side)
+LBView*
+LBApp::RemovePageView(int32 index, bool left_side)
 {
-	OLEDView *view = PageViewAt(index, left_side);
+	LBView *view = PageViewAt(index, left_side);
 
 	return(RemovePageView(view) ? view : NULL);
 }
 
 
-OLEDView*
-OLEDApp::PageViewAt(int32 index, bool left_side) const
+LBView*
+LBApp::PageViewAt(int32 index, bool left_side) const
 {
-	return(left_side ? (OLEDView*)fLeftPageViews.ItemAt(index) : (OLEDView*)fRightPageViews.ItemAt(index));
+	return(left_side ? (LBView*)fLeftPageViews.ItemAt(index) : (LBView*)fRightPageViews.ItemAt(index));
 }
 
 
 int32
-OLEDApp::CountPageViews(bool left_side) const
+LBApp::CountPageViews(bool left_side) const
 {
 	return(left_side ? fLeftPageViews.CountItems() : fRightPageViews.CountItems());
 }
 
 void
-OLEDApp::ActivatePageView(int32 index, bool left_side)
+LBApp::ActivatePageView(int32 index, bool left_side)
 {
-	OLEDView *newView = PageViewAt(index, left_side);
-	OLEDView *oldView = GetActivatedPageView();
+	LBView *newView = PageViewAt(index, left_side);
+	LBView *oldView = GetActivatedPageView();
 
 	if(oldView == newView || newView == NULL) return;
 
@@ -146,32 +146,32 @@ OLEDApp::ActivatePageView(int32 index, bool left_side)
 }
 
 
-OLEDView*
-OLEDApp::GetActivatedPageView() const
+LBView*
+LBApp::GetActivatedPageView() const
 {
 	// ignore NULL to make it compatible with old BeOS API
-	return(PreferredHandler() ? cast_as(PreferredHandler(), OLEDView) : NULL);
+	return(PreferredHandler() ? cast_as(PreferredHandler(), LBView) : NULL);
 }
 
 
 void
-OLEDApp::Go()
+LBApp::Go()
 {
 	if(IsRunning())
 	{
-		printf("[OLEDApp]: It's forbidden to run Go() more than ONE time !\n");
+		printf("[LBApp]: It's forbidden to run Go() more than ONE time !\n");
 		return;
 	}
 
 	if(fOLEDFD < 0 || fInputFD < 0)
 	{
-		printf("[OLEDApp]: Invalid file handle !\n");
+		printf("[LBApp]: Invalid file handle !\n");
 		return;
 	}
 
 	if(pipe(fPipes) < 0)
 	{
-		perror("[OLEDApp]: Unable to create pipe");
+		perror("[LBApp]: Unable to create pipe");
 		return;
 	}
 
@@ -199,7 +199,7 @@ OLEDApp::Go()
 		int status = select(max_c(fInputFD, fPipes[0]) + 1, &rset, NULL, NULL, &timeout);
 		if(status < 0)
 		{
-			perror("[OLEDApp]: Unable to get event from input device");
+			perror("[LBApp]: Unable to get event from input device");
 			break;
 		}
 
@@ -249,19 +249,19 @@ OLEDApp::Go()
 
 		if(n <= 0)
 		{
-			perror("[OLEDApp]: Unable to get event from input device");
+			perror("[LBApp]: Unable to get event from input device");
 			break;
 		}
 
 		if(n != sizeof(event))
 		{
-			printf("[OLEDApp]: Unable to process input event !\n");
+			printf("[LBApp]: Unable to process input event !\n");
 			continue;
 		}
 
 		if(event.type != EV_KEY)
 		{
-			DBGOUT("[OLEDAPP]: event.type(%u) != EV_KEY.\n", event.type);
+			DBGOUT("[LBApp]: event.type(%u) != EV_KEY.\n", event.type);
 			continue;
 		}
 
@@ -281,7 +281,7 @@ OLEDApp::Go()
 
 
 void
-OLEDApp::MessageReceived(BMessage *msg)
+LBApp::MessageReceived(BMessage *msg)
 {
 	int32 key;
 	bigtime_t when;
@@ -303,19 +303,19 @@ OLEDApp::MessageReceived(BMessage *msg)
 			else if(key == OLED_BUTTON3) nKey = 2;
 #endif
 #if OLED_BUTTONS_NUM > 3
-			else if(key == OLED_BUTTON4) nKey = 3;
+			else if(key == LBK_BUTTON4) nKey = 3;
 #endif
 #if OLED_BUTTONS_NUM > 4
-			else if(key == OLED_BUTTON5) nKey = 4;
+			else if(key == LBK_BUTTON5) nKey = 4;
 #endif
 #if OLED_BUTTONS_NUM > 5
-			else if(key == OLED_BUTTON6) nKey = 5;
+			else if(key == LBK_BUTTON6) nKey = 5;
 #endif
 #if OLED_BUTTONS_NUM > 6
-			else if(key == OLED_BUTTON7) nKey = 6;
+			else if(key == LBK_BUTTON7) nKey = 6;
 #endif
 #if OLED_BUTTONS_NUM > 7
-			else if(key == OLED_BUTTON8) nKey = 7;
+			else if(key == LBK_BUTTON8) nKey = 7;
 #endif
 			else break;
 			if(msg->what == B_KEY_DOWN)
@@ -324,7 +324,7 @@ OLEDApp::MessageReceived(BMessage *msg)
 				{
 					// auto-repeat (event.code = 2) event
 					if(when < fKeyTimestamps[nKey]) break;
-					if(when - fKeyTimestamps[nKey] < (bigtime_t)1000000) break; // 1s
+					if(when - fKeyTimestamps[nKey] < (bigtime_t)500000) break; // 0.5s
 					if(fKeyClicks[nKey] == 0xff) break;
 					fKeyClicks[nKey] = 0xff; // long press
 				}
@@ -351,7 +351,7 @@ OLEDApp::MessageReceived(BMessage *msg)
 				if(when < fKeyTimestamps[nKey]) break;
 				if(write(fPipes[1], &byte, 1) <= 0)
 				{
-					DBGOUT("[OLEDApp]: Failed to notice the main thread.\n");
+					DBGOUT("[LBApp]: Failed to notice the main thread.\n");
 					BMessage aMsg(B_KEY_UP);
 					aMsg.AddInt8("key", *((int8*)&nKey));
 					aMsg.AddInt8("clicks", *((int8*)&fKeyClicks[nKey]));
@@ -371,7 +371,7 @@ OLEDApp::MessageReceived(BMessage *msg)
 			break;
 
 		case B_PULSE:
-			DBGOUT("[OLEDApp]: B_PULSE received.\n");
+			DBGOUT("[LBApp]: B_PULSE received.\n");
 			if(msg->HasBool("no_button_check"))
 			{
 				if(PreferredHandler() != NULL)
@@ -409,7 +409,7 @@ OLEDApp::MessageReceived(BMessage *msg)
 				uint8 byte = 0xab;
 				if(write(fPipes[1], &byte, 1) <= 0)
 				{
-					DBGOUT("[OLEDApp]: Failed to notice the main thread.\n");
+					DBGOUT("[LBApp]: Failed to notice the main thread.\n");
 					PostMessage(B_PULSE, this); // try again
 				}
 			}
@@ -422,14 +422,14 @@ OLEDApp::MessageReceived(BMessage *msg)
 
 
 bigtime_t
-OLEDApp::PulseRate() const
+LBApp::PulseRate() const
 {
 	return fPulseRate;
 }
 
 
 void
-OLEDApp::SetPulseRate(bigtime_t rate)
+LBApp::SetPulseRate(bigtime_t rate)
 {
 	if(rate != 0 && rate < (bigtime_t)50000)
 		rate = (bigtime_t)50000;

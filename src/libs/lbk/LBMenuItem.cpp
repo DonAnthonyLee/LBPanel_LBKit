@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,50 +23,79 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDPageView.h
+ * File: LBMenuItem.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_PAGE_VIEW_H__
-#define __OLED_PAGE_VIEW_H__
+#include <string.h>
+#include <lbk/LBMenuItem.h>
+#include <lbk/LBMenuView.h>
 
-#include <OLEDView.h>
+#define ICON_IS_32x32(id)	((id) > LBK_ICON_ID_32x32_BEGIN && (id) < LBK_ICON_ID_32x32_END)
 
-#ifdef __cplusplus /* Just for C++ */
 
-class OLEDPageView : public OLEDView {
-public:
-	OLEDPageView(const char *name = NULL);
-	virtual ~OLEDPageView();
+LBMenuItem::LBMenuItem(const char *label,
+			   BMessage *message,
+			   lbk_icon_id idIcon)
+	: BInvoker(message, NULL),
+	  fLabel(NULL),
+	  fIcon(LBK_ICON_NONE),
+	  fHidden(false),
+	  fMenuView(NULL)
+{
+	SetLabel(label);
+	SetIcon(idIcon);
+}
 
-	virtual void	ShowNavButton(uint8 idBtn);
-	virtual void	HideNavButton(uint8 idBtn);
-	bool		IsNavButtonHidden(uint8 idBtn) const;
 
-	void		SetNavButtonIcon(int32 idBtn, oled_icon_id idIcon);
-	oled_icon_id	GetNavButtonIcon(int32 idBtn) const;
+LBMenuItem::~LBMenuItem()
+{
+	/*
+	 * WARNING: NO GUARANTEE for MenuView !!!
+	 * 	item should be removed from MenuView before deleting
+	 */
+	if(fLabel != NULL) free(fLabel);
+}
 
-	virtual BRect	Bounds() const;
 
-	virtual void	Draw(BRect updateRect);
-	virtual void	KeyDown(uint8 key, uint8 clicks);
-	virtual void	KeyUp(uint8 key, uint8 clicks);
+const char*
+LBMenuItem::Label() const
+{
+	return fLabel;
+}
 
-	void		SwitchToNextPage();
-	void		SwitchToPrevPage();
 
-	bool		IsFarLeftPage() const;
-	bool		IsFarRightPage() const;
+void
+LBMenuItem::SetLabel(const char *label)
+{
+	if(fLabel != NULL) free(fLabel);
+	fLabel = (label != NULL ? strdup(label) : NULL);
 
-	virtual void	DrawNavButtonIcon(oled_icon_id idIcon, BPoint location);
+	// NO REDRAW
+}
 
-private:
-	uint8 fNavButtonsState;
-	oled_icon_id fButtonIcons[8]; // enough
-};
 
-#endif /* __cplusplus */
+lbk_icon_id
+LBMenuItem::Icon() const
+{
+	return fIcon;
+}
 
-#endif /* __OLED_PAGE_VIEW_H__ */
+
+void
+LBMenuItem::SetIcon(lbk_icon_id idIcon)
+{
+	// only 32x32
+	fIcon = (ICON_IS_32x32(idIcon) ? idIcon : LBK_ICON_NONE);
+
+	// NO REDRAW
+}
+
+
+bool
+LBMenuItem::IsHidden() const
+{
+	return fHidden;
+}
 

@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,41 +23,41 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDMenuView.cpp
+ * File: LBMenuView.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
 #include "OLEDConfig.h"
-#include <OLEDMenuView.h>
+#include <lbk/LBMenuView.h>
 
 // Comment the line below out when it's SURE to use it
 #if OLED_BUTTONS_NUM < 2
-#error "OLEDMenuView: Usually, it's useless when number of buttons less than 2 !!!"
+#error "LBMenuView: Usually, it's useless when number of buttons less than 2 !!!"
 #endif
 
 
-OLEDMenuView::OLEDMenuView(const char *name)
-	: OLEDPageView(name),
+LBMenuView::LBMenuView(const char *name)
+	: LBPageView(name),
 	  fSelected(-1),
 	  fOffset(0)
 {
 #if OLED_BUTTONS_NUM == 2
-	SetNavButtonIcon(0, OLED_ICON_LEFT);
-	SetNavButtonIcon(1, OLED_ICON_RIGHT);
+	SetNavButtonIcon(0, LBK_ICON_LEFT);
+	SetNavButtonIcon(1, LBK_ICON_RIGHT);
 #elif OLED_BUTTONS_NUM >= 3
-	SetNavButtonIcon(OLED_BUTTONS_NUM - 3, OLED_ICON_LEFT);
-	SetNavButtonIcon(OLED_BUTTONS_NUM - 2, OLED_ICON_OK);
-	SetNavButtonIcon(OLED_BUTTONS_NUM - 1, OLED_ICON_RIGHT);
+	SetNavButtonIcon(OLED_BUTTONS_NUM - 3, LBK_ICON_LEFT);
+	SetNavButtonIcon(OLED_BUTTONS_NUM - 2, LBK_ICON_OK);
+	SetNavButtonIcon(OLED_BUTTONS_NUM - 1, LBK_ICON_RIGHT);
 #endif
 }
 
 
-OLEDMenuView::~OLEDMenuView()
+LBMenuView::~LBMenuView()
 {
-	OLEDMenuItem *item;
+	LBMenuItem *item;
 
-	while((item = (OLEDMenuItem*)fItems.RemoveItem((int32)0)) != NULL)
+	while((item = (LBMenuItem*)fItems.RemoveItem((int32)0)) != NULL)
 	{
 		item->fMenuView = NULL;
 		delete item;
@@ -66,14 +66,14 @@ OLEDMenuView::~OLEDMenuView()
 
 
 bool
-OLEDMenuView::AddItem(OLEDMenuItem *item)
+LBMenuView::AddItem(LBMenuItem *item)
 {
 	return AddItem(item, fItems.CountItems());
 }
 
 
 bool
-OLEDMenuView::AddItem(OLEDMenuItem *item, int32 index)
+LBMenuView::AddItem(LBMenuItem *item, int32 index)
 {
 	if(item == NULL || item->fMenuView != NULL) return false;
 	if(fItems.AddItem(item, index) == false) return false;
@@ -86,17 +86,17 @@ OLEDMenuView::AddItem(OLEDMenuItem *item, int32 index)
 
 
 bool
-OLEDMenuView::RemoveItem(OLEDMenuItem *item)
+LBMenuView::RemoveItem(LBMenuItem *item)
 {
 	if(item == NULL || item->fMenuView != this) return false;
 	return(RemoveItem(fItems.IndexOf(item)) != NULL);
 }
 
 
-OLEDMenuItem*
-OLEDMenuView::RemoveItem(int32 index)
+LBMenuItem*
+LBMenuView::RemoveItem(int32 index)
 {
-	OLEDMenuItem *item = ItemAt(index);
+	LBMenuItem *item = ItemAt(index);
 
 	if(item == NULL || fItems.RemoveItem(item) == false) return NULL;
 	item->fMenuView = NULL;
@@ -107,31 +107,31 @@ OLEDMenuView::RemoveItem(int32 index)
 }
 
 
-OLEDMenuItem*
-OLEDMenuView::ItemAt(int32 index) const
+LBMenuItem*
+LBMenuView::ItemAt(int32 index) const
 {
-	return((OLEDMenuItem*)fItems.ItemAt(index));
+	return((LBMenuItem*)fItems.ItemAt(index));
 }
 
 
 int32
-OLEDMenuView::CountItems() const
+LBMenuView::CountItems() const
 {
 	return fItems.CountItems();
 }
 
 
 int32
-OLEDMenuView::IndexOf(OLEDMenuItem *item) const
+LBMenuView::IndexOf(LBMenuItem *item) const
 {
 	return fItems.IndexOf(item);
 }
 
 
-OLEDMenuItem*
-OLEDMenuView::FindItem(uint32 command) const
+LBMenuItem*
+LBMenuView::FindItem(uint32 command) const
 {
-	OLEDMenuItem *item;
+	LBMenuItem *item;
 
 	for(int32 k = 0; k < fItems.CountItems(); k++)
 	{
@@ -143,19 +143,19 @@ OLEDMenuView::FindItem(uint32 command) const
 }
 
 
-OLEDMenuItem*
-OLEDMenuView::CurrentSelection() const
+LBMenuItem*
+LBMenuView::CurrentSelection() const
 {
-	OLEDMenuItem *item = ItemAt(fSelected);
+	LBMenuItem *item = ItemAt(fSelected);
 	if(item == NULL || item->IsHidden()) return NULL;
 	return item;
 }
 
 
 void
-OLEDMenuView::ShowItem(int32 index)
+LBMenuView::ShowItem(int32 index)
 {
-	OLEDMenuItem *item = ItemAt(index);
+	LBMenuItem *item = ItemAt(index);
 	if(item == NULL || item->IsHidden() == false) return;
 	item->fHidden = false;
 
@@ -164,9 +164,9 @@ OLEDMenuView::ShowItem(int32 index)
 
 
 void
-OLEDMenuView::HideItem(int32 index)
+LBMenuView::HideItem(int32 index)
 {
-	OLEDMenuItem *item = ItemAt(index);
+	LBMenuItem *item = ItemAt(index);
 	if(item == NULL || item->IsHidden()) return;
 	item->fHidden = true;
 
@@ -175,10 +175,10 @@ OLEDMenuView::HideItem(int32 index)
 
 
 int32
-OLEDMenuView::CountVisibleItems(int32 fromIndex, int32 n) const
+LBMenuView::CountVisibleItems(int32 fromIndex, int32 n) const
 {
 	int32 count = 0;
-	OLEDMenuItem *item;
+	LBMenuItem *item;
 
 	if(fromIndex < 0) return 0;
 	if(n < 0) n = CountItems() - fromIndex;
@@ -195,11 +195,11 @@ OLEDMenuView::CountVisibleItems(int32 fromIndex, int32 n) const
 }
 
 
-OLEDMenuItem*
-OLEDMenuView::PrevVisibleItem(int32 &index) const
+LBMenuItem*
+LBMenuView::PrevVisibleItem(int32 &index) const
 {
 	int32 k = index;
-	OLEDMenuItem *item = ItemAt(--k);
+	LBMenuItem *item = ItemAt(--k);
 
 	while(!(item == NULL || item->IsHidden() == false)) item = ItemAt(--k);
 	if(item == NULL) return NULL;
@@ -209,11 +209,11 @@ OLEDMenuView::PrevVisibleItem(int32 &index) const
 }
 
 
-OLEDMenuItem*
-OLEDMenuView::NextVisibleItem(int32 &index) const
+LBMenuItem*
+LBMenuView::NextVisibleItem(int32 &index) const
 {
 	int32 k = index;
-	OLEDMenuItem *item = ItemAt(++k);
+	LBMenuItem *item = ItemAt(++k);
 
 	while(!(item == NULL || item->IsHidden() == false)) item = ItemAt(++k);
 	if(item == NULL) return NULL;
@@ -223,10 +223,10 @@ OLEDMenuView::NextVisibleItem(int32 &index) const
 }
 
 
-OLEDMenuItem*
-OLEDMenuView::FirstVisibleItem(int32 &index) const
+LBMenuItem*
+LBMenuView::FirstVisibleItem(int32 &index) const
 {
-	OLEDMenuItem *item;
+	LBMenuItem *item;
 
 	for(int32 k = 0; k < CountItems(); k++)
 	{
@@ -242,10 +242,10 @@ OLEDMenuView::FirstVisibleItem(int32 &index) const
 }
 
 
-OLEDMenuItem*
-OLEDMenuView::LastVisibleItem(int32 &index) const
+LBMenuItem*
+LBMenuView::LastVisibleItem(int32 &index) const
 {
-	OLEDMenuItem *item;
+	LBMenuItem *item;
 
 	for(int32 k = CountItems() - 1; k >= 0; k--)
 	{
@@ -262,14 +262,14 @@ OLEDMenuView::LastVisibleItem(int32 &index) const
 
 
 void
-OLEDMenuView::Draw(BRect rect)
+LBMenuView::Draw(BRect rect)
 {
-	OLEDPageView::Draw(rect);
+	LBPageView::Draw(rect);
 	if(fItems.CountItems() == 0) return;
 
 	uint16 w;
 	BRect r;
-	OLEDMenuItem *curItem = CurrentSelection();
+	LBMenuItem *curItem = CurrentSelection();
 
 	// item label
 	r = Bounds();
@@ -289,7 +289,7 @@ OLEDMenuView::Draw(BRect rect)
 	int32 nMax = r.Width() / 40;
 	r.right = r.left + r.Width() / (float)nMax - 1.f;
 
-	OLEDMenuItem *aItem;
+	LBMenuItem *aItem;
 	int32 index = fOffset;
 	for(int32 k = 0; k < nMax; k++, index++)
 	{
@@ -303,17 +303,17 @@ OLEDMenuView::Draw(BRect rect)
 			{
 				FillRect(r & rect);
 
-				const oled_icon *icon = oled_get_icon_data(aItem->Icon());
+				const lbk_icon *icon = lbk_get_icon_data(aItem->Icon());
 				if(icon != NULL)
 				{
-					oled_icon icon_inverse;
+					lbk_icon icon_inverse;
 					icon_inverse.type = icon->type;
 					for(size_t k = 0; k < sizeof(icon_inverse.data); k++)
 						icon_inverse.data[k] = ~(icon->data[k]);
 					DrawIcon(&icon_inverse, r.Center() - BPoint(15, 15));
 				}
 			}
-			else if(aItem->Icon() != OLED_ICON_NONE)
+			else if(aItem->Icon() != LBK_ICON_NONE)
 			{
 				DrawIcon(aItem->Icon(), r.Center() - BPoint(15, 15));
 			}
@@ -325,7 +325,7 @@ OLEDMenuView::Draw(BRect rect)
 
 
 void
-OLEDMenuView::ResetOffsetIfNeeded()
+LBMenuView::ResetOffsetIfNeeded()
 {
 	if(fSelected < 0)
 	{
@@ -338,7 +338,7 @@ OLEDMenuView::ResetOffsetIfNeeded()
 	else
 	{
 		int32 nMax = Bounds().Width() / 40;
-		OLEDMenuItem *aItem;
+		LBMenuItem *aItem;
 		int32 lastIndex = fOffset;
 		for(int32 k = 0; k < nMax; k++, lastIndex++)
 		{
@@ -358,23 +358,23 @@ OLEDMenuView::ResetOffsetIfNeeded()
 
 
 void
-OLEDMenuView::KeyDown(uint8 key, uint8 clicks)
+LBMenuView::KeyDown(uint8 key, uint8 clicks)
 {
-	OLEDPageView::KeyDown(key, clicks);
+	LBPageView::KeyDown(key, clicks);
 
 	if(clicks != 0xff) return;
 	if(IsNavButtonHidden(key)) return;
 
-	oled_icon_id btnIcon = GetNavButtonIcon((int32)key);
+	lbk_icon_id btnIcon = GetNavButtonIcon((int32)key);
 
 	int32 saveSelected = fSelected;
 	switch(btnIcon)
 	{
-		case OLED_ICON_LEFT:
+		case LBK_ICON_LEFT:
 			FirstVisibleItem(fSelected);
 			break;
 
-		case OLED_ICON_RIGHT:
+		case LBK_ICON_RIGHT:
 			LastVisibleItem(fSelected);
 			break;
 
@@ -389,23 +389,23 @@ OLEDMenuView::KeyDown(uint8 key, uint8 clicks)
 }
 
 void
-OLEDMenuView::KeyUp(uint8 key, uint8 clicks)
+LBMenuView::KeyUp(uint8 key, uint8 clicks)
 {
-	OLEDPageView::KeyUp(key, clicks);
+	LBPageView::KeyUp(key, clicks);
 
 	if(IsNavButtonHidden(key)) return;
 
-	oled_icon_id btnIcon = GetNavButtonIcon((int32)key);
-	if(btnIcon == OLED_ICON_NONE) return;
+	lbk_icon_id btnIcon = GetNavButtonIcon((int32)key);
+	if(btnIcon == LBK_ICON_NONE) return;
 
 #if OLED_BUTTONS_NUM >= 3
-	if(clicks == 1 && btnIcon == OLED_ICON_OK)
+	if(clicks == 1 && btnIcon == LBK_ICON_OK)
 #else // OLED_BUTTONS_NUM < 3
-	if((clicks == 1 && btnIcon == OLED_ICON_OK) ||
-	   ((clicks > 1 && clicks != 0xff) && btnIcon == OLED_ICON_LEFT))
+	if((clicks == 1 && btnIcon == LBK_ICON_OK) ||
+	   ((clicks > 1 && clicks != 0xff) && btnIcon == LBK_ICON_LEFT))
 #endif
 	{
-		OLEDMenuItem *curItem = CurrentSelection();
+		LBMenuItem *curItem = CurrentSelection();
 		if(curItem != NULL)
 		{
 			curItem->Invoke();
@@ -418,11 +418,11 @@ OLEDMenuView::KeyUp(uint8 key, uint8 clicks)
 	int32 saveSelected = fSelected;
 	switch(btnIcon)
 	{
-		case OLED_ICON_LEFT:
+		case LBK_ICON_LEFT:
 			PrevVisibleItem(fSelected);
 			break;
 
-		case OLED_ICON_RIGHT:
+		case LBK_ICON_RIGHT:
 			NextVisibleItem(fSelected);
 			break;
 
@@ -438,9 +438,9 @@ OLEDMenuView::KeyUp(uint8 key, uint8 clicks)
 
 
 void
-OLEDMenuView::StandIn()
+LBMenuView::StandIn()
 {
-	OLEDPageView::StandIn();
+	LBPageView::StandIn();
 
 	if(fSelected < 0)
 	{
@@ -453,9 +453,9 @@ OLEDMenuView::StandIn()
 
 
 void
-OLEDMenuView::Activated(bool state)
+LBMenuView::Activated(bool state)
 {
-	OLEDPageView::Activated(state);
+	LBPageView::Activated(state);
 
 	if(state && fSelected < 0)
 	{
@@ -468,7 +468,7 @@ OLEDMenuView::Activated(bool state)
 
 
 void
-OLEDMenuView::RefreshNavButtonIcons()
+LBMenuView::RefreshNavButtonIcons()
 {
 	int32 n = (fSelected <= 0 ? 0 : CountVisibleItems(0, fSelected));
 
@@ -520,7 +520,7 @@ OLEDMenuView::RefreshNavButtonIcons()
 
 
 void
-OLEDMenuView::ItemInvoked(OLEDMenuItem *item)
+LBMenuView::ItemInvoked(LBMenuItem *item)
 {
 	StandBack();
 }

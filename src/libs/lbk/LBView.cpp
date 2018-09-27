@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,7 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDView.cpp
+ * File: LBView.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
@@ -38,9 +38,9 @@
 #include <oled_ssd1306_ioctl.h>
 
 #include "OLEDConfig.h"
-#include <OLEDView.h>
+#include <lbk/LBView.h>
 
-OLEDView::OLEDView(const char *name)
+LBView::LBView(const char *name)
 	: BHandler(name),
 	  fFD(-1), fTimestamp(0),
 	  fActivated(false),
@@ -55,15 +55,15 @@ OLEDView::OLEDView(const char *name)
 }
 
 
-OLEDView::~OLEDView()
+LBView::~LBView()
 {
-	OLEDView *view;
-	while((view = (OLEDView*)fStickViews.RemoveItem((int32)0)) != NULL) delete view; 
+	LBView *view;
+	while((view = (LBView*)fStickViews.RemoveItem((int32)0)) != NULL) delete view; 
 }
 
 
 void
-OLEDView::FillRect(BRect r, pattern p)
+LBView::FillRect(BRect r, pattern p)
 {
 	if(fMasterView != NULL)
 	{
@@ -72,9 +72,9 @@ OLEDView::FillRect(BRect r, pattern p)
 		return;
 	}
 
-	_oled_ssd1306_clear_t data;
+	_lbk_ssd1306_clear_t data;
 
-	r &= OLEDView::Bounds();
+	r &= LBView::Bounds();
 	if (fFD < 0 || fActivated == false || r.IsValid() == false) return;
 
 	data.x = (uint8_t)r.left;
@@ -90,12 +90,12 @@ OLEDView::FillRect(BRect r, pattern p)
 			data.patterns[k] |= ((p.data[m] >> (7 - k + m)) & (0x01 << m));
 	}
 
-	if(ioctl(fFD, OLED_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
+	if(ioctl(fFD, LBK_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
 }
 
 
 void
-OLEDView::StrokeRect(BRect rect, bool erase)
+LBView::StrokeRect(BRect rect, bool erase)
 {
 	if(fMasterView != NULL)
 	{
@@ -133,7 +133,7 @@ OLEDView::StrokeRect(BRect rect, bool erase)
 
 
 void
-OLEDView::DrawString(const char *str, BPoint pt, bool erase)
+LBView::DrawString(const char *str, BPoint pt, bool erase)
 {
 	if(fMasterView != NULL)
 	{
@@ -142,7 +142,7 @@ OLEDView::DrawString(const char *str, BPoint pt, bool erase)
 		return;
 	}
 
-	_oled_ssd1306_show_t data;
+	_lbk_ssd1306_show_t data;
 
 	if(str == NULL || *str == 0) return;
 	if(fFD < 0 || fActivated == false) return;
@@ -155,12 +155,12 @@ OLEDView::DrawString(const char *str, BPoint pt, bool erase)
 	strncpy(data.str, str, sizeof(data.str));
 	data.erase_mode = erase ? 1 : 0;
 
-	if(ioctl(fFD, OLED_SSD1306_IOC_SHOW, &data) == 0) fTimestamp = data.ts;
+	if(ioctl(fFD, LBK_SSD1306_IOC_SHOW, &data) == 0) fTimestamp = data.ts;
 }
 
 
 void
-OLEDView::DrawIcon(const oled_icon *icon, BPoint pt)
+LBView::DrawIcon(const lbk_icon *icon, BPoint pt)
 {
 	if(fMasterView != NULL)
 	{
@@ -169,10 +169,10 @@ OLEDView::DrawIcon(const oled_icon *icon, BPoint pt)
 		return;
 	}
 
-	_oled_ssd1306_clear_t data;
+	_lbk_ssd1306_clear_t data;
 
 	if(fFD < 0 || fActivated == false) return;
-	if(icon == NULL || icon->type > 2 /*OLED_ICON_32x32*/) return;
+	if(icon == NULL || icon->type > 2 /*LBK_ICON_32x32*/) return;
 	if(pt.x < 0 || pt.y < 0) return;
 
 	data.w = 8;
@@ -187,21 +187,21 @@ OLEDView::DrawIcon(const oled_icon *icon, BPoint pt)
 			       icon->data + ((k * (1 << icon->type) + m) << 3),
 			       sizeof(data.patterns));
 
-			if(ioctl(fFD, OLED_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
+			if(ioctl(fFD, LBK_SSD1306_IOC_CLEAR, &data) == 0) fTimestamp = data.ts;
 		}
 	}
 }
 
 
 void
-OLEDView::DrawIcon(oled_icon_id id, BPoint pt)
+LBView::DrawIcon(lbk_icon_id id, BPoint pt)
 {
-	DrawIcon(oled_get_icon_data(id), pt);
+	DrawIcon(lbk_get_icon_data(id), pt);
 }
 
 
 uint8
-OLEDView::FontSize() const
+LBView::FontSize() const
 {
 	if(fMasterView != NULL)
 		return fMasterView->FontSize();
@@ -211,7 +211,7 @@ OLEDView::FontSize() const
 
 
 void
-OLEDView::SetFontSize(uint8 size)
+LBView::SetFontSize(uint8 size)
 {
 	if(fMasterView != NULL)
 	{
@@ -226,12 +226,12 @@ OLEDView::SetFontSize(uint8 size)
 
 
 uint16
-OLEDView::StringWidth(const char *str) const
+LBView::StringWidth(const char *str) const
 {
 	if(fMasterView != NULL)
 		return fMasterView->StringWidth(str);
 
-	_oled_ssd1306_string_width_t data;
+	_lbk_ssd1306_string_width_t data;
 
 	if (fFD < 0 || str == NULL || *str == 0) return 0;
 
@@ -240,12 +240,12 @@ OLEDView::StringWidth(const char *str) const
 	data.size = fFontSize;
 	strncpy(data.str, str, sizeof(data.str));
 
-	return((ioctl(fFD, OLED_SSD1306_IOC_STRING_WIDTH, &data) == 0) ? data.w : 0);
+	return((ioctl(fFD, LBK_SSD1306_IOC_STRING_WIDTH, &data) == 0) ? data.w : 0);
 }
 
 
 void
-OLEDView::EnableUpdate(bool state)
+LBView::EnableUpdate(bool state)
 {
 	if(fMasterView != NULL)
 	{
@@ -261,14 +261,14 @@ OLEDView::EnableUpdate(bool state)
 	if(state == false)
 	{
 		if(fUpdateCount == 0)
-			if(ioctl(fFD, OLED_SSD1306_IOC_UPDATE, &st) != 0) return;
+			if(ioctl(fFD, LBK_SSD1306_IOC_UPDATE, &st) != 0) return;
 
 		fUpdateCount++;
 	}
 	else if(fUpdateCount > 0)
 	{
 		if(fUpdateCount == 1)
-			if(ioctl(fFD, OLED_SSD1306_IOC_UPDATE, &st) != 0) return;
+			if(ioctl(fFD, LBK_SSD1306_IOC_UPDATE, &st) != 0) return;
 
 		fUpdateCount--;
 	}
@@ -276,40 +276,40 @@ OLEDView::EnableUpdate(bool state)
 
 
 bool
-OLEDView::IsNeededToRegen() const
+LBView::IsNeededToRegen() const
 {
 	if(fMasterView != NULL)
 		return fMasterView->IsNeededToRegen();
 
-	_oled_ssd1306_get_ts_t data;
+	_lbk_ssd1306_get_ts_t data;
 
 	if(fFD < 0 || fActivated == false) return false;
 
 	data.last_action = 0;
-	if(ioctl(fFD, OLED_SSD1306_IOC_TIMESTAMP, &data) != 0) return false;
+	if(ioctl(fFD, LBK_SSD1306_IOC_TIMESTAMP, &data) != 0) return false;
 
 	return(data.ts > fTimestamp);
 }
 
 
 bool
-OLEDView::GetPowerState() const
+LBView::GetPowerState() const
 {
 	if(fMasterView != NULL)
 		return fMasterView->GetPowerState();
 
-	_oled_ssd1306_power_t data;
+	_lbk_ssd1306_power_t data;
 
 	if (fFD < 0) return false;
 
 	data.state = 2;
-	if(ioctl(fFD, OLED_SSD1306_IOC_POWER, &data) != 0) return false;
+	if(ioctl(fFD, LBK_SSD1306_IOC_POWER, &data) != 0) return false;
 	return(data.state == 1);
 }
 
 
 void
-OLEDView::SetPowerState(bool state)
+LBView::SetPowerState(bool state)
 {
 	if(fMasterView != NULL)
 	{
@@ -318,59 +318,59 @@ OLEDView::SetPowerState(bool state)
 		return;
 	}
 
-	_oled_ssd1306_power_t data;
+	_lbk_ssd1306_power_t data;
 
 	if (fFD < 0 || fActivated == false) return;
 
 	data.state = (state ? 1 : 0);
-	if(ioctl(fFD, OLED_SSD1306_IOC_POWER, &data) == 0) fTimestamp = data.ts;
+	if(ioctl(fFD, LBK_SSD1306_IOC_POWER, &data) == 0) fTimestamp = data.ts;
 }
 
 
 BRect
-OLEDView::Bounds() const
+LBView::Bounds() const
 {
 	return BRect(0, 0, OLED_SCREEN_WIDTH - 1, OLED_SCREEN_HEIGHT - 1);
 }
 
 
 void
-OLEDView::Draw(BRect updateRect)
+LBView::Draw(BRect updateRect)
 {
 	// Empty
 }
 
 
 void
-OLEDView::KeyDown(uint8 key, uint8 clicks)
+LBView::KeyDown(uint8 key, uint8 clicks)
 {
 	// Empty
 }
 
 
 void
-OLEDView::KeyUp(uint8 key, uint8 clicks)
+LBView::KeyUp(uint8 key, uint8 clicks)
 {
 	// Empty
 }
 
 
 void
-OLEDView::Pulse()
+LBView::Pulse()
 {
 	// Empty
 }
 
 
 uint8
-OLEDView::KeyState(uint8 *down_state) const
+LBView::KeyState(uint8 *down_state) const
 {
 	if(down_state) *down_state = (fKeyState >> 8);
 	return fKeyState;
 }
 
 void
-OLEDView::MessageReceived(BMessage *msg)
+LBView::MessageReceived(BMessage *msg)
 {
 	uint8 key = 0xff;
 	uint8 clicks = 0;
@@ -420,9 +420,9 @@ OLEDView::MessageReceived(BMessage *msg)
 		case '_UPN': // like _UPDATE_IF_NEEDED_ in BeOS API
 			if(IsActivated() == false) break;
 			if(IsNeededToRegen())
-				fUpdateRect = OLEDView::Bounds();
+				fUpdateRect = LBView::Bounds();
 			else
-				fUpdateRect &= OLEDView::Bounds();
+				fUpdateRect &= LBView::Bounds();
 
 			if(fUpdateRect.IsValid())
 			{
@@ -445,7 +445,7 @@ OLEDView::MessageReceived(BMessage *msg)
 
 
 void
-OLEDView::SetActivated(bool state)
+LBView::SetActivated(bool state)
 {
 	if(fActivated != state)
 	{
@@ -457,7 +457,7 @@ OLEDView::SetActivated(bool state)
 
 
 bool
-OLEDView::IsActivated() const
+LBView::IsActivated() const
 {
 	if(fMasterView != NULL)
 	{
@@ -471,7 +471,7 @@ OLEDView::IsActivated() const
 
 
 void
-OLEDView::Activated(bool state)
+LBView::Activated(bool state)
 {
 	if(fStandingInView != NULL) // for derived class
 		fStandingInView->Activated(state);
@@ -488,14 +488,14 @@ OLEDView::Activated(bool state)
 
 
 void
-OLEDView::InvalidRect()
+LBView::InvalidRect()
 {
-	InvalidRect(OLEDView::Bounds());
+	InvalidRect(LBView::Bounds());
 }
 
 
 void
-OLEDView::InvalidRect(BRect r)
+LBView::InvalidRect(BRect r)
 {
 	if(fMasterView != NULL)
 	{
@@ -515,15 +515,15 @@ OLEDView::InvalidRect(BRect r)
 }
 
 
-OLEDView*
-OLEDView::StandingInView() const
+LBView*
+LBView::StandingInView() const
 {
 	return fStandingInView;
 }
 
 
 bool
-OLEDView::AddStickView(OLEDView *view)
+LBView::AddStickView(LBView *view)
 {
 	if(view == NULL) return false;
 	if(!(view->Looper() == NULL || view->Looper() == this->Looper())) return false;
@@ -542,7 +542,7 @@ OLEDView::AddStickView(OLEDView *view)
 
 
 bool
-OLEDView::RemoveStickView(OLEDView *view)
+LBView::RemoveStickView(LBView *view)
 {
 	if(view == NULL) return false;
 	if(view->fMasterView != this) return false;
@@ -562,35 +562,35 @@ OLEDView::RemoveStickView(OLEDView *view)
 }
 
 
-OLEDView*
-OLEDView::RemoveStickView(int32 index)
+LBView*
+LBView::RemoveStickView(int32 index)
 {
-	OLEDView *view = (OLEDView*)fStickViews.ItemAt(index);
+	LBView *view = (LBView*)fStickViews.ItemAt(index);
 	if(view == NULL || RemoveStickView(view) == false) return NULL;
 	return view;
 }
 
 
 int32
-OLEDView::CountStickViews() const
+LBView::CountStickViews() const
 {
 	return fStickViews.CountItems();
 }
 
 
-OLEDView*
-OLEDView::StickViewAt(int32 index) const
+LBView*
+LBView::StickViewAt(int32 index) const
 {
-	return((OLEDView*)fStickViews.ItemAt(index));
+	return((LBView*)fStickViews.ItemAt(index));
 }
 
 
-OLEDView*
-OLEDView::FindStickView(const char *name) const
+LBView*
+LBView::FindStickView(const char *name) const
 {
 	for(int32 k = 0; k < fStickViews.CountItems(); k++)
 	{
-		OLEDView *view = (OLEDView*)fStickViews.ItemAt(k);
+		LBView *view = (LBView*)fStickViews.ItemAt(k);
 
 		if(name == NULL)
 		{
@@ -605,17 +605,17 @@ OLEDView::FindStickView(const char *name) const
 }
 
 
-OLEDView*
-OLEDView::MasterView() const
+LBView*
+LBView::MasterView() const
 {
 	return fMasterView;
 }
 
 
-OLEDView*
-OLEDView::TopView() const
+LBView*
+LBView::TopView() const
 {
-	OLEDView *view = fMasterView;
+	LBView *view = fMasterView;
 
 	while(!(view == NULL || view->fMasterView == NULL))
 		view = view->fMasterView;
@@ -625,13 +625,13 @@ OLEDView::TopView() const
 
 
 void
-OLEDView::Attached()
+LBView::Attached()
 {
 	if(Looper() == NULL) return;
 
 	for(int32 k = 0; k < fStickViews.CountItems(); k++)
 	{
-		OLEDView *view = (OLEDView*)fStickViews.ItemAt(k);
+		LBView *view = (LBView*)fStickViews.ItemAt(k);
 
 		Looper()->AddHandler(view);
 		view->Attached();
@@ -640,13 +640,13 @@ OLEDView::Attached()
 
 
 void
-OLEDView::Detached()
+LBView::Detached()
 {
 	if(Looper() == NULL) return;
 
 	for(int32 k = 0; k < fStickViews.CountItems(); k++)
 	{
-		OLEDView *view = (OLEDView*)fStickViews.ItemAt(k);
+		LBView *view = (LBView*)fStickViews.ItemAt(k);
 
 		view->Detached();
 		Looper()->RemoveHandler(view);
@@ -655,14 +655,14 @@ OLEDView::Detached()
 
 
 bool
-OLEDView::IsStoodIn() const
+LBView::IsStoodIn() const
 {
 	return(fStandingInView != NULL);
 }
 
 
 void
-OLEDView::StandIn()
+LBView::StandIn()
 {
 	if(fMasterView == NULL || fMasterView->fStandingInView == this) return;
 	fMasterView->fStandingInView = this;
@@ -673,7 +673,7 @@ OLEDView::StandIn()
 
 
 void
-OLEDView::StandBack()
+LBView::StandBack()
 {
 	if(fMasterView == NULL || fMasterView->fStandingInView != this) return;
 	fMasterView->fStandingInView = NULL;
@@ -683,7 +683,7 @@ OLEDView::StandBack()
 
 
 bigtime_t
-OLEDView::GetStandInTime() const
+LBView::GetStandInTime() const
 {
 	if(fStandInTimestamp < (bigtime_t)0) return -1;
 	return(real_time_clock_usecs() - fStandInTimestamp);
