@@ -28,7 +28,7 @@
  *
  * --------------------------------------------------------------------------*/
 
-#include "OLEDConfig.h"
+#include <lbk/LBKConfig.h>
 #include <lbk/LBMenuView.h>
 
 // Comment the line below out when it's SURE to use it

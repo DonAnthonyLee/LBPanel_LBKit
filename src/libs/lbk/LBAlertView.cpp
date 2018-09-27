@@ -28,13 +28,8 @@
  *
  * --------------------------------------------------------------------------*/
 
-#include "OLEDConfig.h"
+#include <lbk/LBKConfig.h>
 #include <lbk/LBAlertView.h>
-
-// Comment the line below out when it's SURE to use it
-#if OLED_BUTTONS_NUM < 2
-#error "LBAlertView: Usually, it's useless when number of buttons less than 2 !!!"
-#endif
 
 #define ICON_IS_16x16(id)	((id) > LBK_ICON_ID_16x16_BEGIN && (id) < LBK_ICON_ID_16x16_END)
 #define ICON_IS_VALID(id)	((id) == LBK_ICON_NONE || ICON_IS_16x16(id))
@@ -113,7 +108,7 @@ LBAlertView::SetText(const char *text)
 void
 LBAlertView::SetButtonIcon(int32 index, lbk_icon_id idIcon)
 {
-	if(index < 0 || index > min_c(2, OLED_BUTTONS_NUM - 1)) return;
+	if(index < 0 || index > min_c(2, CountKeys() - 1)) return;
 	if(!ICON_IS_VALID(idIcon)) return;
 
 	if(fIcons[index] != idIcon)
@@ -143,8 +138,9 @@ LBAlertView::SetInvoker(BInvoker *invoker)
 void
 LBAlertView::SetButtonAlignment(alignment align)
 {
+	uint8 n = CountKeys();
 	uint8 mask = 0xff;
-	mask <<= OLED_BUTTONS_NUM;
+	mask <<= n;
 	mask = ~mask;
 
 	switch(align)
@@ -154,11 +150,11 @@ LBAlertView::SetButtonAlignment(alignment align)
 			break;
 
 		case B_ALIGN_CENTER:
-			mask &= (0x07 << max_c(0, (OLED_BUTTONS_NUM - 3) / 2));
+			mask &= (0x07 << max_c(0, (n - 3) / 2));
 			break;
 
 		default:
-			mask &= (0x07 << max_c(0, OLED_BUTTONS_NUM - 3));
+			mask &= (0x07 << max_c(0, n - 3));
 	}
 
 	if(fButtonMask != mask)
@@ -175,7 +171,7 @@ LBAlertView::SetButtonAlignment(alignment align)
 void
 LBAlertView::DrawButtonIcon(lbk_icon_id idIcon, BPoint location)
 {
-	// for OLED_BUTTONS_NUM <= 2, so on
+	// for CountKeys() <= 2, so on
 	DrawIcon(idIcon, location);
 }
 
@@ -183,6 +179,7 @@ LBAlertView::DrawButtonIcon(lbk_icon_id idIcon, BPoint location)
 void
 LBAlertView::Draw(BRect rect)
 {
+	uint8 n;
 	uint16 w;
 	BRect r;
 
@@ -249,13 +246,15 @@ LBAlertView::Draw(BRect rect)
 	}
 
 	// icon
+	n = CountKeys();
+
 	r = LBView::Bounds();
 	r.top = r.bottom - 16;
 	r.bottom -= 1;
-	r.right = r.Width() / (float)OLED_BUTTONS_NUM - 1.f;
+	r.right = r.Width() / (float)n - 1.f;
 
 	int32 idBtn = 0;
-	for(int k = 0; k < OLED_BUTTONS_NUM && idBtn < 3; k++)
+	for(int k = 0; k < n && idBtn < 3; k++)
 	{
 		if((fButtonMask & (0x01 << k)) != 0)
 		{
@@ -299,7 +298,8 @@ LBAlertView::KeyUp(uint8 key, uint8 clicks)
 	if((fButtonMask & (0x01 << key)) == 0) return;
 
 	int32 idBtn = 0;
-	for(int k = 0; k < OLED_BUTTONS_NUM && idBtn < 3; k++)
+	uint8 n = CountKeys();
+	for(uint8 k = 0; k < n && idBtn < 3; k++)
 	{
 		if((fButtonMask & (0x01 << k)) == 0) continue;
 		if(k == key) break;

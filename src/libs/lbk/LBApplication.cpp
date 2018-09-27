@@ -23,7 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBApp.cpp
+ * File: LBApplication.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
@@ -34,52 +34,173 @@
 #include <linux/input.h>
 #include <sys/select.h>
 
-#include "OLEDConfig.h"
-#include <lbk/LBApp.h>
+#include <lbk/LBKConfig.h>
+#include <lbk/LBApplication.h>
 
-//#define LBK_DEBUG
+#include <lbk/add-ons/LBPanelDevice.h>
 
-#ifdef LBK_DEBUG
+#if (1)
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
 #else
 #define DBGOUT(msg...)		do {} while (0)
 #endif
 
+typedef enum
+{
+	LBK_ADD_ON_NONE_DEVICE = 0,
+	LBK_ADD_ON_PANEL_DEVICE,
+} LBKAddOnType;
 
-LBApp::LBApp(int oled_fd, int input_fd)
-	: BLooper(NULL, B_DISPLAY_PRIORITY),
-	  fOLEDFD(oled_fd), fInputFD(input_fd),
+typedef struct
+{
+	BString name;
+	LBKAddOnType type;
+	void *dev;
+	void *image;
+} LBKAddOnData;
+
+
+static LBKAddOnData* lbk_app_load_panel_device_addon(const BPath &pth)
+{
+	LBKAddOnData *data = NULL;
+
+#ifdef ETK_MAJOR_VERSION // use ETK++ function
+	void *image = etk_load_addon(pth.Path());
+	if(image == NULL) return NULL;
+
+	LBPanelDevice* (*instantiate_func)() = NULL;
+	LBPanelDevice *dev = NULL;
+
+	if(etk_get_image_symbol(image, "instantiate_panel_device", (void**)&instantiate_func) != E_OK ||
+	   (dev = (*instantiate_func)()) == NULL ||
+	   dev->InitCheck() != B_OK)
+	{
+		if(dev != NULL) delete dev;
+		etk_unload_addon(image);
+		return NULL;
+	}
+
+	data = new LBKAddOnData;
+	data->name.SetTo(pth.Leaf());
+	data->type = LBK_ADD_ON_PANEL_DEVICE;
+	data->dev = reinterpret_cast<void*>(dev);
+	data->image = image;
+#endif
+
+	// TODO
+	return data;
+}
+
+
+static void lbk_app_unload_panel_device_addon(LBKAddOnData *data)
+{
+#ifdef ETK_MAJOR_VERSION // use ETK++ function
+	if(data == NULL || data->type != LBK_ADD_ON_PANEL_DEVICE) return;
+	if(data->dev == NULL || data->image == NULL) return;
+
+	LBPanelDevice *dev = reinterpret_cast<LBPanelDevice*>(data->dev);
+	delete dev;
+
+	etk_unload_addon(data->image);
+#endif
+}
+
+
+static LBPanelDevice* lbk_app_find_first_panel_device(BList &addOnsList)
+{
+	for(int32 k = 0; k < addOnsList.CountItems(); k++)
+	{
+		LBKAddOnData *data = (LBKAddOnData*)addOnsList.ItemAt(k);
+		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
+			return reinterpret_cast<LBPanelDevice*>(data->dev);
+	}
+
+	return NULL;
+}
+
+
+LBApplication::LBApplication(const BList *cfg)
+	: BLooper(NULL, B_URGENT_DISPLAY_PRIORITY),
 	  fPulseRate(0),
 	  fKeyState(0)
 {
 	bzero(fKeyTimestamps, sizeof(fKeyTimestamps));
 	bzero(fKeyClicks, sizeof(fKeyClicks));
 
-	fPipes[0] = fPipes[1] = -1;
+	fPipes[0] = -1;
+
+	if(cfg != NULL)
+	{
+		for(int32 k = 0; k < cfg->CountItems(); k++)
+		{
+			BString *item = (BString*)cfg->ItemAt(k);
+			if(item == NULL || item->Length() == 0) continue;
+			if(item->FindFirst("#") == 0 || item->FindFirst("//") == 0) continue;
+			item->RemoveAll("\r");
+			item->RemoveAll("\n");
+
+			int32 found = item->FindFirst("=");
+			if(found <= 0) continue;
+
+			BString name(item->String(), found);
+			BString value(item->String() + found + 1);
+
+			if(name == "PanelDeviceAddon")
+			{
+				BPath pth(value.String(), NULL, true);
+				if(pth.Path() == NULL) continue;
+
+				LBKAddOnData *data = lbk_app_load_panel_device_addon(pth);
+				if(data == NULL)
+				{
+					fprintf(stderr,
+						"[LBApplication]: %s --- Failed to load add-on (%s) !\n",
+						__func__, pth.Path());
+					continue;
+				}
+				fAddOnsList.AddItem(data);
+			}
+
+			// TODO
+		}
+	}
 }
 
 
-LBApp::~LBApp()
+LBApplication::~LBApplication()
 {
 	LBView *view;
 	while((view = (LBView*)fLeftPageViews.RemoveItem(0)) != NULL) delete view;
 	while((view = (LBView*)fRightPageViews.RemoveItem(0)) != NULL) delete view;
 
-	if(fPipes[0] >= 0) close(fPipes[0]);
-	if(fPipes[1] >= 0) close(fPipes[1]);
+	if(fPipes[0] >= 0)
+	{
+		close(fPipes[0]);
+		close(fPipes[1]);
+	}
+
+	for(int32 k = 0; k < fAddOnsList.CountItems(); k++)
+	{
+		LBKAddOnData *data = (LBKAddOnData*)fAddOnsList.ItemAt(k);
+		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
+			lbk_app_unload_panel_device_addon(data);
+		// TODO
+		delete data;
+	}
 }
 
 
 bool
-LBApp::AddPageView(LBView *view, bool left_side)
+LBApplication::AddPageView(LBView *view, bool left_side)
 {
-	if(fOLEDFD < 0 || view == NULL || view->Looper() != NULL || view->MasterView() != NULL) return false;
+	LBPanelDevice *dev = lbk_app_find_first_panel_device(fAddOnsList);
+	if(dev == NULL || view == NULL || view->Looper() != NULL || view->MasterView() != NULL) return false;
 
 	if((left_side ? fLeftPageViews.AddItem(view) : fRightPageViews.AddItem(view)) == false) return false;
 	AddHandler(view);
 
 	view->fActivated = false;
-	view->fFD = fOLEDFD;
+	view->fDev = dev;
 
 	view->Attached();
 
@@ -88,7 +209,7 @@ LBApp::AddPageView(LBView *view, bool left_side)
 
 
 bool
-LBApp::RemovePageView(LBView *view)
+LBApplication::RemovePageView(LBView *view)
 {
 	if(view == NULL || view->Looper() != this || view->MasterView() != NULL) return false;
 
@@ -102,14 +223,14 @@ LBApp::RemovePageView(LBView *view)
 		SetPreferredHandler(NULL);
 
 	view->fActivated = false;
-	view->fFD = -1;
+	view->fDev = NULL;
 
 	return true;
 }
 
 
 LBView*
-LBApp::RemovePageView(int32 index, bool left_side)
+LBApplication::RemovePageView(int32 index, bool left_side)
 {
 	LBView *view = PageViewAt(index, left_side);
 
@@ -118,20 +239,20 @@ LBApp::RemovePageView(int32 index, bool left_side)
 
 
 LBView*
-LBApp::PageViewAt(int32 index, bool left_side) const
+LBApplication::PageViewAt(int32 index, bool left_side) const
 {
 	return(left_side ? (LBView*)fLeftPageViews.ItemAt(index) : (LBView*)fRightPageViews.ItemAt(index));
 }
 
 
 int32
-LBApp::CountPageViews(bool left_side) const
+LBApplication::CountPageViews(bool left_side) const
 {
 	return(left_side ? fLeftPageViews.CountItems() : fRightPageViews.CountItems());
 }
 
 void
-LBApp::ActivatePageView(int32 index, bool left_side)
+LBApplication::ActivatePageView(int32 index, bool left_side)
 {
 	LBView *newView = PageViewAt(index, left_side);
 	LBView *oldView = GetActivatedPageView();
@@ -147,7 +268,7 @@ LBApp::ActivatePageView(int32 index, bool left_side)
 
 
 LBView*
-LBApp::GetActivatedPageView() const
+LBApplication::GetActivatedPageView() const
 {
 	// ignore NULL to make it compatible with old BeOS API
 	return(PreferredHandler() ? cast_as(PreferredHandler(), LBView) : NULL);
@@ -155,23 +276,25 @@ LBApp::GetActivatedPageView() const
 
 
 void
-LBApp::Go()
+LBApplication::Go()
 {
 	if(IsRunning())
 	{
-		printf("[LBApp]: It's forbidden to run Go() more than ONE time !\n");
+		printf("[LBApplication]: It's forbidden to run Go() more than ONE time !\n");
 		return;
 	}
 
-	if(fOLEDFD < 0 || fInputFD < 0)
+	LBPanelDevice* dev = lbk_app_find_first_panel_device(fAddOnsList);
+	if(dev == NULL)
 	{
-		printf("[LBApp]: Invalid file handle !\n");
+		printf("[LBApplication]: NO PANEL DEVICE !\n");
 		return;
 	}
+	dev->fMsgr = BMessenger(this, this);
 
 	if(pipe(fPipes) < 0)
 	{
-		perror("[LBApp]: Unable to create pipe");
+		perror("[LBApplication]: Unable to create pipe");
 		return;
 	}
 
@@ -190,16 +313,15 @@ LBApp::Go()
 	while(IsRunning())
 	{
 		timeout.tv_usec = (pulse_rate > 0 && pulse_rate < (bigtime_t)500000) ? pulse_rate : 500000;
-		if(count > 0 && timeout.tv_usec > OLED_BUTTON_INTERVAL / 3)
-			timeout.tv_usec = OLED_BUTTON_INTERVAL / 3;
+		if(count > 0 && timeout.tv_usec > LBK_KEY_INTERVAL / 3)
+			timeout.tv_usec = LBK_KEY_INTERVAL / 3;
 
 		FD_ZERO(&rset);
-		FD_SET(fInputFD, &rset);
 		FD_SET(fPipes[0], &rset);
-		int status = select(max_c(fInputFD, fPipes[0]) + 1, &rset, NULL, NULL, &timeout);
+		int status = select(fPipes[0] + 1, &rset, NULL, NULL, &timeout);
 		if(status < 0)
 		{
-			perror("[LBApp]: Unable to get event from input device");
+			perror("[LBApplication]: Unable to get event from input device");
 			break;
 		}
 
@@ -220,7 +342,7 @@ LBApp::Go()
 			}
 		}
 
-		if(count > 0 && real_time_clock_usecs() - pulse_sent_time[0] >= (bigtime_t)(OLED_BUTTON_INTERVAL / 2))
+		if(count > 0 && real_time_clock_usecs() - pulse_sent_time[0] >= (bigtime_t)(LBK_KEY_INTERVAL / 2))
 		{
 			count--;
 			Lock();
@@ -239,39 +361,6 @@ LBApp::Go()
 			Unlock();
 			pulse_sent_time[1] = real_time_clock_usecs();
 		}
-
-		if(status == 0) continue;
-
-		if(!FD_ISSET(fInputFD, &rset)) continue;
-
-		struct input_event event;
-		int n = read(fInputFD, &event, sizeof(event));
-
-		if(n <= 0)
-		{
-			perror("[LBApp]: Unable to get event from input device");
-			break;
-		}
-
-		if(n != sizeof(event))
-		{
-			printf("[LBApp]: Unable to process input event !\n");
-			continue;
-		}
-
-		if(event.type != EV_KEY)
-		{
-			DBGOUT("[LBApp]: event.type(%u) != EV_KEY.\n", event.type);
-			continue;
-		}
-
-		BMessage msg(event.value == 0 ? B_KEY_UP : B_KEY_DOWN);
-		msg.AddInt32("key", event.code);
-		msg.AddInt64("when", (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) + (bigtime_t)event.time.tv_usec);
-
-		Lock();
-		PostMessage(&msg, this);
-		Unlock();
 	}
 
 	Lock();
@@ -281,11 +370,10 @@ LBApp::Go()
 
 
 void
-LBApp::MessageReceived(BMessage *msg)
+LBApplication::MessageReceived(BMessage *msg)
 {
-	int32 key;
 	bigtime_t when;
-	uint8 nKey;
+	uint8 nKey = 0;
 	bool stopRunner;
 
 	switch(msg->what)
@@ -293,36 +381,13 @@ LBApp::MessageReceived(BMessage *msg)
 		case B_KEY_DOWN:
 		case B_KEY_UP:
 			if(PreferredHandler() == NULL) break;
-			if(msg->FindInt32("key", &key) != B_OK) break;
+			if(msg->FindInt8("key", (int8*)&nKey) != B_OK || nKey >= 8) break;
 			if(msg->FindInt64("when", &when) != B_OK) break;
-			if(key == OLED_BUTTON1) nKey = 0;
-#if OLED_BUTTONS_NUM > 1
-			else if(key == OLED_BUTTON2) nKey = 1;
-#endif
-#if OLED_BUTTONS_NUM > 2
-			else if(key == OLED_BUTTON3) nKey = 2;
-#endif
-#if OLED_BUTTONS_NUM > 3
-			else if(key == LBK_BUTTON4) nKey = 3;
-#endif
-#if OLED_BUTTONS_NUM > 4
-			else if(key == LBK_BUTTON5) nKey = 4;
-#endif
-#if OLED_BUTTONS_NUM > 5
-			else if(key == LBK_BUTTON6) nKey = 5;
-#endif
-#if OLED_BUTTONS_NUM > 6
-			else if(key == LBK_BUTTON7) nKey = 6;
-#endif
-#if OLED_BUTTONS_NUM > 7
-			else if(key == LBK_BUTTON8) nKey = 7;
-#endif
-			else break;
 			if(msg->what == B_KEY_DOWN)
 			{
 				if((fKeyState & (0x01 << nKey)) != 0) // already DOWN
 				{
-					// auto-repeat (event.code = 2) event
+					// auto-repeat (event.value = 2) event
 					if(when < fKeyTimestamps[nKey]) break;
 					if(when - fKeyTimestamps[nKey] < (bigtime_t)500000) break; // 0.5s
 					if(fKeyClicks[nKey] == 0xff) break;
@@ -351,7 +416,7 @@ LBApp::MessageReceived(BMessage *msg)
 				if(when < fKeyTimestamps[nKey]) break;
 				if(write(fPipes[1], &byte, 1) <= 0)
 				{
-					DBGOUT("[LBApp]: Failed to notice the main thread.\n");
+					DBGOUT("[LBApplication]: Failed to notice the main thread.\n");
 					BMessage aMsg(B_KEY_UP);
 					aMsg.AddInt8("key", *((int8*)&nKey));
 					aMsg.AddInt8("clicks", *((int8*)&fKeyClicks[nKey]));
@@ -371,7 +436,7 @@ LBApp::MessageReceived(BMessage *msg)
 			break;
 
 		case B_PULSE:
-			DBGOUT("[LBApp]: B_PULSE received.\n");
+			DBGOUT("[LBApplication]: B_PULSE received.\n");
 			if(msg->HasBool("no_button_check"))
 			{
 				if(PreferredHandler() != NULL)
@@ -380,12 +445,13 @@ LBApp::MessageReceived(BMessage *msg)
 			}
 			stopRunner = true;
 			when = real_time_clock_usecs();
-			for(uint8 k = 0; k < OLED_BUTTONS_NUM; k++)
+			nKey = CountKeys(0);
+			for(uint8 k = 0; k < nKey; k++)
 			{
 				if((fKeyState & (0x01 << k)) != 0) continue; // DOWN, no need
 				if(fKeyClicks[k] == 0 || fKeyTimestamps[k] == 0) continue; // no UP before
 				if(when < fKeyTimestamps[k]) continue; // should never happen
-				if(when - fKeyTimestamps[k] < (bigtime_t)OLED_BUTTON_INTERVAL)
+				if(when - fKeyTimestamps[k] < (bigtime_t)LBK_KEY_INTERVAL)
 				{
 					stopRunner = false;
 					continue;
@@ -409,7 +475,7 @@ LBApp::MessageReceived(BMessage *msg)
 				uint8 byte = 0xab;
 				if(write(fPipes[1], &byte, 1) <= 0)
 				{
-					DBGOUT("[LBApp]: Failed to notice the main thread.\n");
+					DBGOUT("[LBApplication]: Failed to notice the main thread.\n");
 					PostMessage(B_PULSE, this); // try again
 				}
 			}
@@ -422,14 +488,14 @@ LBApp::MessageReceived(BMessage *msg)
 
 
 bigtime_t
-LBApp::PulseRate() const
+LBApplication::PulseRate() const
 {
 	return fPulseRate;
 }
 
 
 void
-LBApp::SetPulseRate(bigtime_t rate)
+LBApplication::SetPulseRate(bigtime_t rate)
 {
 	if(rate != 0 && rate < (bigtime_t)50000)
 		rate = (bigtime_t)50000;
@@ -446,5 +512,30 @@ LBApp::SetPulseRate(bigtime_t rate)
 			write(fPipes[1], &byte, 1);
 		}
 	}
+}
+
+
+uint8
+LBApplication::CountKeys(int32 indexPanel) const
+{
+	uint8 n = 0;
+
+	if(indexPanel < 0 || indexPanel >= fAddOnsList.CountItems()) return 0;
+
+	for(int32 k = 0; k < fAddOnsList.CountItems(); k++)
+	{
+		LBKAddOnData *data = (LBKAddOnData*)fAddOnsList.ItemAt(k);
+		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
+		{
+			if(indexPanel-- == 0)
+			{
+				LBPanelDevice *dev = reinterpret_cast<LBPanelDevice*>(data->dev);
+				dev->GetCountOfKeys(n);
+				break;
+			}
+		}
+	}
+
+	return n;
 }
 
