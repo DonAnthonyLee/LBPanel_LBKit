@@ -23,81 +23,78 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBPanelDevice.h
+ * File: NPIHat.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __LBK_PANEL_DEVICE_H__
-#define __LBK_PANEL_DEVICE_H__
+#ifndef __NPI_OLED_HAT_DEVICE_H__
+#define __NPI_OLED_HAT_DEVICE_H__
 
-#include <lbk/LBKConfig.h>
-#include <lbk/LBApplication.h>
+#include <lbk/add-ons/LBPanelDevice.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-// NOTE:
-// 	Addon must have C function like below and all the null virtual functions
-// 	of class must be implemented.
-// 		extern "C" LBPanelDevice* instantiate_panel_device();
-
-class LBPanelDevice : public BLocker {
+class NPIHat : public LBPanelDevice {
 public:
-	LBPanelDevice();
-	virtual ~LBPanelDevice();
+	NPIHat();
+	virtual ~NPIHat();
 
-	virtual status_t	InitCheck() = 0;
+	virtual status_t	InitCheck();
 
 	/* screen */
-	virtual uint16		ScreenWidth() = 0;
-	virtual uint16		ScreenHeight() = 0;
+	virtual uint16		ScreenWidth();
+	virtual uint16		ScreenHeight();
 #ifdef LBK_ENABLE_MORE_FEATURES
-	virtual uint8		ScreenDepth() = 0;
-	virtual color_space	ScreenColorSpace() = 0;
-	virtual status_t	SetHighColor(rgb_color c) = 0;
-	virtual status_t	SetLowColor(rgb_color c) = 0;
+	virtual uint8		ScreenDepth();
+	virtual color_space	ScreenColorSpace();
+	virtual status_t	SetHighColor(rgb_color c);
+	virtual status_t	SetLowColor(rgb_color c);
 #endif
 	virtual status_t	FillRect(BRect rect,
 					 pattern p,
 					 bool patternVertical,
-					 bigtime_t &ts) = 0;
-	virtual bool		IsFontHeightSupported(uint8 fontHeight) = 0;
+					 bigtime_t &ts);
+	virtual bool		IsFontHeightSupported(uint8 fontHeight);
 	virtual status_t	DrawString(const char *str,
 					   BPoint pt,
 					   uint8 fontHeight,
 					   bool erase,
-					   bigtime_t &ts) = 0;
+					   bigtime_t &ts);
 	virtual status_t	MeasureStringWidth(const char *str,
 						   uint8 fontHeight,
-						   uint16 &width) = 0;
-	virtual status_t	GetPowerState(bool &state) = 0;
+						   uint16 &width);
+	virtual status_t	GetPowerState(bool &state);
 	virtual status_t	SetPowerState(bool state,
-					      bigtime_t &ts) = 0;
-	virtual status_t	GetTimestamp(bigtime_t &ts) = 0;
-	virtual status_t	SetTimestampNow(bigtime_t &tsRet) = 0;
-	virtual status_t	DisableUpdate() = 0;
-	virtual status_t	EnableUpdate() = 0;
+					      bigtime_t &ts);
+	virtual status_t	GetTimestamp(bigtime_t &ts);
+	virtual status_t	SetTimestampNow(bigtime_t &tsRet);
+	virtual status_t	DisableUpdate();
+	virtual status_t	EnableUpdate();
 #ifdef LBK_ENABLE_MORE_FEATURES
-	virtual status_t	MapBuffer(void **buf) = 0;
-	virtual status_t	UnmapBuffer(void *buf) = 0;
-	virtual status_t	Flush(bigtime_t &ts) = 0;
+	virtual status_t	MapBuffer(void **buf);
+	virtual status_t	UnmapBuffer(void *buf);
+	virtual status_t	Flush(bigtime_t &ts);
 #endif
 
 	/* keys */
-	virtual status_t	GetCountOfKeys(uint8 &count) = 0;
+	virtual status_t	GetCountOfKeys(uint8 &count);
 #ifdef LBK_ENABLE_MORE_FEATURES
-	virtual status_t	GetOrientationOfKeys(orientation &o) = 0;
-	virtual status_t	GetSideOfKeys(bool &right_or_bottom) = 0;
-	virtual status_t	GetScreenOffsetOfKeys(uint16 &offset) = 0;
+	virtual status_t	GetOrientationOfKeys(orientation &o);
+	virtual status_t	GetSideOfKeys(bool &right_or_bottom);
+	virtual status_t	GetScreenOffsetOfKeys(uint16 &offset);
 #endif
 
-	void			SendMessageToApp(const BMessage *msg);
-	void			SendMessageToApp(uint32 command);
+	int			InputHandle() const;
+	int			PipeHandle() const;
 
 private:
-	friend class LBApplication;
+	int fOLEDFD;
+	int fInputFD;
+	int fPipes[2];
+	void *fThread;
 
-	BMessenger fMsgr;
+	static int32		InputEventsObserver(void*);
 };
 
 #endif /* __cplusplus */

@@ -28,16 +28,18 @@
  *
  * --------------------------------------------------------------------------*/
 
+#include <stdio.h>
+
 #include <lbk/add-ons/LBPanelDevice.h>
 
 
-LBPanelDevice::LBPanelDevice(const BList *cfg)
+LBPanelDevice::LBPanelDevice()
 	: BLocker()
 {
 }
 
 
-LBPanelDevice::~LBPanelDevcie()
+LBPanelDevice::~LBPanelDevice()
 {
 }
 
@@ -48,11 +50,19 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 	if(CountLocks() != 0)
 	{
 		fprintf(stderr,
-			"[LBPanelDevice]: %s --- It's forbidden to call this function when locked !\n",
+			"[LBPanelDevice]: %s --- Can't call this function by locking itself !\n",
 			__func__);
 		return;
 	}
 
 	fMsgr.SendMessage(msg);
+}
+
+
+void
+LBPanelDevice::SendMessageToApp(uint32 command)
+{
+	BMessage msg(command);
+	SendMessageToApp(&msg);
 }
 

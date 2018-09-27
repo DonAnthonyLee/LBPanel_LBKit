@@ -23,24 +23,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBApp.h
+ * File: LBApplication.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __LBK_APP_H__
-#define __LBK_APP_H__
-
-#include <be/Be.h>
+#ifndef __LBK_APPLICATION_H__
+#define __LBK_APPLICATION_H__
 
 #include <lbk/LBView.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class LBApp : public BLooper {
+class LBApplication : public BLooper {
 public:
-	LBApp(int oled_fd, int input_fd);
-	virtual ~LBApp();
+	LBApplication(int oled_fd, int input_fd);
+	virtual ~LBApplication();
 
 	bool		AddPageView(LBView *view, bool left_side = true);
 	bool		RemovePageView(LBView *view);
@@ -77,5 +75,5 @@ private:
 
 #endif /* __cplusplus */
 
-#endif /* __LBK_APP_H__ */
+#endif /* __LBK_APPLICATION_H__ */
 
