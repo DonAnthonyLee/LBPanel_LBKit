@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,45 +23,50 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDListItem.h
+ * File: LBPageView.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_LIST_ITEM_H__
-#define __OLED_LIST_ITEM_H__
+#ifndef __LBK_PAGE_VIEW_H__
+#define __LBK_PAGE_VIEW_H__
 
-#include <be/Be.h>
+#include <lbk/LBView.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class OLEDListView;
-
-class OLEDListItem {
+class LBPageView : public LBView {
 public:
-	OLEDListItem(const char *text,
-		     oled_icon_id idIcon);
-	virtual ~OLEDListItem();
+	LBPageView(const char *name = NULL);
+	virtual ~LBPageView();
 
-	const char*	Text() const;
-	void		SetText(const char *text);
+	virtual void	ShowNavButton(uint8 idBtn);
+	virtual void	HideNavButton(uint8 idBtn);
+	bool		IsNavButtonHidden(uint8 idBtn) const;
 
-	oled_icon_id	Icon() const;
-	void		SetIcon(oled_icon_id idIcon);
+	void		SetNavButtonIcon(int32 idBtn, lbk_icon_id idIcon);
+	lbk_icon_id	GetNavButtonIcon(int32 idBtn) const;
 
-	bool		IsHidden() const;
+	virtual BRect	Bounds() const;
+
+	virtual void	Draw(BRect updateRect);
+	virtual void	KeyDown(uint8 key, uint8 clicks);
+	virtual void	KeyUp(uint8 key, uint8 clicks);
+
+	void		SwitchToNextPage();
+	void		SwitchToPrevPage();
+
+	bool		IsFarLeftPage() const;
+	bool		IsFarRightPage() const;
+
+	virtual void	DrawNavButtonIcon(lbk_icon_id idIcon, BPoint location);
 
 private:
-	friend class OLEDListView;
-
-	char *fText;
-	oled_icon_id fIcon;
-	bool fHidden;
-
-	OLEDListView *fListView;
+	uint8 fNavButtonsState;
+	lbk_icon_id fButtonIcons[8]; // enough
 };
 
 #endif /* __cplusplus */
 
-#endif /* __OLED_LIST_ITEM_H__ */
+#endif /* __LBK_PAGE_VIEW_H__ */
 

@@ -9,7 +9,7 @@ TARGET_1 = oled-panel
 TARGET_2 =
 TARGET_3 =
 
-OBJECTS_1 = TMainPageView.o main.o
+OBJECTS_1 = TMainPageView.o TMenuPageView.o main.o
 OBJECTS_2 =
 OBJECTS_3 =
 
@@ -19,9 +19,9 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../../libs/include -I../../libs/liboled_app
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../../libs/include -I../../libs/liboled_app
-LDFLAGS =  $(shell lite-beapi-config --libs) -L../../libs/liboled_app -loled_app
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../../libs/include
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../../libs/include
+LDFLAGS =  $(shell lite-beapi-config --libs) -L../../libs/lbk -llbk
 
 all: targets $(TARGET)
 

@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,24 +23,45 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDAppKit.h
+ * File: LBListItem.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_APP_KIT_H__
-#define __OLED_APP_KIT_H__
+#ifndef __LBK_LIST_ITEM_H__
+#define __LBK_LIST_ITEM_H__
 
-#include <OLEDIconDefs.h>
-#include <OLEDView.h>
-#include <OLEDPageView.h>
-#include <OLEDApp.h>
+#include <be/Be.h>
 
-#include <OLEDAlertView.h>
-#include <OLEDListItem.h>
-#include <OLEDListView.h>
-#include <OLEDMenuItem.h>
-#include <OLEDMenuView.h>
+#ifdef __cplusplus /* Just for C++ */
 
-#endif /* __OLED_APP_KIT_H__ */
+class LBListView;
+
+class LBListItem {
+public:
+	LBListItem(const char *text,
+		   lbk_icon_id idIcon);
+	virtual ~LBListItem();
+
+	const char*	Text() const;
+	void		SetText(const char *text);
+
+	lbk_icon_id	Icon() const;
+	void		SetIcon(lbk_icon_id idIcon);
+
+	bool		IsHidden() const;
+
+private:
+	friend class LBListView;
+
+	char *fText;
+	lbk_icon_id fIcon;
+	bool fHidden;
+
+	LBListView *fListView;
+};
+
+#endif /* __cplusplus */
+
+#endif /* __LBK_LIST_ITEM_H__ */
 

@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,33 +23,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDApp.h
+ * File: LBApp.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_APP_H__
-#define __OLED_APP_H__
+#ifndef __LBK_APP_H__
+#define __LBK_APP_H__
 
 #include <be/Be.h>
 
-#include <OLEDView.h>
+#include <lbk/LBView.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class OLEDApp : public BLooper {
+class LBApp : public BLooper {
 public:
-	OLEDApp(int oled_fd, int input_fd);
-	virtual ~OLEDApp();
+	LBApp(int oled_fd, int input_fd);
+	virtual ~LBApp();
 
-	bool		AddPageView(OLEDView *view, bool left_side = true);
-	bool		RemovePageView(OLEDView *view);
-	OLEDView*	RemovePageView(int32 index, bool left_side = true);
-	OLEDView*	PageViewAt(int32 index, bool left_side = true) const;
+	bool		AddPageView(LBView *view, bool left_side = true);
+	bool		RemovePageView(LBView *view);
+	LBView*		RemovePageView(int32 index, bool left_side = true);
+	LBView*		PageViewAt(int32 index, bool left_side = true) const;
 	int32		CountPageViews(bool left_side = true) const;
 
 	void		ActivatePageView(int32 index, bool left_side = true);
-	OLEDView*	GetActivatedPageView() const;
+	LBView*		GetActivatedPageView() const;
 
 	void		Go();
 
@@ -77,5 +77,5 @@ private:
 
 #endif /* __cplusplus */
 
-#endif /* __OLED_APP_H__ */
+#endif /* __LBK_APP_H__ */
 

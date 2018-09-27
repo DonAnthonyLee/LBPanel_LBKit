@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,36 +23,36 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDAlertView.cpp
+ * File: LBAlertView.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
 #include "OLEDConfig.h"
-#include <OLEDAlertView.h>
+#include <lbk/LBAlertView.h>
 
 // Comment the line below out when it's SURE to use it
 #if OLED_BUTTONS_NUM < 2
-#error "OLEDAlertView: Usually, it's useless when number of buttons less than 2 !!!"
+#error "LBAlertView: Usually, it's useless when number of buttons less than 2 !!!"
 #endif
 
-#define ICON_IS_16x16(id)	((id) > OLED_ICON_ID_16x16_BEGIN && (id) < OLED_ICON_ID_16x16_END)
-#define ICON_IS_VALID(id)	((id) == OLED_ICON_NONE || ICON_IS_16x16(id))
+#define ICON_IS_16x16(id)	((id) > LBK_ICON_ID_16x16_BEGIN && (id) < LBK_ICON_ID_16x16_END)
+#define ICON_IS_VALID(id)	((id) == LBK_ICON_NONE || ICON_IS_16x16(id))
 
 
-OLEDAlertView::OLEDAlertView(const char *title,
+LBAlertView::LBAlertView(const char *title,
 			     const char *text,
-			     oled_icon_id icon3,
-			     oled_icon_id icon2,
-			     oled_icon_id icon1,
+			     lbk_icon_id icon3,
+			     lbk_icon_id icon2,
+			     lbk_icon_id icon1,
 			     alert_type type)
-	: OLEDView(NULL),
+	: LBView(NULL),
 	  fTitle(title),
 	  fText(text),
 	  fButtonMask(0),
 	  fInvoker(NULL)
 {
-	memset(fIcons, OLED_ICON_NONE, sizeof(fIcons));
+	memset(fIcons, LBK_ICON_NONE, sizeof(fIcons));
 
 	switch(type)
 	{
@@ -63,7 +63,7 @@ OLEDAlertView::OLEDAlertView(const char *title,
 		case B_STOP_ALERT:
 #endif
 		case B_WARNING_ALERT:
-			fIcons[3] = OLED_ICON_WARNING;
+			fIcons[3] = LBK_ICON_WARNING;
 			break;
 
 		default:
@@ -77,32 +77,32 @@ OLEDAlertView::OLEDAlertView(const char *title,
 }
 
 
-OLEDAlertView::~OLEDAlertView()
+LBAlertView::~LBAlertView()
 {
 	if(fInvoker != NULL) delete fInvoker;
 }
 
 
 void
-OLEDAlertView::SetTitle(const char *title)
+LBAlertView::SetTitle(const char *title)
 {
 	fTitle.Truncate(0);
 	fTitle.SetTo(title);
 
-	BRect r = OLEDView::Bounds();
+	BRect r = LBView::Bounds();
 	r.bottom = 13;
 	InvalidRect(r);
 }
 
 
 void
-OLEDAlertView::SetText(const char *text)
+LBAlertView::SetText(const char *text)
 {
 	fText.Truncate(0);
 	fText.SetTo(text);
 
-	BRect r = OLEDView::Bounds();
-	r.left = (fIcons[3] == OLED_ICON_NONE ? 13 : 45);
+	BRect r = LBView::Bounds();
+	r.left = (fIcons[3] == LBK_ICON_NONE ? 13 : 45);
 	r.top = 14;
 	r.bottom -= 18;
 	r.InsetBy(0, 2);
@@ -111,7 +111,7 @@ OLEDAlertView::SetText(const char *text)
 
 
 void
-OLEDAlertView::SetButtonIcon(int32 index, oled_icon_id idIcon)
+LBAlertView::SetButtonIcon(int32 index, lbk_icon_id idIcon)
 {
 	if(index < 0 || index > min_c(2, OLED_BUTTONS_NUM - 1)) return;
 	if(!ICON_IS_VALID(idIcon)) return;
@@ -120,7 +120,7 @@ OLEDAlertView::SetButtonIcon(int32 index, oled_icon_id idIcon)
 	{
 		fIcons[index] = idIcon;
 
-		BRect r = OLEDView::Bounds();
+		BRect r = LBView::Bounds();
 		r.top = r.bottom - 17;
 		InvalidRect(r);
 	}
@@ -128,7 +128,7 @@ OLEDAlertView::SetButtonIcon(int32 index, oled_icon_id idIcon)
 
 
 status_t
-OLEDAlertView::SetInvoker(BInvoker *invoker)
+LBAlertView::SetInvoker(BInvoker *invoker)
 {
 	if(invoker == fInvoker) return B_BAD_VALUE;
 
@@ -141,7 +141,7 @@ OLEDAlertView::SetInvoker(BInvoker *invoker)
 
 
 void
-OLEDAlertView::SetButtonAlignment(alignment align)
+LBAlertView::SetButtonAlignment(alignment align)
 {
 	uint8 mask = 0xff;
 	mask <<= OLED_BUTTONS_NUM;
@@ -165,7 +165,7 @@ OLEDAlertView::SetButtonAlignment(alignment align)
 	{
 		fButtonMask = mask;
 
-		BRect r = OLEDView::Bounds();
+		BRect r = LBView::Bounds();
 		r.top = r.bottom - 17;
 		InvalidRect(r);
 	}
@@ -173,7 +173,7 @@ OLEDAlertView::SetButtonAlignment(alignment align)
 
 
 void
-OLEDAlertView::DrawButtonIcon(oled_icon_id idIcon, BPoint location)
+LBAlertView::DrawButtonIcon(lbk_icon_id idIcon, BPoint location)
 {
 	// for OLED_BUTTONS_NUM <= 2, so on
 	DrawIcon(idIcon, location);
@@ -181,13 +181,13 @@ OLEDAlertView::DrawButtonIcon(oled_icon_id idIcon, BPoint location)
 
 
 void
-OLEDAlertView::Draw(BRect rect)
+LBAlertView::Draw(BRect rect)
 {
 	uint16 w;
 	BRect r;
 
 	// title
-	r = OLEDView::Bounds();
+	r = LBView::Bounds();
 	r.bottom = 13;
 	if(fTitle.Length() > 0 && r.Intersects(rect))
 	{
@@ -198,16 +198,16 @@ OLEDAlertView::Draw(BRect rect)
 
 	// message area
 	r.OffsetBy(0, r.Height() + 1);
-	r.bottom = OLEDView::Bounds().bottom - 18;
+	r.bottom = LBView::Bounds().bottom - 18;
 	if(r.Intersects(rect))
 	{
 		FillRect(r & rect);
 	}
 
 	// type icon
-	if(fIcons[3] != OLED_ICON_NONE)
+	if(fIcons[3] != LBK_ICON_NONE)
 	{
-		const oled_icon *icon = oled_get_icon_data(fIcons[3]);
+		const lbk_icon *icon = lbk_get_icon_data(fIcons[3]);
 
 		BRect tRect = r;
 		tRect.right = 32;
@@ -215,7 +215,7 @@ OLEDAlertView::Draw(BRect rect)
 
 		if(icon != NULL && tRect.Intersects(rect))
 		{
-			oled_icon icon_inverse;
+			lbk_icon icon_inverse;
 			icon_inverse.type = icon->type;
 			for(size_t k = 0; k < sizeof(icon_inverse.data); k++)
 				icon_inverse.data[k] = ~(icon->data[k]);
@@ -227,7 +227,7 @@ OLEDAlertView::Draw(BRect rect)
 	if(fText.Length() > 0)
 	{
 		BRect tRect = r;
-		tRect.left = (fIcons[3] == OLED_ICON_NONE ? 13 : 45);
+		tRect.left = (fIcons[3] == LBK_ICON_NONE ? 13 : 45);
 		tRect.InsetBy(0, 2);
 		if(tRect.Intersects(rect))
 		{
@@ -249,7 +249,7 @@ OLEDAlertView::Draw(BRect rect)
 	}
 
 	// icon
-	r = OLEDView::Bounds();
+	r = LBView::Bounds();
 	r.top = r.bottom - 16;
 	r.bottom -= 1;
 	r.right = r.Width() / (float)OLED_BUTTONS_NUM - 1.f;
@@ -277,11 +277,11 @@ OLEDAlertView::Draw(BRect rect)
 
 
 void
-OLEDAlertView::KeyDown(uint8 key, uint8 clicks)
+LBAlertView::KeyDown(uint8 key, uint8 clicks)
 {
 	if(clicks == 1 && (fButtonMask & (0x01 << key)) != 0)
 	{
-		BRect r = OLEDView::Bounds();
+		BRect r = LBView::Bounds();
 		r.top = r.bottom - 17;
 
 		InvalidRect(r);
@@ -290,9 +290,9 @@ OLEDAlertView::KeyDown(uint8 key, uint8 clicks)
 
 
 void
-OLEDAlertView::KeyUp(uint8 key, uint8 clicks)
+LBAlertView::KeyUp(uint8 key, uint8 clicks)
 {
-	BRect r = OLEDView::Bounds();
+	BRect r = LBView::Bounds();
 	r.top = r.bottom - 17;
 	InvalidRect(r);
 

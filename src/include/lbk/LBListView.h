@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Little Board Application Kit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,36 +23,36 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: OLEDListView.h
+ * File: LBListView.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_LIST_VIEW_H__
-#define __OLED_LIST_VIEW_H__
+#ifndef __LBK_LIST_VIEW_H__
+#define __LBK_LIST_VIEW_H__
 
-#include <OLEDPageView.h>
-#include <OLEDListItem.h>
+#include <lbk/LBPageView.h>
+#include <lbk/LBListItem.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class OLEDListView : public OLEDPageView, public BInvoker {
+class LBListView : public LBPageView, public BInvoker {
 public:
-	OLEDListView(const char *name = NULL);
-	virtual ~OLEDListView();
+	LBListView(const char *name = NULL);
+	virtual ~LBListView();
 
-	bool			AddItem(OLEDListItem *item);
-	bool			AddItem(OLEDListItem *item, int32 index);
-	bool			RemoveItem(OLEDListItem *item);
-	OLEDListItem*		RemoveItem(int32 index);
+	bool			AddItem(LBListItem *item);
+	bool			AddItem(LBListItem *item, int32 index);
+	bool			RemoveItem(LBListItem *item);
+	LBListItem*		RemoveItem(int32 index);
 
-	OLEDListItem*		ItemAt(int32 index) const;
+	LBListItem*		ItemAt(int32 index) const;
 	int32			CountItems() const;
-	int32			IndexOf(OLEDListItem *item) const;
+	int32			IndexOf(LBListItem *item) const;
 
 	bool			SwapItems(int32 indexA, int32 indexB);
 	bool			MoveItem(int32 fromIndex, int32 toIndex);
-	void			SortItems(int (*cmpFunc)(const OLEDListItem**, const OLEDListItem**));
+	void			SortItems(int (*cmpFunc)(const LBListItem**, const LBListItem**));
 
 	void			ShowItem(int32 index);
 	void			HideItem(int32 index);
@@ -84,18 +84,18 @@ public:
 protected:
 	virtual void		RefreshNavButtonIcons();
 
-	// TODO: Similar to OLEDMenuView ...
+	// TODO: Similar to LBMenuView ...
 	int32			CountVisibleItems(int32 fromIndex, int32 n) const;
-	OLEDListItem*		PrevVisibleItem(int32 &index) const;
-	OLEDListItem*		NextVisibleItem(int32 &index) const;
-	OLEDListItem*		FirstVisibleItem(int32 &index) const;
-	OLEDListItem*		LastVisibleItem(int32 &index) const;
+	LBListItem*		PrevVisibleItem(int32 &index) const;
+	LBListItem*		NextVisibleItem(int32 &index) const;
+	LBListItem*		FirstVisibleItem(int32 &index) const;
+	LBListItem*		LastVisibleItem(int32 &index) const;
 
 private:
 	BList fItems;
 	int32 fOffset;
 	int32 fPos;
-	int32 fSelectable;
+	bool fSelectable;
 	BMessage *fSelectionMessage;
 
 	void			ResetOffsetIfNeeded();
@@ -103,5 +103,5 @@ private:
 
 #endif /* __cplusplus */
 
-#endif /* __OLED_LIST_VIEW_H__ */
+#endif /* __LBK_LIST_VIEW_H__ */
 
