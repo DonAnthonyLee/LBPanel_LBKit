@@ -31,7 +31,9 @@
 #ifndef __LBK_BUILD_CONFIG_H__
 #define __LBK_BUILD_CONFIG_H__
 
-// TODO
+//#define LBK_ENABLE_MORE_FEATURES
+
+#define LBK_KEY_INTERVAL		130000	/* 130ms */
 
 #endif /* __LBK_BUILD_CONFIG_H__ */
 
