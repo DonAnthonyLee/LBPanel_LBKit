@@ -28,17 +28,9 @@
  *
  * --------------------------------------------------------------------------*/
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <stdint.h>
-#include <oled_ssd1306_ioctl.h>
-
 #include <lbk/LBKConfig.h>
 #include <lbk/LBView.h>
+
 
 LBView::LBView(const char *name)
 	: BHandler(name),
@@ -353,7 +345,12 @@ LBView::MessageReceived(BMessage *msg)
 			}
 			if(msg->FindInt8("key", (int8*)&key) != B_OK) break;
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
-			if(key >= CountKeys() || clicks == 0) break;
+			if(clicks == 0) break;
+#if 0 // don't care
+			if(key >= CountPanelKeys()) break;
+#else
+			if(key > LBK_KEY_ID_MAX) break;
+#endif
 
 			fKeyState |= (0x01 << key);
 			if(msg->what == B_KEY_DOWN)
@@ -657,11 +654,22 @@ LBView::GetStandInTime() const
 }
 
 
-uint8
-LBView::CountKeys() const
+LBPanelDevice*
+LBView::PanelDevice() const
 {
-	// TODO & FIXME: I need to figure out how it should deal ...
-	uint8 n = 3;
+	if(fMasterView != NULL)
+		return fMasterView->PanelDevice();
+	return fDev;
+}
+
+
+uint8
+LBView::CountPanelKeys() const
+{
+	uint8 n = 0;
+
+	if(fMasterView != NULL)
+		return fMasterView->CountPanelKeys();
 
 	if(fDev != NULL)
 		fDev->GetCountOfKeys(n);
