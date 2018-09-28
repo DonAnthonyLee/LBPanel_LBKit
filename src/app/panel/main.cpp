@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Panel application for little board
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -34,8 +34,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <OLEDApp.h>
+#include <lbk/LBKit.h>
 #include "TMainPageView.h"
+#include "TMenuPageView.h"
 
 
 void show_usage(const char *cmd)
@@ -49,8 +50,6 @@ void show_usage(const char *cmd)
 int main(int argc, char **argv)
 {
 	BPath path_conf("/etc/oled_panel.conf");
-	BPath path_oled_dev("/dev/oled-003c");
-	BPath path_input_dev("/dev/input/event0");
 	BFile f;
 
 	for(int n = 1; n < argc; n++)
@@ -66,40 +65,28 @@ int main(int argc, char **argv)
 		}
 	}
 
-#if 0
-	if (f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK)
+	BList cfg;
+	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK)
 	{
-		printf("Unable to open config file (%s) !\n", path_conf.Path());
-		exit(1);
+		printf("Unable to open config file (%s), use default settings !\n", path_conf.Path());
+
+		cfg.AddItem(new BString("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so"));
+
+		// TODO: more
 	}
-
-	// TODO: parsing the config file
-
+	else
+	{
+		// TODO
+	}
 	f.Unset();
-#endif
 
-	int fd1, fd2;
-	if ((fd1 = open(path_oled_dev.Path(), O_RDWR)) < 0)
-	{
-		perror("Unable to open OLED device");
-		exit(1);
-	}
-
-	if ((fd2 = open(path_input_dev.Path(), O_RDONLY)) < 0)
-	{
-		perror("Unable to open input device");
-		exit(1);
-	}
-
-
-	OLEDApp app(fd1, fd2);
+	LBApplication app(&cfg);
+	for(int32 k = 0; k < cfg.CountItems(); k++) delete ((BString*)cfg.ItemAt(k));
 
 	// TODO: a lot
 	app.AddPageView(new TMainPageView(), false);
+	app.AddPageView(new TMenuPageView(), false);
 	app.Go(); // the "app" only handle input events
-
-	close(fd1);
-	close(fd2);
 
 	printf("End\n");
 	return 0;
