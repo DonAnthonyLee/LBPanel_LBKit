@@ -52,7 +52,7 @@ LBPageView::~LBPageView()
 void
 LBPageView::ShowNavButton(uint8 idBtn)
 {
-	if(idBtn >= CountKeys()) return;
+	if(idBtn >= LBK_KEY_TYPICAL_NUMBER) return;
 
 	if((fNavButtonsState & (0x01 << idBtn)) == 0)
 	{
@@ -70,7 +70,7 @@ LBPageView::ShowNavButton(uint8 idBtn)
 void
 LBPageView::HideNavButton(uint8 idBtn)
 {
-	if(idBtn >= CountKeys()) return;
+	if(idBtn >= LBK_KEY_TYPICAL_NUMBER) return;
 
 	if((fNavButtonsState & (0x01 << idBtn)) != 0)
 	{
@@ -88,7 +88,7 @@ LBPageView::HideNavButton(uint8 idBtn)
 bool
 LBPageView::IsNavButtonHidden(uint8 idBtn) const
 {
-	if(idBtn >= CountKeys()) return false;
+	if(idBtn >= LBK_KEY_TYPICAL_NUMBER) return false;
 
 	return((fNavButtonsState & (0x01 << idBtn)) == 0);
 }
@@ -97,7 +97,7 @@ LBPageView::IsNavButtonHidden(uint8 idBtn) const
 void
 LBPageView::SetNavButtonIcon(int32 idBtn, lbk_icon_id idIcon)
 {
-	if(idBtn >= CountKeys()) return;
+	if(idBtn >= LBK_KEY_TYPICAL_NUMBER) return;
 	if(!ICON_IS_VALID(idIcon)) return;
 
 	if(fButtonIcons[idBtn] != idIcon)
@@ -125,7 +125,7 @@ LBPageView::GetNavButtonIcon(int32 idBtn) const
 void
 LBPageView::DrawNavButtonIcon(lbk_icon_id idIcon, BPoint location)
 {
-	// for CountKeys() <= 2, so on
+	// for LBK_KEY_TYPICAL_NUMBER <= 2, so on
 	DrawIcon(idIcon, location);
 }
 
@@ -145,14 +145,13 @@ LBPageView::Bounds() const
 void
 LBPageView::Draw(BRect rect)
 {
-	uint8 nKeys = CountKeys();
-	if(nKeys == 0 || fNavButtonsState == 0) return;
+	if(fNavButtonsState == 0) return;
 
 	BRect r = LBView::Bounds();
-	r.right = r.Width() / (float)nKeys - 1.f;
+	r.right = r.Width() / (float)LBK_KEY_TYPICAL_NUMBER - 1.f;
 	r.top = r.bottom - 15;
 
-	for(int k = 0; k < nKeys; k++)
+	for(int k = 0; k < LBK_KEY_TYPICAL_NUMBER; k++)
 	{
 		if(IsNavButtonHidden(k) == false && r.Intersects(rect))
 		{
