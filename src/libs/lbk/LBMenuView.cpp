@@ -32,8 +32,8 @@
 #include <lbk/LBMenuView.h>
 
 // Comment the line below out when it's SURE to use it
-#if OLED_BUTTONS_NUM < 2
-#error "LBMenuView: Usually, it's useless when number of buttons less than 2 !!!"
+#if LBK_KEY_TYPICAL_NUMBER < 2
+#error "LBMenuView: Usually, it's useless when number of keys less than 2 !!!"
 #endif
 
 
@@ -42,13 +42,13 @@ LBMenuView::LBMenuView(const char *name)
 	  fSelected(-1),
 	  fOffset(0)
 {
-#if OLED_BUTTONS_NUM == 2
+#if LBK_KEY_TYPICAL_NUMBER == 2
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
 	SetNavButtonIcon(1, LBK_ICON_RIGHT);
-#elif OLED_BUTTONS_NUM >= 3
-	SetNavButtonIcon(OLED_BUTTONS_NUM - 3, LBK_ICON_LEFT);
-	SetNavButtonIcon(OLED_BUTTONS_NUM - 2, LBK_ICON_OK);
-	SetNavButtonIcon(OLED_BUTTONS_NUM - 1, LBK_ICON_RIGHT);
+#elif LBK_KEY_TYPICAL_NUMBER >= 3
+	SetNavButtonIcon(LBK_KEY_TYPICAL_NUMBER - 3, LBK_ICON_LEFT);
+	SetNavButtonIcon(LBK_KEY_TYPICAL_NUMBER - 2, LBK_ICON_OK);
+	SetNavButtonIcon(LBK_KEY_TYPICAL_NUMBER - 1, LBK_ICON_RIGHT);
 #endif
 }
 
@@ -398,9 +398,9 @@ LBMenuView::KeyUp(uint8 key, uint8 clicks)
 	lbk_icon_id btnIcon = GetNavButtonIcon((int32)key);
 	if(btnIcon == LBK_ICON_NONE) return;
 
-#if OLED_BUTTONS_NUM >= 3
+#if LBK_KEY_TYPICAL_NUMBER >= 3
 	if(clicks == 1 && btnIcon == LBK_ICON_OK)
-#else // OLED_BUTTONS_NUM < 3
+#else // LBK_KEY_TYPICAL_NUMBER < 3
 	if((clicks == 1 && btnIcon == LBK_ICON_OK) ||
 	   ((clicks > 1 && clicks != 0xff) && btnIcon == LBK_ICON_LEFT))
 #endif
@@ -475,45 +475,45 @@ LBMenuView::RefreshNavButtonIcons()
 	// LEFT
 	if(n > 0)
 	{
-#if OLED_BUTTONS_NUM == 2
+#if LBK_KEY_TYPICAL_NUMBER == 2
 		ShowNavButton(0);
-#elif OLED_BUTTONS_NUM >= 3
-		ShowNavButton(OLED_BUTTONS_NUM - 3);
+#elif LBK_KEY_TYPICAL_NUMBER >= 3
+		ShowNavButton(LBK_KEY_TYPICAL_NUMBER - 3);
 #endif
 	}
 	else
 	{
-#if OLED_BUTTONS_NUM == 2
+#if LBK_KEY_TYPICAL_NUMBER == 2
 		HideNavButton(0);
-#elif OLED_BUTTONS_NUM >= 3
-		HideNavButton(OLED_BUTTONS_NUM - 3);
+#elif LBK_KEY_TYPICAL_NUMBER >= 3
+		HideNavButton(LBK_KEY_TYPICAL_NUMBER - 3);
 #endif
 	}
 
 	// OK
-#if OLED_BUTTONS_NUM >= 3
+#if LBK_KEY_TYPICAL_NUMBER >= 3
 	if(CurrentSelection() != NULL)
-		ShowNavButton(OLED_BUTTONS_NUM - 2);
+		ShowNavButton(LBK_KEY_TYPICAL_NUMBER - 2);
 	else
-		HideNavButton(OLED_BUTTONS_NUM - 2);
+		HideNavButton(LBK_KEY_TYPICAL_NUMBER - 2);
 #endif
 
 	// RIGHT
 	n = CountVisibleItems(fSelected + 1, -1);
 	if(n > 0)
 	{
-#if OLED_BUTTONS_NUM == 2
+#if LBK_KEY_TYPICAL_NUMBER == 2
 		ShowNavButton(1);
-#elif OLED_BUTTONS_NUM >= 3
-		ShowNavButton(OLED_BUTTONS_NUM - 1);
+#elif LBK_KEY_TYPICAL_NUMBER >= 3
+		ShowNavButton(LBK_KEY_TYPICAL_NUMBER - 1);
 #endif
 	}
 	else
 	{
-#if OLED_BUTTONS_NUM == 2
+#if LBK_KEY_TYPICAL_NUMBER == 2
 		HideNavButton(1);
-#elif OLED_BUTTONS_NUM >= 3
-		HideNavButton(OLED_BUTTONS_NUM - 1);
+#elif LBK_KEY_TYPICAL_NUMBER >= 3
+		HideNavButton(LBK_KEY_TYPICAL_NUMBER - 1);
 #endif
 	}
 }

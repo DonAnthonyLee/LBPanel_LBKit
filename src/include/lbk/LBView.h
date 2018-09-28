@@ -102,7 +102,8 @@ public:
 
 protected:
 	bigtime_t	GetStandInTime() const;
-	uint8		CountKeys() const;
+	LBPanelDevice*	PanelDevice() const;
+	uint8		CountPanelKeys() const;
 
 private:
 	friend class LBApplication;
