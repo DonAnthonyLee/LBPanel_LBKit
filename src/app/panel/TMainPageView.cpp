@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Panel application for little board
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -31,15 +31,17 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <OLEDApp.h>
 #include "TMainPageView.h"
 
 
+#define POWER_REQUESTED_CONFIRM_MSG	'pwof'
+
+
 TMainPageView::TMainPageView(const char *name)
-	: OLEDPageView(name), fTabIndex(0), f24Hours(true), fShowSeconds(false), fShowTimestamp(0)
+	: LBPageView(name), fTabIndex(0), f24Hours(true), fShowSeconds(false), fShowTimestamp(0)
 {
-	SetNavButtonIcon(0, OLED_ICON_UP);
-	SetNavButtonIcon(2, OLED_ICON_DOWN);
+	SetNavButtonIcon(0, LBK_ICON_LEFT);
+	SetNavButtonIcon(2, LBK_ICON_RIGHT);
 
 	// TODO
 }
@@ -56,12 +58,12 @@ TMainPageView::Pulse()
 
 	// TODO: check whether to redraw DATE & WEEK
 
-	BRect r = OLEDView::Bounds();
+	BRect r = LBView::Bounds();
 	r.top = 14;
 	r.bottom -= 13;
 	InvalidRect(r);
 
-	if(fTabIndex == 0 && real_time_clock_usecs() - fShowTimestamp > 3000000) // 3s
+	if(fTabIndex == 0 && real_time_clock_usecs() - fShowTimestamp > 2000000) // 2s
 	{
 		HideNavButton(0);
 		HideNavButton(2);
@@ -79,7 +81,7 @@ TMainPageView::DrawClock(BRect rect)
 	struct tm t;
 	if(localtime_r(&timer, &t) == NULL) return;
 
-	BRect r = OLEDView::Bounds();
+	BRect r = LBView::Bounds();
 	r.bottom = 13;
 	if(r.Intersects(rect))
 	{
@@ -91,9 +93,12 @@ TMainPageView::DrawClock(BRect rect)
 	}
 
 	r.OffsetBy(0, r.Height() + 1);
-	r.bottom = OLEDView::Bounds().bottom - 13;
+	r.bottom = LBView::Bounds().bottom - 13;
 	if(r.Intersects(rect))
 	{
+		FillRect(r & rect);
+
+		// TODO: AM/PM
 		if(fShowSeconds)
 			snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
 				 f24Hours ? t.tm_hour : (t.tm_hour % 12),
@@ -104,11 +109,11 @@ TMainPageView::DrawClock(BRect rect)
 				 t.tm_min);
 		SetFontSize(fShowSeconds ? 24 : 32);
 		w = StringWidth(buf);
-		DrawString(buf, r.Center() - BPoint(w / 2.f, (fShowSeconds ? 23 : 31) / 2.f));
+		DrawString(buf, r.Center() - BPoint(w / 2.f, (fShowSeconds ? 23 : 31) / 2.f), true);
 	}
 
 	r.OffsetBy(0, r.Height() + 1);
-	r.bottom = OLEDView::Bounds().bottom;
+	r.bottom = LBView::Bounds().bottom;
 	if(r.Intersects(rect))
 	{
 		const char *desc[] = {"日", "一", "二", "三", "四", "五", "六"};
@@ -128,15 +133,22 @@ TMainPageView::DrawBoardInfo(BRect rect)
 	int k;
 	BPoint pt(0, 0);
 
-	for(k = 0; k <= OLED_ICON_RIGHT; k++)
+	for(k = 0; k <= LBK_ICON_RIGHT; k++)
 	{
-		DrawIcon((oled_icon_id)k, pt);
+		DrawIcon((lbk_icon_id)k, pt);
 		pt.x += 17;
-		if(pt.x + 16 > OLEDView::Bounds().right)
+		if(pt.x + 16 > LBView::Bounds().right)
 		{
 			pt.x = 0;
 			pt.y += 17;
 		}
+	}
+
+	pt.Set(0, 33);
+	for(k = LBK_ICON_WARNING; k <= LBK_ICON_POWER_OFF; k++)
+	{
+		DrawIcon((lbk_icon_id)k, pt);
+		pt.x += 33;
 	}
 #endif
 }
@@ -153,7 +165,7 @@ TMainPageView::DrawClientsInfo(BRect rect)
 
 	uint16 w = StringWidth(aStr.String());
 	DrawString(aStr.String(),
-		   OLEDView::Bounds().Center() - BPoint(w / 2.f, 15 / 2.f));
+		   LBView::Bounds().Center() - BPoint(w / 2.f, 15 / 2.f));
 #endif
 }
 
@@ -161,7 +173,7 @@ TMainPageView::DrawClientsInfo(BRect rect)
 void
 TMainPageView::Draw(BRect updateRect)
 {
-	OLEDPageView::Draw(updateRect);
+	LBPageView::Draw(updateRect);
 
 	if(fTabIndex == 0)
 	{
@@ -182,11 +194,23 @@ TMainPageView::Draw(BRect updateRect)
 void
 TMainPageView::KeyDown(uint8 key, uint8 clicks)
 {
-	OLEDPageView::KeyDown(key, clicks);
+	LBPageView::KeyDown(key, clicks);
 
 	if(clicks == 0xff) // long press
 	{
-		// TODO: confirm to power off
+		LBView *view = FindStickView("PowerOffRequested");
+		if(view == NULL)
+		{
+			view = new LBAlertView("关机",
+						 "是否确定\n进行关机操作?",
+						 LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
+						 B_WARNING_ALERT);
+			BInvoker *invoker = new BInvoker(new BMessage(POWER_REQUESTED_CONFIRM_MSG), this);
+			cast_as(view, LBAlertView)->SetInvoker(invoker);
+			view->SetName("PowerOffRequested");
+			AddStickView(view);
+		}
+		view->StandIn();
 		printf("[TMainPageView]: Power off requested.\n");
 	}
 
@@ -208,17 +232,17 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 void
 TMainPageView::KeyUp(uint8 key, uint8 clicks)
 {
-	OLEDPageView::KeyUp(key, clicks);
+	LBPageView::KeyUp(key, clicks);
 
 	int32 saveIndex = fTabIndex;
 
 	if(clicks == 1)
 	{
-		if(key == 0 && fTabIndex > -1) // Up
+		if(key == 0 && fTabIndex > -1) // Left
 		{
 			fTabIndex--;
 		}
-		else if(key == 2 && fTabIndex < 1) // Down
+		else if(key == 2 && fTabIndex < 1) // Right
 		{
 			fTabIndex++;
 		}
@@ -233,12 +257,12 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 		{ 
 			fTabIndex = 0;
 		}
-		else if(key == 0) // Left
+		else if(key == 0) // Left Switch
 		{
 			SwitchToPrevPage();
 			return;
 		}
-		else if(key == 2) // Right
+		else if(key == 2) // Right Switch
 		{
 			SwitchToNextPage();
 			return;
@@ -248,9 +272,9 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 	if(saveIndex != fTabIndex)
 	{
 		if(fTabIndex == 0)
-			cast_as(Looper(), OLEDApp)->SetPulseRate(fShowSeconds ? 1000000 : 10000000);
+			cast_as(Looper(), LBApplication)->SetPulseRate(fShowSeconds ? 1000000 : 10000000);
 		else
-			cast_as(Looper(), OLEDApp)->SetPulseRate(0);
+			cast_as(Looper(), LBApplication)->SetPulseRate(0);
 
 		fShowTimestamp = real_time_clock_usecs();
 		if(fTabIndex > -1)
@@ -274,8 +298,7 @@ TMainPageView::Set24Hours(bool state)
 	if(f24Hours != state)
 	{
 		f24Hours = state;
-		if(IsActivated())
-			InvalidRect();
+		InvalidRect();
 	}
 }
 
@@ -286,8 +309,46 @@ TMainPageView::ShowSeconds(bool state)
 	if(fShowSeconds != state)
 	{
 		fShowSeconds = state;
-		if(IsActivated())
-			InvalidRect();
+		InvalidRect();
 	}
 }
+
+
+void
+TMainPageView::Activated(bool state)
+{
+	LBPageView::Activated(state);
+
+	if(state == false)
+		cast_as(Looper(), LBApplication)->SetPulseRate(0);
+}
+
+
+void
+TMainPageView::MessageReceived(BMessage *msg)
+{
+	int32 which = -1;
+	uint8 clicks = 0;
+	LBView *view;
+
+	switch(msg->what)
+	{
+		case POWER_REQUESTED_CONFIRM_MSG:
+			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
+			if(msg->FindInt32("which", &which) != B_OK) break;
+			if(clicks > 1) break;
+			view = FindStickView("PowerOffRequested");
+			if(view == NULL) break;
+			view->StandBack();
+			if(which != 1) break;
+			printf("[TMainPageView]: Going to power off !\n");
+			// TODO: Show "Shuting down..."
+			system("poweroff");
+			break;
+
+		default:
+			LBPageView::MessageReceived(msg);
+	}
+}
+
 
