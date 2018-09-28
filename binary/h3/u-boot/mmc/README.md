@@ -14,7 +14,10 @@
     	boot_device = <1>;
     };
 
-## 其它
+另外一种方法是更改 bootarg (修改 boot.cmd 并转换替换 boot.scr)，将其中的 mmcblk0 改成
+ mmcblk1。
+ 
+ ## 其它
 
 参照 SPI 启动。
 
