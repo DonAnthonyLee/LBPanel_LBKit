@@ -47,72 +47,124 @@
 
 typedef enum
 {
-	LBK_ADD_ON_NONE_DEVICE = 0,
+	LBK_ADD_ON_NONE = 0,
 	LBK_ADD_ON_PANEL_DEVICE,
-} LBKAddOnType;
+} LBAddOnType;
+
+// use ETK++'s functions for no implementation in Lite BeAPI
+#ifdef ETK_MAJOR_VERSION
+	#define B_SYMBOL_TYPE_TEXT				0x02
+
+	typedef void*	image_id;
+	#define load_add_on(path)				etk_load_addon(path)
+	#define unload_add_on(image)				etk_unload_addon(image)
+	#define get_image_symbol(image, name, sclass, ptr)	etk_get_image_symbol(image, name, ptr)
+	#define IMAGE_IS_VALID(image)				(image != NULL)
+#else
+	#define IMAGE_IS_VALID(image)				(image > 0)
+#endif
+
+typedef struct
+{
+	uint8 keyState;
+	bigtime_t keyTimestamps[8];
+	uint8 keyClicks[8];
+	BList *leftPageViews;
+	BList *rightPageViews;
+	BHandler *preferHandler;
+} LBPanelDeviceAddOnData;
 
 typedef struct
 {
 	BString name;
-	LBKAddOnType type;
+	LBAddOnType type;
 	void *dev;
-	void *image;
-} LBKAddOnData;
+	image_id image;
+	void *data;
+} LBAddOnData;
 
 
-static LBKAddOnData* lbk_app_load_panel_device_addon(const BPath &pth)
+static LBAddOnData* lbk_app_load_panel_device_addon(const BPath &pth)
 {
-	LBKAddOnData *data = NULL;
+	LBAddOnData *data = NULL;
 
-#ifdef ETK_MAJOR_VERSION // use ETK++ function
-	void *image = etk_load_addon(pth.Path());
-	if(image == NULL) return NULL;
+	image_id image = load_add_on(pth.Path());
+	if(!IMAGE_IS_VALID(image)) return NULL;
 
 	LBPanelDevice* (*instantiate_func)() = NULL;
 	LBPanelDevice *dev = NULL;
+	LBPanelDeviceAddOnData *devData = NULL;
 
-	if(etk_get_image_symbol(image, "instantiate_panel_device", (void**)&instantiate_func) != E_OK ||
+	if(get_image_symbol(image, "instantiate_panel_device", B_SYMBOL_TYPE_TEXT, (void**)&instantiate_func) != B_OK ||
 	   (dev = (*instantiate_func)()) == NULL ||
-	   dev->InitCheck() != B_OK)
+	   dev->InitCheck() != B_OK ||
+	   (devData = (LBPanelDeviceAddOnData*)malloc(sizeof(LBPanelDeviceAddOnData))) == NULL)
 	{
 		if(dev != NULL) delete dev;
-		etk_unload_addon(image);
+		unload_add_on(image);
 		return NULL;
 	}
 
-	data = new LBKAddOnData;
+	data = new LBAddOnData;
 	data->name.SetTo(pth.Leaf());
 	data->type = LBK_ADD_ON_PANEL_DEVICE;
 	data->dev = reinterpret_cast<void*>(dev);
 	data->image = image;
-#endif
 
-	// TODO
+	bzero(devData, sizeof(LBPanelDeviceAddOnData));
+	devData->leftPageViews = new BList();
+	devData->rightPageViews = new BList();
+	data->data = devData;
+
 	return data;
 }
 
 
-static void lbk_app_unload_panel_device_addon(LBKAddOnData *data)
+static void lbk_app_unload_panel_device_addon(LBAddOnData *data)
 {
-#ifdef ETK_MAJOR_VERSION // use ETK++ function
 	if(data == NULL || data->type != LBK_ADD_ON_PANEL_DEVICE) return;
-	if(data->dev == NULL || data->image == NULL) return;
+	if(data->dev == NULL || !IMAGE_IS_VALID(data->image)) return;
 
 	LBPanelDevice *dev = reinterpret_cast<LBPanelDevice*>(data->dev);
 	delete dev;
 
-	etk_unload_addon(data->image);
-#endif
+	LBPanelDeviceAddOnData *devData = (LBPanelDeviceAddOnData*)data->data;
+	delete devData->leftPageViews;
+	delete devData->rightPageViews;
+	free(devData);
 }
 
 
-static LBPanelDevice* lbk_app_find_first_panel_device(BList &addOnsList)
+static LBPanelDevice* lbk_app_get_panel_device(const BList &addOnsList, int32 index)
 {
+	if(index < 0 || index >= addOnsList.CountItems()) return NULL;
+
 	for(int32 k = 0; k < addOnsList.CountItems(); k++)
 	{
-		LBKAddOnData *data = (LBKAddOnData*)addOnsList.ItemAt(k);
+		LBAddOnData *data = (LBAddOnData*)addOnsList.ItemAt(k);
 		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
-			return reinterpret_cast<LBPanelDevice*>(data->dev);
+		{
+			if(index-- == 0)
+				return(reinterpret_cast<LBPanelDevice*>(data->dev));
+		}
+	}
+
+	return NULL;
+}
+
+
+static LBPanelDeviceAddOnData* lbk_app_get_panel_device_data(const BList &addOnsList, int32 index)
+{
+	if(index < 0 || index >= addOnsList.CountItems()) return NULL;
+
+	for(int32 k = 0; k < addOnsList.CountItems(); k++)
+	{
+		LBAddOnData *data = (LBAddOnData*)addOnsList.ItemAt(k);
+		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
+		{
+			if(index-- == 0)
+				return((LBPanelDeviceAddOnData*)data->data);
+		}
 	}
 
 	return NULL;
@@ -122,11 +174,8 @@ static LBPanelDevice* lbk_app_find_first_panel_device(BList &addOnsList)
 LBApplication::LBApplication(const BList *cfg)
 	: BLooper(NULL, B_URGENT_DISPLAY_PRIORITY),
 	  fPulseRate(0),
-	  fKeyState(0)
+	  fPanelsCount(0)
 {
-	bzero(fKeyTimestamps, sizeof(fKeyTimestamps));
-	bzero(fKeyClicks, sizeof(fKeyClicks));
-
 	fPipes[0] = -1;
 
 	if(cfg != NULL)
@@ -135,12 +184,13 @@ LBApplication::LBApplication(const BList *cfg)
 		{
 			BString *item = (BString*)cfg->ItemAt(k);
 			if(item == NULL || item->Length() == 0) continue;
-			if(item->FindFirst("#") == 0 || item->FindFirst("//") == 0) continue;
+			if(item->ByteAt(0) == '#' || item->FindFirst("//") == 0) continue;
 			item->RemoveAll("\r");
 			item->RemoveAll("\n");
+			item->RemoveAll(" ");
 
 			int32 found = item->FindFirst("=");
-			if(found <= 0) continue;
+			if(found <= 0 || found == item->Length() - 1) continue;
 
 			BString name(item->String(), found);
 			BString value(item->String() + found + 1);
@@ -150,7 +200,7 @@ LBApplication::LBApplication(const BList *cfg)
 				BPath pth(value.String(), NULL, true);
 				if(pth.Path() == NULL) continue;
 
-				LBKAddOnData *data = lbk_app_load_panel_device_addon(pth);
+				LBAddOnData *data = lbk_app_load_panel_device_addon(pth);
 				if(data == NULL)
 				{
 					fprintf(stderr,
@@ -158,10 +208,11 @@ LBApplication::LBApplication(const BList *cfg)
 						__func__, pth.Path());
 					continue;
 				}
+
 				fAddOnsList.AddItem(data);
 			}
 
-			// TODO
+			// TODO: other addons
 		}
 	}
 }
@@ -169,9 +220,14 @@ LBApplication::LBApplication(const BList *cfg)
 
 LBApplication::~LBApplication()
 {
-	LBView *view;
-	while((view = (LBView*)fLeftPageViews.RemoveItem(0)) != NULL) delete view;
-	while((view = (LBView*)fRightPageViews.RemoveItem(0)) != NULL) delete view;
+	for(int32 k = 0; k < CountPanels(); k++)
+	{
+		LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, k);
+
+		LBView *view;
+		while((view = (LBView*)dev->leftPageViews->RemoveItem(0)) != NULL) delete view;
+		while((view = (LBView*)dev->rightPageViews->RemoveItem(0)) != NULL) delete view;
+	}
 
 	if(fPipes[0] >= 0)
 	{
@@ -181,26 +237,28 @@ LBApplication::~LBApplication()
 
 	for(int32 k = 0; k < fAddOnsList.CountItems(); k++)
 	{
-		LBKAddOnData *data = (LBKAddOnData*)fAddOnsList.ItemAt(k);
+		LBAddOnData *data = (LBAddOnData*)fAddOnsList.ItemAt(k);
 		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
 			lbk_app_unload_panel_device_addon(data);
-		// TODO
+		// TODO: other addons
+		unload_add_on(data->image);
 		delete data;
 	}
 }
 
 
 bool
-LBApplication::AddPageView(LBView *view, bool left_side)
+LBApplication::AddPageView(LBView *view, bool left_side, int32 panel_index)
 {
-	LBPanelDevice *dev = lbk_app_find_first_panel_device(fAddOnsList);
-	if(dev == NULL || view == NULL || view->Looper() != NULL || view->MasterView() != NULL) return false;
+	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, panel_index);
+	if(dev == NULL || view == NULL) return false;
+	if(view->fDev != NULL || view->Looper() != NULL || view->MasterView() != NULL) return false;
 
-	if((left_side ? fLeftPageViews.AddItem(view) : fRightPageViews.AddItem(view)) == false) return false;
+	if((left_side ? dev->leftPageViews->AddItem(view) : dev->rightPageViews->AddItem(view)) == false) return false;
 	AddHandler(view);
 
 	view->fActivated = false;
-	view->fDev = dev;
+	view->fDev = PanelAt(panel_index);
 
 	view->Attached();
 
@@ -211,16 +269,18 @@ LBApplication::AddPageView(LBView *view, bool left_side)
 bool
 LBApplication::RemovePageView(LBView *view)
 {
-	if(view == NULL || view->Looper() != this || view->MasterView() != NULL) return false;
+	if(view == NULL || view->fDev == NULL || view->Looper() != this || view->MasterView() != NULL) return false;
+
+	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, view->fDev->fID);
 
 	view->Detached();
 	RemoveHandler(view);
 
-	if(fLeftPageViews.RemoveItem(view) == false)
-		fRightPageViews.RemoveItem(view);
+	if(dev->leftPageViews->RemoveItem(view) == false)
+		dev->rightPageViews->RemoveItem(view);
 
-	if(view->fActivated)
-		SetPreferredHandler(NULL);
+	if(view == dev->preferHandler)
+		dev->preferHandler = NULL;
 
 	view->fActivated = false;
 	view->fDev = NULL;
@@ -230,48 +290,61 @@ LBApplication::RemovePageView(LBView *view)
 
 
 LBView*
-LBApplication::RemovePageView(int32 index, bool left_side)
+LBApplication::RemovePageView(int32 index, bool left_side, int32 panel_index)
 {
-	LBView *view = PageViewAt(index, left_side);
+	LBView *view = PageViewAt(index, left_side, panel_index);
 
 	return(RemovePageView(view) ? view : NULL);
 }
 
 
 LBView*
-LBApplication::PageViewAt(int32 index, bool left_side) const
+LBApplication::PageViewAt(int32 index, bool left_side, int32 panel_index) const
 {
-	return(left_side ? (LBView*)fLeftPageViews.ItemAt(index) : (LBView*)fRightPageViews.ItemAt(index));
+	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, panel_index);
+
+	if(dev == NULL) return NULL;
+	return(left_side ? (LBView*)dev->leftPageViews->ItemAt(index) : (LBView*)dev->rightPageViews->ItemAt(index));
 }
 
 
 int32
-LBApplication::CountPageViews(bool left_side) const
+LBApplication::CountPageViews(bool left_side, int32 panel_index) const
 {
-	return(left_side ? fLeftPageViews.CountItems() : fRightPageViews.CountItems());
+	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, panel_index);
+
+	if(dev == NULL) return 0;
+	return(left_side ? dev->leftPageViews->CountItems() : dev->rightPageViews->CountItems());
 }
 
+
 void
-LBApplication::ActivatePageView(int32 index, bool left_side)
+LBApplication::ActivatePageView(int32 index, bool left_side, int32 panel_index)
 {
-	LBView *newView = PageViewAt(index, left_side);
-	LBView *oldView = GetActivatedPageView();
+	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, panel_index);
+	if(dev == NULL) return;
+
+	LBView *newView = PageViewAt(index, left_side, panel_index);
+	LBView *oldView = GetActivatedPageView(panel_index);
 
 	if(oldView == newView || newView == NULL) return;
 
 	if(oldView)
 		oldView->SetActivated(false);
 
-	SetPreferredHandler(newView);
+	dev->preferHandler = newView;
 	newView->SetActivated(true);
 }
 
 
 LBView*
-LBApplication::GetActivatedPageView() const
+LBApplication::GetActivatedPageView(int32 panel_index) const
 {
+	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, panel_index);
+
+	if(dev == NULL) return NULL;
 	// ignore NULL to make it compatible with old BeOS API
-	return(PreferredHandler() ? cast_as(PreferredHandler(), LBView) : NULL);
+	return(dev->preferHandler ? cast_as(dev->preferHandler, LBView) : NULL);
 }
 
 
@@ -284,14 +357,6 @@ LBApplication::Go()
 		return;
 	}
 
-	LBPanelDevice* dev = lbk_app_find_first_panel_device(fAddOnsList);
-	if(dev == NULL)
-	{
-		printf("[LBApplication]: NO PANEL DEVICE !\n");
-		return;
-	}
-	dev->fMsgr = BMessenger(this, this);
-
 	if(pipe(fPipes) < 0)
 	{
 		perror("[LBApplication]: Unable to create pipe");
@@ -300,7 +365,15 @@ LBApplication::Go()
 
 	Lock();
 	Run();
-	ActivatePageView(0, false);
+	for(int32 k = 0; k < CountPanels(); k++)
+	{
+		LBPanelDevice* dev = PanelAt(k);
+
+		dev->fID = k;
+		dev->fMsgr = BMessenger(this, this);
+
+		ActivatePageView(0, false, k);
+	}
 	Unlock();
 
 	fd_set rset;
@@ -372,65 +445,71 @@ LBApplication::Go()
 void
 LBApplication::MessageReceived(BMessage *msg)
 {
+	int32 id = -1;
+	LBPanelDeviceAddOnData *dev = NULL;
+
 	bigtime_t when;
-	uint8 nKey = 0;
+	uint8 key = 0;
 	bool stopRunner;
 
 	switch(msg->what)
 	{
 		case B_KEY_DOWN:
 		case B_KEY_UP:
-			if(PreferredHandler() == NULL) break;
-			if(msg->FindInt8("key", (int8*)&nKey) != B_OK || nKey >= 8) break;
+			if(msg->FindInt32("panel_id", &id) != B_OK) break;
+			if((dev = lbk_app_get_panel_device_data(fAddOnsList, id)) == NULL) break;
+			if(dev->preferHandler == NULL) break;
+			if(msg->FindInt8("key", (int8*)&key) != B_OK || key >= 8) break;
 			if(msg->FindInt64("when", &when) != B_OK) break;
 			if(msg->what == B_KEY_DOWN)
 			{
-				if((fKeyState & (0x01 << nKey)) != 0) // already DOWN
+				if((dev->keyState & (0x01 << key)) != 0) // already DOWN
 				{
+					// FIXME: GPIO blocking I2C transfer
 					// auto-repeat (event.value = 2) event
-					if(when < fKeyTimestamps[nKey]) break;
-					if(when - fKeyTimestamps[nKey] < (bigtime_t)500000) break; // 0.5s
-					if(fKeyClicks[nKey] == 0xff) break;
-					fKeyClicks[nKey] = 0xff; // long press
+					if(when < dev->keyTimestamps[key]) break;
+					if(when - dev->keyTimestamps[key] < (bigtime_t)500000) break; // 0.5s
+					if(dev->keyClicks[key] == 0xff) break;
+					dev->keyClicks[key] = 0xff; // long press
 				}
 				else
 				{
-					if(fKeyClicks[nKey] > 0 && when < fKeyTimestamps[nKey]) break;
-					if(fKeyClicks[nKey] < 0xff) fKeyClicks[nKey]++;
+					if(dev->keyClicks[key] > 0 && when < dev->keyTimestamps[key]) break;
+					if(dev->keyClicks[key] < 0xff) dev->keyClicks[key]++;
 				}
-				fKeyTimestamps[nKey] = when;
+				dev->keyTimestamps[key] = when;
 
 				BMessage aMsg(B_KEY_DOWN);
-				aMsg.AddInt8("key", *((int8*)&nKey));
-				aMsg.AddInt8("clicks", *((int8*)&fKeyClicks[nKey]));
+				aMsg.AddInt8("key", *((int8*)&key));
+				aMsg.AddInt8("clicks", *((int8*)&dev->keyClicks[key]));
 				aMsg.AddInt64("when", when);
-				PostMessage(&aMsg, PreferredHandler());
+				PostMessage(&aMsg, dev->preferHandler);
 
-				fKeyState |= (0x1 << nKey);
+				dev->keyState |= (0x1 << key);
 			}
 			else
 			{
 				uint8 byte = 0xab;
 
-				if((fKeyState & (0x01 << nKey)) == 0) break; // already UP
-				if(when < fKeyTimestamps[nKey]) break;
+				if((dev->keyState & (0x01 << key)) == 0) break; // already UP
+				if(when < dev->keyTimestamps[key]) break;
 				if(write(fPipes[1], &byte, 1) <= 0)
 				{
 					DBGOUT("[LBApplication]: Failed to notice the main thread.\n");
 					BMessage aMsg(B_KEY_UP);
-					aMsg.AddInt8("key", *((int8*)&nKey));
-					aMsg.AddInt8("clicks", *((int8*)&fKeyClicks[nKey]));
+					aMsg.AddInt8("key", *((int8*)&key));
+					aMsg.AddInt8("clicks", *((int8*)&dev->keyClicks[key]));
 					aMsg.AddInt64("when", when);
-					PostMessage(&aMsg, PreferredHandler());
+					PostMessage(&aMsg, dev->preferHandler);
 
-					fKeyState &= ~(0x01 << nKey);
-					fKeyClicks[nKey] = 0;
-					fKeyTimestamps[nKey] = 0;
+					dev->keyState &= ~(0x01 << key);
+					dev->keyClicks[key] = 0;
+					dev->keyTimestamps[key] = 0;
 				}
 				else
 				{
-					fKeyState &= ~(0x01 << nKey);
-					fKeyTimestamps[nKey] = when;
+					dev->keyState &= ~(0x01 << key);
+					dev->keyTimestamps[key] = when;
 				}
 			}
 			break;
@@ -439,37 +518,49 @@ LBApplication::MessageReceived(BMessage *msg)
 			DBGOUT("[LBApplication]: B_PULSE received.\n");
 			if(msg->HasBool("no_button_check"))
 			{
-				if(PreferredHandler() != NULL)
-					PostMessage(B_PULSE, PreferredHandler());
+				for(int32 m = 0; m < CountPanels(); m++)
+				{
+					dev = lbk_app_get_panel_device_data(fAddOnsList, m);
+					if(dev->preferHandler != NULL)
+						PostMessage(B_PULSE, dev->preferHandler);
+				}
 				break;
 			}
+
 			stopRunner = true;
 			when = real_time_clock_usecs();
-			nKey = CountKeys(0);
-			for(uint8 k = 0; k < nKey; k++)
+
+			for(int32 m = 0; m < CountPanels(); m++)
 			{
-				if((fKeyState & (0x01 << k)) != 0) continue; // DOWN, no need
-				if(fKeyClicks[k] == 0 || fKeyTimestamps[k] == 0) continue; // no UP before
-				if(when < fKeyTimestamps[k]) continue; // should never happen
-				if(when - fKeyTimestamps[k] < (bigtime_t)LBK_KEY_INTERVAL)
-				{
-					stopRunner = false;
-					continue;
-				}
+				dev = lbk_app_get_panel_device_data(fAddOnsList, m);
 
-				if(PreferredHandler() != NULL)
+				uint8 nKeys = CountPanelKeys(m);
+				for(uint8 k = 0; k < nKeys; k++)
 				{
-					BMessage aMsg(B_KEY_UP);
-					aMsg.AddInt8("key", *((int8*)&k));
-					aMsg.AddInt8("clicks", *((int8*)&fKeyClicks[k]));
-					aMsg.AddInt64("when", fKeyTimestamps[k]);
-					PostMessage(&aMsg, PreferredHandler());
-				}
+					if((dev->keyState & (0x01 << k)) != 0) continue; // DOWN, no need
+					if(dev->keyClicks[k] == 0 || dev->keyTimestamps[k] == 0) continue; // no UP before
+					if(when < dev->keyTimestamps[k]) continue; // should never happen
+					if(when - dev->keyTimestamps[k] < (bigtime_t)LBK_KEY_INTERVAL)
+					{
+						stopRunner = false;
+						continue;
+					}
 
-				fKeyState &= ~(0x01 << k);
-				fKeyClicks[k] = 0;
-				fKeyTimestamps[k] = 0;
+					if(dev->preferHandler != NULL)
+					{
+						BMessage aMsg(B_KEY_UP);
+						aMsg.AddInt8("key", *((int8*)&k));
+						aMsg.AddInt8("clicks", *((int8*)&dev->keyClicks[k]));
+						aMsg.AddInt64("when", dev->keyTimestamps[k]);
+						PostMessage(&aMsg, dev->preferHandler);
+					}
+
+					dev->keyState &= ~(0x01 << k);
+					dev->keyClicks[k] = 0;
+					dev->keyTimestamps[k] = 0;
+				}
 			}
+
 			if(stopRunner == false)
 			{
 				uint8 byte = 0xab;
@@ -515,27 +606,29 @@ LBApplication::SetPulseRate(bigtime_t rate)
 }
 
 
+LBPanelDevice*
+LBApplication::PanelAt(int32 index) const
+{
+	return lbk_app_get_panel_device(fAddOnsList, index);
+}
+
+
 uint8
-LBApplication::CountKeys(int32 indexPanel) const
+LBApplication::CountPanelKeys(int32 index) const
 {
 	uint8 n = 0;
 
-	if(indexPanel < 0 || indexPanel >= fAddOnsList.CountItems()) return 0;
-
-	for(int32 k = 0; k < fAddOnsList.CountItems(); k++)
-	{
-		LBKAddOnData *data = (LBKAddOnData*)fAddOnsList.ItemAt(k);
-		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
-		{
-			if(indexPanel-- == 0)
-			{
-				LBPanelDevice *dev = reinterpret_cast<LBPanelDevice*>(data->dev);
-				dev->GetCountOfKeys(n);
-				break;
-			}
-		}
-	}
+	LBPanelDevice *dev = PanelAt(index);
+	if(dev != NULL)
+		dev->GetCountOfKeys(n);
 
 	return n;
+}
+
+
+int32
+LBApplication::CountPanels() const
+{
+	return fPanelsCount;
 }
 
