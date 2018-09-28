@@ -133,7 +133,7 @@ TMainPageView::DrawBoardInfo(BRect rect)
 	int k;
 	BPoint pt(0, 0);
 
-	for(k = 0; k <= LBK_ICON_RIGHT; k++)
+	for(k = LBK_ICON_ID_16x16_BEGIN + 1; k < LBK_ICON_ID_16x16_END; k++)
 	{
 		DrawIcon((lbk_icon_id)k, pt);
 		pt.x += 17;
@@ -145,7 +145,7 @@ TMainPageView::DrawBoardInfo(BRect rect)
 	}
 
 	pt.Set(0, 33);
-	for(k = LBK_ICON_WARNING; k <= LBK_ICON_POWER_OFF; k++)
+	for(k = LBK_ICON_ID_32x32_BEGIN + 1; k < LBK_ICON_ID_32x32_END; k++)
 	{
 		DrawIcon((lbk_icon_id)k, pt);
 		pt.x += 33;
@@ -196,7 +196,7 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 {
 	LBPageView::KeyDown(key, clicks);
 
-	if(clicks == 0xff) // long press
+	if(clicks == 0xff && key == 1) // K2 long press
 	{
 		LBView *view = FindStickView("PowerOffRequested");
 		if(view == NULL)
