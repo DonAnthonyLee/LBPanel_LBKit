@@ -61,7 +61,7 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 	while(aMsg.HasInt32("panel_id"))
 		aMsg.RemoveInt32("panel_id", 0);
 	aMsg.AddInt32("panel_id", fID);
-	fMsgr.SendMessage(msg);
+	fMsgr.SendMessage(&aMsg);
 }
 
 

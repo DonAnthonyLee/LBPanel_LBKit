@@ -39,7 +39,7 @@
 
 #include <lbk/add-ons/LBPanelDevice.h>
 
-#if (1)
+#if (0)
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
 #else
 #define DBGOUT(msg...)		do {} while (0)
@@ -209,6 +209,7 @@ LBApplication::LBApplication(const BList *cfg)
 					continue;
 				}
 
+				fPanelsCount++;
 				fAddOnsList.AddItem(data);
 			}
 
@@ -454,6 +455,17 @@ LBApplication::MessageReceived(BMessage *msg)
 
 	switch(msg->what)
 	{
+		case B_QUIT_REQUESTED:
+			if(msg->FindInt32("panel_id", &id) == B_OK)
+			{
+				// TODO
+			}
+			else
+			{
+				BLooper::MessageReceived(msg);
+			}
+			break;
+
 		case B_KEY_DOWN:
 		case B_KEY_UP:
 			if(msg->FindInt32("panel_id", &id) != B_OK) break;
@@ -465,7 +477,7 @@ LBApplication::MessageReceived(BMessage *msg)
 			{
 				if((dev->keyState & (0x01 << key)) != 0) // already DOWN
 				{
-					// FIXME: GPIO blocking I2C transfer
+					// TODO: GPIO blocking I2C transfer, we should start the runner when DOWN
 					// auto-repeat (event.value = 2) event
 					if(when < dev->keyTimestamps[key]) break;
 					if(when - dev->keyTimestamps[key] < (bigtime_t)500000) break; // 0.5s
