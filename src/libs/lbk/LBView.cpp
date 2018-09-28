@@ -59,13 +59,13 @@ LBView::FillRect(BRect r, pattern p)
 {
 	if(fMasterView != NULL)
 	{
-		if(fMasterView->IsStoodIn())
+		if(fMasterView->fStandingInView == this)
 			fMasterView->FillRect(r, p);
 		return;
 	}
 
 	r &= LBView::Bounds();
-	if (fDev == NULL || fActivated == false || r.IsValid() == false) return;
+	if(fDev == NULL || fActivated == false || r.IsValid() == false) return;
 
 	fDev->FillRect(r, p, false, fTimestamp);
 }
@@ -76,7 +76,7 @@ LBView::StrokeRect(BRect rect, bool erase)
 {
 	if(fMasterView != NULL)
 	{
-		if(fMasterView->IsStoodIn())
+		if(fMasterView->fStandingInView == this)
 			fMasterView->StrokeRect(rect, erase);
 		return;
 	}
@@ -114,7 +114,7 @@ LBView::DrawString(const char *str, BPoint pt, bool erase)
 {
 	if(fMasterView != NULL)
 	{
-		if(fMasterView->IsStoodIn())
+		if(fMasterView->fStandingInView == this)
 			fMasterView->DrawString(str, pt, erase);
 		return;
 	}
@@ -130,7 +130,7 @@ LBView::DrawIcon(const lbk_icon *icon, BPoint pt)
 {
 	if(fMasterView != NULL)
 	{
-		if(fMasterView->IsStoodIn())
+		if(fMasterView->fStandingInView == this)
 			fMasterView->DrawIcon(icon, pt);
 		return;
 	}
@@ -169,10 +169,9 @@ LBView::DrawIcon(lbk_icon_id id, BPoint pt)
 uint8
 LBView::FontSize() const
 {
-	if(fMasterView != NULL)
-		return fMasterView->FontSize();
-
-	return fFontSize;
+	if(fMasterView == NULL || fMasterView->fStandingInView != this)
+		return fFontSize;
+	return(fMasterView->FontSize());
 }
 
 
@@ -181,7 +180,7 @@ LBView::SetFontSize(uint8 size)
 {
 	if(fMasterView != NULL)
 	{
-		if(fMasterView->IsStoodIn())
+		if(fMasterView->fStandingInView == this)
 			fMasterView->SetFontSize(size);
 		return;
 	}
@@ -195,7 +194,10 @@ uint16
 LBView::StringWidth(const char *str) const
 {
 	if(fMasterView != NULL)
-		return fMasterView->StringWidth(str);
+	{
+		return(fMasterView->fStandingInView == this ?
+				fMasterView->StringWidth(str) : 0);
+	}
 
 	if(fDev == NULL || str == NULL || *str == 0) return 0;
 
@@ -210,7 +212,7 @@ LBView::EnableUpdate(bool state)
 {
 	if(fMasterView != NULL)
 	{
-		if(fMasterView->IsStoodIn())
+		if(fMasterView->fStandingInView == this)
 			fMasterView->EnableUpdate(state);
 		return;
 	}
@@ -238,7 +240,10 @@ bool
 LBView::IsNeededToRegen() const
 {
 	if(fMasterView != NULL)
-		return fMasterView->IsNeededToRegen();
+	{
+		return(fMasterView->fStandingInView == this ?
+				fMasterView->IsNeededToRegen() : false);
+	}
 
 	if(fDev == NULL || fActivated == false) return false;
 
@@ -267,7 +272,7 @@ LBView::SetPowerState(bool state)
 {
 	if(fMasterView != NULL)
 	{
-		if(fMasterView->IsStoodIn())
+		if(fMasterView->fStandingInView == this)
 			fMasterView->SetPowerState(state);
 		return;
 	}
@@ -282,10 +287,11 @@ LBView::Bounds() const
 {
 	BRect r(0, 0, 0, 0);
 
-	if(fDev != NULL)
+	LBPanelDevice *dev = PanelDevice();
+	if(dev != NULL)
 	{
-		r.right = (float)fDev->ScreenWidth() - 1;
-		r.bottom = (float)fDev->ScreenHeight() - 1;
+		r.right = (float)dev->ScreenWidth() - 1;
+		r.bottom = (float)dev->ScreenHeight() - 1;
 	}
 
 	return r;
@@ -658,7 +664,7 @@ LBPanelDevice*
 LBView::PanelDevice() const
 {
 	if(fMasterView != NULL)
-		return fMasterView->PanelDevice();
+		return(fMasterView->fStandingInView == this ? fMasterView->PanelDevice() : NULL);
 	return fDev;
 }
 
