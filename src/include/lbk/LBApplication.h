@@ -35,45 +35,40 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
+class LBPanelDevice;
+
 class LBApplication : public BLooper {
 public:
 	LBApplication(const BList *cfg);
 	virtual ~LBApplication();
 
-	bool		AddPageView(LBView *view, bool left_side = true);
+	bool		AddPageView(LBView *view, bool left_side = true, int32 panel_index = 0);
 	bool		RemovePageView(LBView *view);
-	LBView*		RemovePageView(int32 index, bool left_side = true);
-	LBView*		PageViewAt(int32 index, bool left_side = true) const;
-	int32		CountPageViews(bool left_side = true) const;
+	LBView*		RemovePageView(int32 index, bool left_side = true, int32 panel_index = 0);
+	LBView*		PageViewAt(int32 index, bool left_side = true, int32 panel_index = 0) const;
+	int32		CountPageViews(bool left_side = true, int32 panel_index = 0) const;
 
-	void		ActivatePageView(int32 index, bool left_side = true);
-	LBView*		GetActivatedPageView() const;
+	void		ActivatePageView(int32 index, bool left_side = true, int32 panel_index = 0);
+	LBView*		GetActivatedPageView(int32 panel_index = 0) const;
 
 	void		Go();
-
-	// TODO
-
 
 	bigtime_t	PulseRate() const;
 	void		SetPulseRate(bigtime_t rate);
 
 	virtual void	MessageReceived(BMessage *msg);
 
-	uint8		CountKeys(int32 indexPanel) const;
+
+protected:
+	int32		CountPanels() const;
+	LBPanelDevice*	PanelAt(int32 index) const;
+	uint8		CountPanelKeys(int32 index) const;
 
 private:
 	BList fAddOnsList;
 	int fPipes[2];
 	bigtime_t fPulseRate;
-
-	uint8 fKeyState;
-	bigtime_t fKeyTimestamps[8];
-	uint8 fKeyClicks[8];
-
-	BList fLeftPageViews;
-	BList fRightPageViews;
-
-	void		InitPanelDevice(const char*);
+	int32 fPanelsCount;
 };
 
 #endif /* __cplusplus */
