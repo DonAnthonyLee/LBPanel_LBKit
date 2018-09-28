@@ -34,7 +34,7 @@
 
 
 LBPanelDevice::LBPanelDevice()
-	: BLocker()
+	: BLocker(), fID(-1)
 {
 }
 
@@ -47,6 +47,8 @@ LBPanelDevice::~LBPanelDevice()
 void
 LBPanelDevice::SendMessageToApp(const BMessage *msg)
 {
+	if(msg == NULL || fID < 0) return;
+
 	if(CountLocks() != 0)
 	{
 		fprintf(stderr,
@@ -55,6 +57,10 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 		return;
 	}
 
+	BMessage aMsg(*msg);
+	while(aMsg.HasInt32("panel_id"))
+		aMsg.RemoveInt32("panel_id", 0);
+	aMsg.AddInt32("panel_id", fID);
 	fMsgr.SendMessage(msg);
 }
 

@@ -68,6 +68,9 @@ $(TARGET_3): $(OBJECTS_3)
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
 clean:
+	for f in $(ADD_ONS_DIRS) .none; do \
+		(test $$f = .none || $(MAKE) $(MAKEFLAGS) clean -C add-ons/$$f) \
+	done
 	for f in $(TARGET) $(OBJECTS) .none; do \
 		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
 	done

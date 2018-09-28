@@ -99,6 +99,7 @@ public:
 private:
 	friend class LBApplication;
 
+	int32 fID;
 	BMessenger fMsgr;
 };
 
