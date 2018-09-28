@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Panel Application for NanoPi OLED Hat
+ * Panel application for little board
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -28,14 +28,14 @@
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __OLED_MAIN_PAGE_VIEW_H__
-#define __OLED_MAIN_PAGE_VIEW_H__
+#ifndef __T_MAIN_PAGE_VIEW_H__
+#define __T_MAIN_PAGE_VIEW_H__
 
-#include <OLEDPageView.h>
+#include <lbk/LBKit.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class TMainPageView : public OLEDPageView {
+class TMainPageView : public LBPageView {
 public:
 	TMainPageView(const char *name = NULL);
 	virtual ~TMainPageView();
@@ -44,11 +44,13 @@ public:
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	Pulse();
+	virtual void	Activated(bool state);
 
 	void		Set24Hours(bool state = true);
 	void		ShowSeconds(bool state = true);
 
 	// TODO
+	virtual void	MessageReceived(BMessage *msg);
 
 private:
 	int32 fTabIndex;
@@ -63,5 +65,5 @@ private:
 
 #endif /* __cplusplus */
 
-#endif /* __OLED_MAIN_PAGE_VIEW_H__ */
+#endif /* __T_MAIN_PAGE_VIEW_H__ */
 
