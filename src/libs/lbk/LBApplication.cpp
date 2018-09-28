@@ -480,7 +480,7 @@ LBApplication::MessageReceived(BMessage *msg)
 					// TODO: GPIO blocking I2C transfer, we should start the runner when DOWN
 					// auto-repeat (event.value = 2) event
 					if(when < dev->keyTimestamps[key]) break;
-					if(when - dev->keyTimestamps[key] < (bigtime_t)500000) break; // 0.5s
+					if(when - dev->keyTimestamps[key] < (bigtime_t)600000) break; // 0.6s
 					if(dev->keyClicks[key] == 0xff) break;
 					dev->keyClicks[key] = 0xff; // long press
 				}

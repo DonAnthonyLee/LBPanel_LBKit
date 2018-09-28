@@ -43,7 +43,7 @@
 #include "Config.h"
 #include "NPIHat.h"
 
-#if (1)
+#if (0)
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
 #else
 #define DBGOUT(msg...)		do {} while (0)
