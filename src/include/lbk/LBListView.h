@@ -36,7 +36,7 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
-class LBListView : public LBPageView, public BInvoker {
+class _EXPORT LBListView : public LBPageView, public BInvoker {
 public:
 	LBListView(const char *name = NULL);
 	virtual ~LBListView();

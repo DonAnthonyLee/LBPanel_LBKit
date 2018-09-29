@@ -36,7 +36,7 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
-class LBMenuView : public LBPageView {
+class _EXPORT LBMenuView : public LBPageView {
 public:
 	LBMenuView(const char *name = NULL);
 	virtual ~LBMenuView();
@@ -61,6 +61,7 @@ public:
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	StandIn();
 	virtual void	Activated(bool state);
+	virtual void	Attached();
 
 protected:
 	virtual void	ItemInvoked(LBMenuItem *item);
