@@ -2,7 +2,7 @@
 
 Panel application for little board
 &
-Little Board Application Kit
+Little Board application Kit
 
 
 项目简介及构思详见 [Wiki 页面](https://github.com/DonAnthonyLee/npi_oled_panel/wiki)。
