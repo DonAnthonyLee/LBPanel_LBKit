@@ -50,3 +50,7 @@ SPI Nor Flash（考虑后期将储存 OpenWrt 的 rootfs，建议不小于8M）
 
 提示：外接 USB 键盘并于开机时按住 K2 键及键盘上的 CTRL+C 可进入 U-Boot 命令行模式。
 
+## 其它
+
+更多使用帮助详细见 [HOWTO](https://github.com/DonAnthonyLee/npi_oled_panel/tree/master/docs/howto/u-boot)
+
