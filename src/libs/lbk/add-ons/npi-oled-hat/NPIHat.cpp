@@ -50,7 +50,7 @@
 #endif
 
 
-extern "C" LBPanelDevice* instantiate_panel_device()
+extern "C" _EXPORT LBPanelDevice* instantiate_panel_device()
 {
 	return new NPIHat();
 }
@@ -387,9 +387,10 @@ NPIHat::GetSideOfKeys(bool &right_or_bottom)
 
 
 status_t
-NPIHat::GetScreenOffsetOfKeys(uint16 &offset)
+NPIHat::GetScreenOffsetOfKeys(uint16 &offsetLeftTop,
+			      uint16 &offsetRightBottom)
 {
-	offset = 0;
+	offsetLeftTop = offsetRightBottom = 0;
 	return B_OK;
 }
 #endif
