@@ -6,18 +6,15 @@
 
 ## Ubuntu等启动问题
 
-假如启动过程中出现无法挂载 root 文件系统而重启，请在所编译
-的设备树源文件（扩展名为 dts）中加入以下内容，并编译成 dtb
-代替 Micro SD 卡上 boot 分区相应文件。
+假如启动过程中出现无法挂载 root 文件系统而重启，请在所编译的设备树源文件（扩展名为 dts）中加入以下内容，并编译成 dtb 代替 Micro SD 卡上 boot 分区相应文件。
 
     &mmc0 {
     	boot_device = <1>;
     };
 
-另外一种方法是更改 bootarg (修改 boot.cmd 并转换替换 boot.scr)，将其中的 mmcblk0 改成
- mmcblk1。
+另外一种方法是更改 bootarg (修改 boot.cmd 并转换替换 boot.scr)，将其中的 mmcblk0 改成 mmcblk1。
  
- ## 其它
+## 其它
 
 参照 SPI 启动。
 
