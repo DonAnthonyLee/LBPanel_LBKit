@@ -35,7 +35,7 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
-class LBPageView : public LBView {
+class _EXPORT LBPageView : public LBView {
 public:
 	LBPageView(const char *name = NULL);
 	virtual ~LBPageView();

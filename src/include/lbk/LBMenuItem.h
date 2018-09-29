@@ -31,14 +31,13 @@
 #ifndef __LBK_MENU_ITEM_H__
 #define __LBK_MENU_ITEM_H__
 
-#include <be/Be.h>
 #include <lbk/LBIconDefs.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
 class LBMenuView;
 
-class LBMenuItem : public BInvoker {
+class _EXPORT LBMenuItem : public BInvoker {
 public:
 	LBMenuItem(const char *label,
 		   BMessage *message,

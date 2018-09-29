@@ -37,7 +37,7 @@
 
 class LBPanelDevice;
 
-class LBApplication : public BLooper {
+class _EXPORT LBApplication : public BLooper {
 public:
 	LBApplication(const BList *cfg);
 	virtual ~LBApplication();

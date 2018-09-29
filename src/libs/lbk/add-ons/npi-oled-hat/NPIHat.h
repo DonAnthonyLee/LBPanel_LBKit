@@ -82,7 +82,8 @@ public:
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual status_t	GetOrientationOfKeys(orientation &o);
 	virtual status_t	GetSideOfKeys(bool &right_or_bottom);
-	virtual status_t	GetScreenOffsetOfKeys(uint16 &offset);
+	virtual status_t	GetScreenOffsetOfKeys(uint16 &offsetLeftTop,
+						      uint16 &OffsetRightBottom);
 #endif
 
 	int			InputHandle() const;

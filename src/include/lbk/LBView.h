@@ -31,8 +31,7 @@
 #ifndef __LBK_VIEW_H__
 #define __LBK_VIEW_H__
 
-#include <be/Be.h>
-
+#include <lbk/LBKConfig.h>
 #include <lbk/LBIconDefs.h>
 #include <lbk/add-ons/LBPanelDevice.h>
 
@@ -40,13 +39,22 @@
 
 class LBApplication;
 
-class LBView : public BHandler {
+class _EXPORT LBView : public BHandler {
 public:
 	LBView(const char *name = NULL);
 	virtual ~LBView();
 
 	// Bounds(): A derived class usually draw within it.
 	virtual BRect	Bounds() const;
+
+#ifdef LBK_ENABLE_MORE_FEATURES
+	void		SetHighColor(rgb_color c);
+	void		SetHighColor(uint8 r, uint8 g, uint8 b, uint8 a = 255);
+	void		SetLowColor(rgb_color c);
+	void		SetLowColor(uint8 r, uint8 g, uint8 b, uint8 a = 255);
+	rgb_color	HighColor() const;
+	rgb_color	LowColor() const;
+#endif
 
 	void		FillRect(BRect r, pattern p = B_SOLID_HIGH);
 	void		StrokeRect(BRect r, bool erase = false);
@@ -121,6 +129,10 @@ private:
 	LBView *fStandingInView;
 	BList fStickViews;
 	bigtime_t fStandInTimestamp;
+
+#ifdef LBK_ENABLE_MORE_FEATURES
+	rgb_color fColors[2];
+#endif
 
 	void		SetActivated(bool state);
 };

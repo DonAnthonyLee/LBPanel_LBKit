@@ -31,11 +31,18 @@
 #ifndef __LBK_BUILD_CONFIG_H__
 #define __LBK_BUILD_CONFIG_H__
 
+#include <be/Be.h>
+
 //#define LBK_ENABLE_MORE_FEATURES
 
 #define LBK_KEY_TYPICAL_NUMBER		3
 #define LBK_KEY_ID_MAX			7
 #define LBK_KEY_INTERVAL		130000	/* 130ms */
+
+
+#ifndef ETK_MAJOR_VERSION // for BeOS
+#define _EXPORT		__declspec(dllexport)
+#endif
 
 #endif /* __LBK_BUILD_CONFIG_H__ */
 

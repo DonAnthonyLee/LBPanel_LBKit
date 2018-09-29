@@ -31,7 +31,7 @@
 #ifndef __LBK_ICON_DEFS_H__
 #define __LBK_ICON_DEFS_H__
 
-#include <be/Be.h>
+#include <lbk/LBKConfig.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,7 +80,7 @@ typedef enum {
 } lbk_icon_id;
 
 
-const lbk_icon* lbk_get_icon_data(lbk_icon_id id_icon);
+_EXPORT const lbk_icon* lbk_get_icon_data(lbk_icon_id id_icon);
 
 #ifdef __cplusplus
 } // extern "C"
