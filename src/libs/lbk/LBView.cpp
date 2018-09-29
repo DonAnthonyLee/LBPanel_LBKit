@@ -44,6 +44,11 @@ LBView::LBView(const char *name)
 {
 	fUpdateRect = BRect();
 	fStandInTimestamp = (bigtime_t)-1;
+
+#ifdef LBK_ENABLE_MORE_FEATURES
+	SetHighColor(255, 255, 255); // white
+	SetLowColor(0, 0, 0); // black
+#endif
 }
 
 
@@ -67,6 +72,10 @@ LBView::FillRect(BRect r, pattern p)
 	r &= LBView::Bounds();
 	if(fDev == NULL || fActivated == false || r.IsValid() == false) return;
 
+#ifdef LBK_ENABLE_MORE_FEATURES
+	if(fDev->SetHighColor(fColors[0]) != B_OK) return;
+	if(fDev->SetLowColor(fColors[1]) != B_OK) return;
+#endif
 	fDev->FillRect(r, p, false, fTimestamp);
 }
 
@@ -121,6 +130,10 @@ LBView::DrawString(const char *str, BPoint pt, bool erase)
 
 	if(fDev == NULL || fActivated == false) return;
 
+#ifdef LBK_ENABLE_MORE_FEATURES
+	if(fDev->SetHighColor(fColors[0]) != B_OK) return;
+	if(fDev->SetLowColor(fColors[1]) != B_OK) return;
+#endif
 	fDev->DrawString(str, pt, fFontSize, erase, fTimestamp);
 }
 
@@ -137,6 +150,11 @@ LBView::DrawIcon(const lbk_icon *icon, BPoint pt)
 
 	if(fDev == NULL || fActivated == false) return;
 	if(icon == NULL || icon->type > 2 /*LBK_ICON_32x32*/) return;
+
+#ifdef LBK_ENABLE_MORE_FEATURES
+	if(fDev->SetHighColor(fColors[0]) != B_OK) return;
+	if(fDev->SetLowColor(fColors[1]) != B_OK) return;
+#endif
 
 	BRect r;
 	pattern p;
@@ -682,4 +700,54 @@ LBView::CountPanelKeys() const
 
 	return n;
 }
+
+
+#ifdef LBK_ENABLE_MORE_FEATURES
+void
+LBView::SetHighColor(rgb_color c)
+{
+	*((uint32*)&fColors[0]) = *((uint32*)&c);
+}
+
+
+void
+LBView::SetHighColor(uint8 r, uint8 g, uint8 b, uint8 a)
+{
+	fColors[0].red = r;
+	fColors[0].green = g;
+	fColors[0].blue = b;
+	fColors[0].alpha = a;
+}
+
+
+void
+LBView::SetLowColor(rgb_color c)
+{
+	*((uint32*)&fColors[1]) = *((uint32*)&c);
+}
+
+
+void
+LBView::SetLowColor(uint8 r, uint8 g, uint8 b, uint8 a)
+{
+	fColors[1].red = r;
+	fColors[1].green = g;
+	fColors[1].blue = b;
+	fColors[1].alpha = a;
+}
+
+
+rgb_color
+LBView::HighColor() const
+{
+	return fColors[0];
+}
+
+
+rgb_color
+LBView::LowColor() const
+{
+	return fColors[1];
+}
+#endif
 
