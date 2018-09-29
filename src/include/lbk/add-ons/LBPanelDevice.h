@@ -31,7 +31,6 @@
 #ifndef __LBK_PANEL_DEVICE_H__
 #define __LBK_PANEL_DEVICE_H__
 
-#include <be/Be.h>
 #include <lbk/LBKConfig.h>
 
 #ifdef __cplusplus /* Just for C++ */
@@ -39,11 +38,11 @@
 // NOTE:
 // 	Addon must have C function like below and all the null virtual functions
 // 	of class must be implemented.
-// 		extern "C" LBPanelDevice* instantiate_panel_device();
+// 		extern "C" _EXPORT LBPanelDevice* instantiate_panel_device();
 
 class LBApplication;
 
-class LBPanelDevice : public BLocker {
+class _EXPORT LBPanelDevice : public BLocker {
 public:
 	LBPanelDevice();
 	virtual ~LBPanelDevice();
@@ -90,7 +89,8 @@ public:
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual status_t	GetOrientationOfKeys(orientation &o) = 0;
 	virtual status_t	GetSideOfKeys(bool &right_or_bottom) = 0;
-	virtual status_t	GetScreenOffsetOfKeys(uint16 &offset) = 0;
+	virtual status_t	GetScreenOffsetOfKeys(uint16 &offsetLeftTop,
+						      uint16 &OffsetRightBottom) = 0;
 #endif
 
 	void			SendMessageToApp(const BMessage *msg);

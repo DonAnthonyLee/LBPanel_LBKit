@@ -525,3 +525,11 @@ LBMenuView::ItemInvoked(LBMenuItem *item)
 	StandBack();
 }
 
+
+void
+LBMenuView::Attached()
+{
+	for(int32 k = 0; k < CountItems(); k++)
+		ItemAt(k)->SetTarget(this);
+}
+

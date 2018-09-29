@@ -35,7 +35,7 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
-class LBAlertView : public LBView {
+class _EXPORT LBAlertView : public LBView {
 public:
 	LBAlertView(const char *title,
 		    const char *text,

@@ -31,13 +31,13 @@
 #ifndef __LBK_LIST_ITEM_H__
 #define __LBK_LIST_ITEM_H__
 
-#include <be/Be.h>
+#include <lbk/LBKConfig.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
 class LBListView;
 
-class LBListItem {
+class _EXPORT LBListItem {
 public:
 	LBListItem(const char *text,
 		   lbk_icon_id idIcon);
