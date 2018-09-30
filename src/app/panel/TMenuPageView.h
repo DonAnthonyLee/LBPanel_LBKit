@@ -41,7 +41,6 @@ public:
 	virtual ~TMenuPageView();
 
 	virtual void	KeyUp(uint8 key, uint8 clicks);
-	virtual void	Attached();
 
 	// TODO
 	virtual void	MessageReceived(BMessage *msg);
