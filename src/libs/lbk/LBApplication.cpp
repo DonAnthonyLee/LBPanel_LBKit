@@ -29,9 +29,7 @@
  * --------------------------------------------------------------------------*/
 
 #include <stdio.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <linux/input.h>
 #include <sys/select.h>
 
 #include <lbk/LBKConfig.h>
