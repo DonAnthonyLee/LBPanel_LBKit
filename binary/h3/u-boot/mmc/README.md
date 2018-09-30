@@ -12,8 +12,8 @@
     	boot_device = <1>;
     };
 
-另外一种方法是更改 bootarg (修改 boot.cmd 并转换替换 boot.scr)，将其中的 mmcblk0 改成 mmcblk1。
- 
+另外一种方法是更改 bootarg (修改 boot.cmd 并转换替换 boot.scr)，将其中的 mmcblk0 改成 mmcblk1，另外，有必要时需要修改或注释掉 rootfs 分区下 /etc/fstab 有关 mmcblk0 相关的行。 
+
 ## 其它
 
 参照 SPI 启动。
