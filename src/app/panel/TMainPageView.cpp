@@ -144,9 +144,8 @@ TMainPageView::DrawClock(BRect rect)
 {
 	uint16 w;
 
-	time_t timer = (time_t)(real_time_clock_usecs() / (bigtime_t)1000000);
-	struct tm t;
-	if(localtime_r(&timer, &t) == NULL) return;
+	if(fDate.Length() == 0)
+		GetTime(&fDate, &fTime, &fWeek);
 
 	BRect r = LBView::Bounds();
 	r.bottom = 13;
@@ -390,8 +389,6 @@ TMainPageView::Activated(bool state)
 
 	if(state == false)
 		cast_as(Looper(), LBApplication)->SetPulseRate(0);
-	else
-		GetTime(&fDate, &fTime, &fWeek);
 }
 
 
