@@ -377,8 +377,9 @@ LBApplication::Go()
 	{
 		LBPanelDevice* dev = PanelAt(k);
 
-		dev->fID = k;
+		// WARNING: DO NOT CHANGE THE SEQUENCE OF FOLLOWING 2 LINES !!!
 		dev->fMsgr = BMessenger(this, this);
+		dev->fID = k;
 
 		ActivatePageView(0, false, k);
 	}
