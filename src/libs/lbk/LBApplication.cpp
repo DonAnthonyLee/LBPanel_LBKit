@@ -84,7 +84,7 @@ typedef struct
 } LBAddOnData;
 
 
-static LBAddOnData* lbk_app_load_panel_device_addon(const BPath &pth)
+static LBAddOnData* lbk_app_load_panel_device_addon(const BPath &pth, const char *opt)
 {
 	LBAddOnData *data = NULL;
 
@@ -97,7 +97,7 @@ static LBAddOnData* lbk_app_load_panel_device_addon(const BPath &pth)
 
 	if(get_image_symbol(image, "instantiate_panel_device", B_SYMBOL_TYPE_TEXT, (void**)&instantiate_func) != B_OK ||
 	   (dev = (*instantiate_func)()) == NULL ||
-	   dev->InitCheck() != B_OK ||
+	   dev->InitCheck(opt) != B_OK ||
 	   (devData = (LBPanelDeviceAddOnData*)malloc(sizeof(LBPanelDeviceAddOnData))) == NULL)
 	{
 		if(dev != NULL) delete dev;
@@ -194,13 +194,22 @@ LBApplication::LBApplication(const BList *cfg)
 
 			BString name(item->String(), found);
 			BString value(item->String() + found + 1);
+			BString options;
+
+			found = value.FindFirst(",");
+			if(found > 0)
+			{
+				if(found < value.Length() - 1)
+					options.SetTo(value.String() + found + 1);
+				value.Truncate(found);
+			}
 
 			if(name == "PanelDeviceAddon")
 			{
 				BPath pth(value.String(), NULL, true);
 				if(pth.Path() == NULL) continue;
 
-				LBAddOnData *data = lbk_app_load_panel_device_addon(pth);
+				LBAddOnData *data = lbk_app_load_panel_device_addon(pth, options.String());
 				if(data == NULL)
 				{
 					fprintf(stderr,
