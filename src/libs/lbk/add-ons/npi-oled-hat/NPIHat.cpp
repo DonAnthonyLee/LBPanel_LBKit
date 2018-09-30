@@ -82,22 +82,26 @@ NPIHat::NPIHat()
 		return;
 	}
 
-	// Since it's in Linux, so we use ETK++'s thread function directly instead of BeOS style.
+	// Use ETK++'s thread function directly instead of BeOS style.
 	if((fThread = etk_create_thread(this->InputEventsObserver,
 					E_URGENT_DISPLAY_PRIORITY,
 					reinterpret_cast<void*>(this),
 					NULL)) == NULL ||
 	   etk_resume_thread(fThread) != E_OK)
 	{
+		if(fThread != NULL)
+		{
+			etk_delete_thread(fThread);
+			fThread = NULL;
+		}
 		ETK_WARNING("[NPIHat]: Unable to create thread !\n");
-		return;
 	}
 }
 
 
 NPIHat::~NPIHat()
 {
-	// Since it's in Linux, so we use ETK++'s thread function directly instead of BeOS style.
+	// Use ETK++'s thread function directly instead of BeOS style.
 	if(fThread != NULL)
 	{
 		if(fPipes[0] >= 0)
@@ -121,7 +125,7 @@ NPIHat::~NPIHat()
 
 
 status_t
-NPIHat::InitCheck()
+NPIHat::InitCheck(const char *options)
 {
 	return((fOLEDFD < 0 || fInputFD < 0 || fPipes[0] < 0 || fThread == NULL) ? B_ERROR : B_OK);
 }

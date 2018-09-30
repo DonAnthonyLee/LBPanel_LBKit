@@ -40,7 +40,7 @@ public:
 	NPIHat();
 	virtual ~NPIHat();
 
-	virtual status_t	InitCheck();
+	virtual status_t	InitCheck(const char *options);
 
 	/* screen */
 	virtual uint16		ScreenWidth();
