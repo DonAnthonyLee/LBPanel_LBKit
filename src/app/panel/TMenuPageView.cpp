@@ -68,14 +68,6 @@ TMenuPageView::KeyUp(uint8 key, uint8 clicks)
 
 
 void
-TMenuPageView::Attached()
-{
-	for(int32 k = 0; k < CountItems(); k++)
-		ItemAt(k)->SetTarget(this);
-}
-
-
-void
 TMenuPageView::MessageReceived(BMessage *msg)
 {
 	switch(msg->what)

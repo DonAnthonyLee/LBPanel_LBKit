@@ -35,10 +35,11 @@
 
 
 #define POWER_REQUESTED_CONFIRM_MSG	'pwof'
+#define POWER_OFF_MSG			'pwOF'
 
 
 TMainPageView::TMainPageView(const char *name)
-	: LBPageView(name), fTabIndex(0), f24Hours(true), fShowSeconds(false), fShowTimestamp(0)
+	: LBPageView(name), fTabIndex(0), f24Hours(false), fShowSeconds(false), fShowTimestamp(0)
 {
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
 	SetNavButtonIcon(2, LBK_ICON_RIGHT);
@@ -52,29 +53,95 @@ TMainPageView::~TMainPageView()
 
 
 void
+TMainPageView::GetTime(BString *strDate, BString *strTime, BString *strWeek) const
+{
+	time_t timer = (time_t)(real_time_clock_usecs() / (bigtime_t)1000000);
+	struct tm t;
+	if(localtime_r(&timer, &t) == NULL) return;
+
+	if(strDate != NULL)
+	{
+		strDate->Truncate(0);
+		*strDate << 1900 + t.tm_year << "年" << 1 + t.tm_mon << "月" << t.tm_mday << "日";
+	}
+
+	if(strTime != NULL)
+	{
+		strTime->Truncate(0);
+		if(fShowSeconds == false && f24Hours == false)
+		{
+			if(t.tm_hour < 12)
+				*strTime << (t.tm_hour < 6 ? "凌晨" : "上午");
+			else
+				*strTime << (t.tm_hour < 6 ? "下午" : "晚上");
+		}
+
+		*strTime << (f24Hours ? t.tm_hour : (t.tm_hour % 12));
+		*strTime << ":" << t.tm_min;
+		if(fShowSeconds)
+			*strTime << ":" << t.tm_sec;
+	}
+
+	if(strWeek != NULL)
+	{
+		const char *desc[] = {"日", "一", "二", "三", "四", "五", "六"};
+
+		strWeek->SetTo("星期");
+		strWeek->Append(desc[t.tm_wday]);
+	}
+}
+
+
+void
 TMainPageView::Pulse()
 {
+	BRect r;
+	BString strDate, strTime, strWeek;
+
 	if(fTabIndex != 0) return;
 
-	// TODO: check whether to redraw DATE & WEEK
+	GetTime(&strDate, &strTime, &strWeek);
 
-	BRect r = LBView::Bounds();
-	r.top = 14;
-	r.bottom -= 13;
-	InvalidRect(r);
-
-	if(fTabIndex == 0 && real_time_clock_usecs() - fShowTimestamp > 2000000) // 2s
+	if(strDate != fDate)
 	{
-		HideNavButton(0);
-		HideNavButton(2);
+		fDate = strDate;
+
+		r = LBView::Bounds();
+		r.bottom = 13;
+		InvalidRect(r);
 	}
+
+	if(strTime != fTime)
+	{
+		fTime = strTime;
+
+		r = LBView::Bounds();
+		r.top = 14;
+		r.bottom -= 14;
+		InvalidRect(r);
+	}
+
+	if(strWeek != fWeek)
+	{
+		fWeek = strWeek;
+
+		r = LBView::Bounds();
+		r.top = r.bottom - 13;
+		InvalidRect(r);
+	}
+
+	if(fShowTimestamp == 0 || real_time_clock_usecs() - fShowTimestamp < 2000000) return;
+	fShowTimestamp = 0;
+
+	cast_as(Looper(), LBApplication)->SetPulseRate(fShowSeconds ? 1000000 : 10000000);
+	HideNavButton(0);
+	HideNavButton(2);
 }
 
 
 void
 TMainPageView::DrawClock(BRect rect)
 {
-	char buf[128];
 	uint16 w;
 
 	time_t timer = (time_t)(real_time_clock_usecs() / (bigtime_t)1000000);
@@ -83,44 +150,50 @@ TMainPageView::DrawClock(BRect rect)
 
 	BRect r = LBView::Bounds();
 	r.bottom = 13;
-	if(r.Intersects(rect))
+	if(r.Intersects(rect) && fDate.Length() > 0)
 	{
-		snprintf(buf, sizeof(buf), "%d年%d月%d日",
-			 1900 + t.tm_year, 1 + t.tm_mon, t.tm_mday);
 		SetFontSize(12);
-		w = StringWidth(buf);
-		DrawString(buf, BPoint(r.Center().x - w / 2.f, 1));
+		w = StringWidth(fDate.String());
+		DrawString(fDate.String(), BPoint(r.Center().x - w / 2.f, 1));
 	}
 
 	r.OffsetBy(0, r.Height() + 1);
-	r.bottom = LBView::Bounds().bottom - 13;
-	if(r.Intersects(rect))
+	r.bottom = LBView::Bounds().bottom - 14;
+	if(r.Intersects(rect) && fTime.Length() > 0)
 	{
 		FillRect(r & rect);
 
-		// TODO: AM/PM
-		if(fShowSeconds)
-			snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
-				 f24Hours ? t.tm_hour : (t.tm_hour % 12),
-				 t.tm_min, t.tm_sec);
-		else
-			snprintf(buf, sizeof(buf), "%02d:%02d",
-				 f24Hours ? t.tm_hour : (t.tm_hour % 12),
-				 t.tm_min);
 		SetFontSize(fShowSeconds ? 24 : 32);
-		w = StringWidth(buf);
-		DrawString(buf, r.Center() - BPoint(w / 2.f, (fShowSeconds ? 23 : 31) / 2.f), true);
+		if(fShowSeconds == false && f24Hours == false && fTime.Length() > 6)
+		{
+			uint16 w1;
+			BString str(fTime, 6);
+
+			SetFontSize(12);
+			w1 = StringWidth(str.String());
+			SetFontSize(32);
+			w = w1 + 2 + StringWidth(fTime.String() + 6);
+
+			BPoint pt = r.Center() - BPoint(w / 2.f, 23 / 2.f);
+			DrawString(fTime.String() + 6, pt + BPoint(w1 + 2, 0), true);
+			SetFontSize(12);
+			DrawString(str.String(), pt + BPoint(0, 12), true);
+		}
+		else
+		{
+			SetFontSize(fShowSeconds ? 24 : 32);
+			w = StringWidth(fTime.String());
+			DrawString(fTime.String(), r.Center() - BPoint(w / 2.f, (fShowSeconds ? 23 : 31) / 2.f), true);
+		}
 	}
 
 	r.OffsetBy(0, r.Height() + 1);
 	r.bottom = LBView::Bounds().bottom;
-	if(r.Intersects(rect))
+	if(r.Intersects(rect) && fWeek.Length() > 0)
 	{
-		const char *desc[] = {"日", "一", "二", "三", "四", "五", "六"};
-		snprintf(buf, sizeof(buf), "星期%s", desc[t.tm_wday]);
 		SetFontSize(12);
-		w = StringWidth(buf);
-		DrawString(buf, BPoint(r.Center().x - w / 2.f, r.top + 1));
+		w = StringWidth(fWeek.String());
+		DrawString(fWeek.String(), BPoint(r.Center().x - w / 2.f, r.top + 1));
 	}
 }
 
@@ -198,19 +271,15 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 
 	if(clicks == 0xff && key == 1) // K2 long press
 	{
-		LBView *view = FindStickView("PowerOffRequested");
-		if(view == NULL)
-		{
-			view = new LBAlertView("关机",
-						 "是否确定\n进行关机操作?",
-						 LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
-						 B_WARNING_ALERT);
-			BInvoker *invoker = new BInvoker(new BMessage(POWER_REQUESTED_CONFIRM_MSG), this);
-			cast_as(view, LBAlertView)->SetInvoker(invoker);
-			view->SetName("PowerOffRequested");
-			AddStickView(view);
-		}
+		LBAlertView *view = new LBAlertView("关机",
+						    "是否确定\n进行关机操作?",
+						    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
+						    B_WARNING_ALERT);
+		view->SetInvoker(new BInvoker(new BMessage(POWER_REQUESTED_CONFIRM_MSG), this));
+		view->SetName("PowerOffRequested");
+		AddStickView(view);
 		view->StandIn();
+
 		printf("[TMainPageView]: Power off requested.\n");
 	}
 
@@ -272,7 +341,7 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 	if(saveIndex != fTabIndex)
 	{
 		if(fTabIndex == 0)
-			cast_as(Looper(), LBApplication)->SetPulseRate(fShowSeconds ? 1000000 : 10000000);
+			cast_as(Looper(), LBApplication)->SetPulseRate(500000);
 		else
 			cast_as(Looper(), LBApplication)->SetPulseRate(0);
 
@@ -321,6 +390,8 @@ TMainPageView::Activated(bool state)
 
 	if(state == false)
 		cast_as(Looper(), LBApplication)->SetPulseRate(0);
+	else
+		GetTime(&fDate, &fTime, &fWeek);
 }
 
 
@@ -340,9 +411,32 @@ TMainPageView::MessageReceived(BMessage *msg)
 			view = FindStickView("PowerOffRequested");
 			if(view == NULL) break;
 			view->StandBack();
-			if(which != 1) break;
+			if(which != 1)
+			{
+				RemoveStickView(view);
+				delete view;
+				break;
+			}
+
+			view = new LBAlertView("关机",
+					       "正在关机...",
+					       LBK_ICON_NONE, LBK_ICON_NONE, LBK_ICON_NONE,
+					       B_EMPTY_ALERT);
+			AddStickView(view);
+			view->StandIn();
+
+			Looper()->PostMessage(POWER_OFF_MSG, this);
+			break;
+
+		case POWER_OFF_MSG:
+			if(msg->HasBool("delay") == false) // in order to show the "Shuting down..."
+			{
+				msg->AddBool("delay", true);
+				Looper()->PostMessage(msg, this);
+				break;
+			}
+
 			printf("[TMainPageView]: Going to power off !\n");
-			// TODO: Show "Shuting down..."
 			system("poweroff");
 			break;
 

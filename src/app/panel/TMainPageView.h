@@ -58,6 +58,12 @@ private:
 	bool fShowSeconds;
 	bigtime_t fShowTimestamp;
 
+	BString fDate;
+	BString fTime;
+	BString fWeek;
+
+	void GetTime(BString*, BString*, BString*) const;
+
 	void DrawBoardInfo(BRect r);
 	void DrawClock(BRect r);
 	void DrawClientsInfo(BRect r);
