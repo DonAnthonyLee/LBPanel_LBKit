@@ -73,7 +73,7 @@ TMainPageView::GetTime(BString *strDate, BString *strTime, BString *strWeek) con
 			if(t.tm_hour < 12)
 				*strTime << (t.tm_hour < 6 ? "凌晨" : "上午");
 			else
-				*strTime << (t.tm_hour < 6 ? "下午" : "晚上");
+				*strTime << (t.tm_hour < 18 ? "下午" : "晚上");
 		}
 
 		*strTime << (f24Hours ? t.tm_hour : (t.tm_hour % 12));
