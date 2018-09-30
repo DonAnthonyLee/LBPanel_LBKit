@@ -17,6 +17,8 @@ OBJECTS_1 = \
 	LBPageView.o \
 	LBApplication.o \
 	LBIconData.o \
+	LBScopeItem.o \
+	LBScopeHandler.o \
 	LBAlertView.o \
 	LBMenuItem.o \
 	LBMenuView.o
