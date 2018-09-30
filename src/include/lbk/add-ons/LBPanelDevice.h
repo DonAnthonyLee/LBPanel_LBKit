@@ -47,7 +47,7 @@ public:
 	LBPanelDevice();
 	virtual ~LBPanelDevice();
 
-	virtual status_t	InitCheck() = 0;
+	virtual status_t	InitCheck(const char *options) = 0;
 
 	/* screen */
 	virtual uint16		ScreenWidth() = 0;
