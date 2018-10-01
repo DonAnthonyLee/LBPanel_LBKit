@@ -67,6 +67,7 @@ public:
 	// Empty functions BEGIN --- just for derived class
 	virtual void		PositionChanged(int32 pos, int32 old);
 	virtual void		OffsetChanged(int32 offset, int32 old);
+	virtual void		ScopeChanged();
 	// Empty functions END
 
 	void			ShowItem(LBScopeItem *item);
@@ -87,15 +88,17 @@ protected:
 	int32			CountVisibleItems(int32 fromIndex, int32 n) const;
 	LBScopeItem*		PrevVisibleItem(int32 &index) const;
 	LBScopeItem*		NextVisibleItem(int32 &index) const;
-	LBScopeItem*		FirstVisibleItem(int32 &index) const;
+	LBScopeItem*		FirstVisibleItem(int32 &index, int32 fromOffset = 0) const;
 	LBScopeItem*		LastVisibleItem(int32 &index) const;
+	LBScopeItem*		FirstVisibleItemAtScope(int32 &index) const;
+	LBScopeItem*		LastVisibleItemAtScope(int32 &index) const;
 
 private:
 	BList fItems;
 	int32 fOffset;
 	int32 fPos;
 
-	void			ResetOffsetIfNeeded();
+	virtual int32		RejustOffsetAfterPositionChanged();
 };
 
 #endif /* __cplusplus */
