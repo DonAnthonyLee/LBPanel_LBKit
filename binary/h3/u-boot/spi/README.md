@@ -52,5 +52,5 @@ SPI Nor Flash（考虑后期将储存 OpenWrt 的 rootfs，建议不小于8M）
 
 ## 其它
 
-更多使用帮助详细见 [HOWTO](https://github.com/DonAnthonyLee/npi_oled_panel/tree/master/docs/howto/u-boot)
+更多使用帮助详细见 [HOWTO](https://github.com/DonAnthonyLee/LBPanel_LBKit/tree/master/docs/howto/u-boot)
 
