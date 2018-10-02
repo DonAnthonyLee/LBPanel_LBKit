@@ -52,8 +52,11 @@ public:
 	void		SetHighColor(uint8 r, uint8 g, uint8 b, uint8 a = 255);
 	void		SetLowColor(rgb_color c);
 	void		SetLowColor(uint8 r, uint8 g, uint8 b, uint8 a = 255);
+	void		SetViewColor(rgb_color c);
+	void		SetViewColor(uint8 r, uint8 g, uint8 b, uint8 a = 255);
 	rgb_color	HighColor() const;
 	rgb_color	LowColor() const;
+	rgb_color	ViewColor() const;
 #endif
 
 	void		FillRect(BRect r, pattern p = B_SOLID_HIGH);
@@ -131,10 +134,11 @@ private:
 	bigtime_t fStandInTimestamp;
 
 #ifdef LBK_ENABLE_MORE_FEATURES
-	rgb_color fColors[2];
+	rgb_color fColors[3];
 #endif
 
 	void		SetActivated(bool state);
+	void		Clear(BRect r);
 };
 
 #endif /* __cplusplus */
