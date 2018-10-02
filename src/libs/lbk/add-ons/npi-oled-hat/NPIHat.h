@@ -73,7 +73,7 @@ public:
 	virtual status_t	EnableUpdate();
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual status_t	MapBuffer(void **buf);
-	virtual status_t	UnmapBuffer(void *buf);
+	virtual status_t	UnmapBuffer();
 	virtual status_t	Flush(bigtime_t &ts);
 #endif
 
@@ -94,6 +94,9 @@ private:
 	int fInputFD;
 	int fPipes[2];
 	void *fThread;
+#ifdef LBK_ENABLE_MORE_FEATURES
+	void *fBuffer;
+#endif
 
 	static int32		InputEventsObserver(void*);
 };

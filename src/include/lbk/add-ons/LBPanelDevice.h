@@ -80,7 +80,7 @@ public:
 	virtual status_t	EnableUpdate() = 0;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual status_t	MapBuffer(void **buf) = 0;
-	virtual status_t	UnmapBuffer(void *buf) = 0;
+	virtual status_t	UnmapBuffer() = 0;
 	virtual status_t	Flush(bigtime_t &ts) = 0;
 #endif
 
