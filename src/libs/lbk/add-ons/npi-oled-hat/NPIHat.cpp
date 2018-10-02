@@ -43,6 +43,10 @@
 #include "Config.h"
 #include "NPIHat.h"
 
+#ifdef LBK_ENABLE_MORE_FEATURES
+#include <sys/mman.h>
+#endif
+
 #if (0)
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
 #else
@@ -62,6 +66,9 @@ NPIHat::NPIHat()
 	  fInputFD(-1),
 	  fThread(NULL)
 {
+#ifdef LBK_ENABLE_MORE_FEATURES
+	fBuffer = NULL;
+#endif
 	fPipes[0] = -1;
 
 	if ((fOLEDFD = open(DEFAULT_OLED_DEVICE, O_RDWR)) < 0)
@@ -121,6 +128,11 @@ NPIHat::~NPIHat()
 		close(fPipes[0]);
 		close(fPipes[1]);
 	}
+
+#ifdef LBK_ENABLE_MORE_FEATURES
+	if(fBuffer != NULL)
+		munmap(fBuffer, OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3));
+#endif
 }
 
 
@@ -353,24 +365,47 @@ NPIHat::SetLowColor(rgb_color c)
 status_t
 NPIHat::MapBuffer(void **buf)
 {
-	// TODO
-	return B_ERROR;
+	if(buf == NULL) return B_BAD_VALUE;
+	if(fBuffer != NULL) return B_ERROR;
+
+	fBuffer = mmap(NULL,
+		       OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3),
+		       PROT_READ | PROT_WRITE,
+		       MAP_SHARED,
+		       fOLEDFD,
+		       0);
+	if(fBuffer == NULL || fBuffer == MAP_FAILED)
+	{
+		fBuffer = NULL;
+		return B_ERROR;
+	}
+
+	*buf = fBuffer;
+	return B_OK;
 }
 
 
 status_t
-NPIHat::UnmapBuffer(void *buf)
+NPIHat::UnmapBuffer()
 {
-	// TODO
-	return B_ERROR;
+	if(fBuffer == NULL) return B_BAD_VALUE;
+	if(munmap(fBuffer, OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3)) != 0) return B_ERROR;
+	fBuffer = NULL;
+	return B_OK;
 }
 
 
 status_t
 NPIHat::Flush(bigtime_t &ts)
 {
-	// TODO
-	return B_ERROR;
+	_oled_ssd1306_buffer_t data;
+	bzero(&data, sizeof(data));
+
+	data.action = 1;
+
+	if(ioctl(fOLEDFD, OLED_SSD1306_IOC_BUFFER, &data) != 0) return B_ERROR;
+	ts = data.ts;
+	return B_OK;
 }
 
 
