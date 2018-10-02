@@ -48,6 +48,7 @@ LBView::LBView(const char *name)
 #ifdef LBK_ENABLE_MORE_FEATURES
 	SetHighColor(255, 255, 255); // white
 	SetLowColor(0, 0, 0); // black
+	SetViewColor(0, 0, 0); // black
 #endif
 }
 
@@ -414,7 +415,7 @@ LBView::MessageReceived(BMessage *msg)
 			if(fUpdateRect.IsValid())
 			{
 				EnableUpdate(false);
-				FillRect(fUpdateRect, B_SOLID_LOW); // auto clear
+				Clear(fUpdateRect); // auto clear
 				if(fStandingInView != NULL)
 					fStandingInView->Draw(fUpdateRect);
 				else
@@ -737,6 +738,23 @@ LBView::SetLowColor(uint8 r, uint8 g, uint8 b, uint8 a)
 }
 
 
+void
+LBView::SetViewColor(rgb_color c)
+{
+	*((uint32*)&fColors[2]) = *((uint32*)&c);
+}
+
+
+void
+LBView::SetViewColor(uint8 r, uint8 g, uint8 b, uint8 a)
+{
+	fColors[2].red = r;
+	fColors[2].green = g;
+	fColors[2].blue = b;
+	fColors[2].alpha = a;
+}
+
+
 rgb_color
 LBView::HighColor() const
 {
@@ -749,5 +767,26 @@ LBView::LowColor() const
 {
 	return fColors[1];
 }
+
+
+rgb_color
+LBView::ViewColor() const
+{
+	return fColors[2];
+}
 #endif
+
+
+void
+LBView::Clear(BRect r)
+{
+#ifdef LBK_ENABLE_MORE_FEATURES
+	rgb_color c = LowColor();
+	SetLowColor(ViewColor());
+	FillRect(fUpdateRect, B_SOLID_LOW);
+	SetLowColor(c);
+#else
+	FillRect(fUpdateRect, B_SOLID_LOW);
+#endif
+}
 
