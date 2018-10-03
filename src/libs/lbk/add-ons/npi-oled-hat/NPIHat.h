@@ -92,9 +92,7 @@ private:
 	int fInputFD;
 	int fPipes[2];
 	void *fThread;
-#ifdef LBK_ENABLE_MORE_FEATURES
 	void *fBuffer;
-#endif
 
 	static int32		InputEventsObserver(void*);
 };

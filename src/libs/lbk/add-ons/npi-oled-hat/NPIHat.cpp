@@ -36,16 +36,13 @@
 #include <unistd.h>
 #include <linux/input.h>
 #include <sys/select.h>
+#include <sys/mman.h>
 
 #include <stdint.h>
 #include <oled_ssd1306_ioctl.h>
 
 #include "Config.h"
 #include "NPIHat.h"
-
-#ifdef LBK_ENABLE_MORE_FEATURES
-#include <sys/mman.h>
-#endif
 
 #if (0)
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
@@ -64,11 +61,9 @@ NPIHat::NPIHat()
 	: LBPanelDevice(),
 	  fOLEDFD(-1),
 	  fInputFD(-1),
-	  fThread(NULL)
+	  fThread(NULL),
+	  fBuffer(NULL)
 {
-#ifdef LBK_ENABLE_MORE_FEATURES
-	fBuffer = NULL;
-#endif
 	fPipes[0] = -1;
 
 	if ((fOLEDFD = open(DEFAULT_OLED_DEVICE, O_RDWR)) < 0)
@@ -129,10 +124,8 @@ NPIHat::~NPIHat()
 		close(fPipes[1]);
 	}
 
-#ifdef LBK_ENABLE_MORE_FEATURES
 	if(fBuffer != NULL)
 		munmap(fBuffer, OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3));
-#endif
 }
 
 
