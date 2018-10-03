@@ -33,28 +33,20 @@
 
 #include <lbk/LBPageView.h>
 #include <lbk/LBMenuItem.h>
+#include <lbk/LBScopeHandler.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class _EXPORT LBMenuView : public LBPageView {
+class _EXPORT LBMenuView : public LBPageView, public LBScopeHandler {
 public:
 	LBMenuView(const char *name = NULL);
 	virtual ~LBMenuView();
 
-	bool		AddItem(LBMenuItem *item);
-	bool		AddItem(LBMenuItem *item, int32 index);
-	bool		RemoveItem(LBMenuItem *item);
-	LBMenuItem*	RemoveItem(int32 index);
-
-	LBMenuItem*	ItemAt(int32 index) const;
-	int32		CountItems() const;
-	int32		IndexOf(LBMenuItem *item) const;
-
 	LBMenuItem*	FindItem(uint32 command) const;
 	LBMenuItem*	CurrentSelection() const;
 
-	void		ShowItem(int32 index);
-	void		HideItem(int32 index);
+	virtual BRect	ItemLabelBounds() const;
+	virtual BRect	ItemIconBounds() const;
 
 	virtual void	Draw(BRect updateRect);
 	virtual void	KeyDown(uint8 key, uint8 clicks);
@@ -67,18 +59,11 @@ protected:
 	virtual void	ItemInvoked(LBMenuItem *item);
 	virtual void	RefreshNavButtonIcons();
 
-	int32		CountVisibleItems(int32 fromIndex, int32 n) const;
-	LBMenuItem*	PrevVisibleItem(int32 &index) const;
-	LBMenuItem*	NextVisibleItem(int32 &index) const;
-	LBMenuItem*	FirstVisibleItem(int32 &index) const;
-	LBMenuItem*	LastVisibleItem(int32 &index) const;
-
-private:
-	BList fItems;
-	int32 fSelected;
-	int32 fOffset;
-
-	void		ResetOffsetIfNeeded();
+	virtual int32	VisibleItemsCountMax() const;
+	virtual void	PositionChanged(int32 pos, int32 old);
+	virtual void	OffsetChanged(int32 offset, int32 old);
+	virtual void	ScopeChanged();
+	virtual bool	IsValidKind(LBScopeItem *item) const;
 };
 
 #endif /* __cplusplus */

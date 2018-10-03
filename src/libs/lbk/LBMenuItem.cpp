@@ -38,11 +38,10 @@
 LBMenuItem::LBMenuItem(const char *label,
 			   BMessage *message,
 			   lbk_icon_id idIcon)
-	: BInvoker(message, NULL),
+	: LBScopeItem(),
+	  BInvoker(message, NULL),
 	  fLabel(NULL),
-	  fIcon(LBK_ICON_NONE),
-	  fHidden(false),
-	  fMenuView(NULL)
+	  fIcon(LBK_ICON_NONE)
 {
 	SetLabel(label);
 	SetIcon(idIcon);
@@ -51,10 +50,6 @@ LBMenuItem::LBMenuItem(const char *label,
 
 LBMenuItem::~LBMenuItem()
 {
-	/*
-	 * WARNING: NO GUARANTEE for MenuView !!!
-	 * 	item should be removed from MenuView before deleting
-	 */
 	if(fLabel != NULL) free(fLabel);
 }
 
@@ -72,7 +67,13 @@ LBMenuItem::SetLabel(const char *label)
 	if(fLabel != NULL) free(fLabel);
 	fLabel = (label != NULL ? strdup(label) : NULL);
 
-	// NO REDRAW
+	if(IsVisible() == false) return;
+
+	LBMenuView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBMenuView));
+	if(view == NULL || view->IsActivated() == false || view->CurrentSelection() != this) return;
+
+	BRect r = view->ItemLabelBounds();
+	view->InvalidRect(r);
 }
 
 
@@ -89,13 +90,19 @@ LBMenuItem::SetIcon(lbk_icon_id idIcon)
 	// only 32x32
 	fIcon = (ICON_IS_32x32(idIcon) ? idIcon : LBK_ICON_NONE);
 
-	// NO REDRAW
+	if(IsVisible() == false) return;
+
+	LBMenuView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBMenuView));
+	if(view == NULL || view->IsActivated() == false) return;
+
+	BRect r = view->ItemIconBounds();
+	view->InvalidRect(r);
 }
 
 
 bool
 LBMenuItem::IsHidden() const
 {
-	return fHidden;
+	return(!IsVisible());
 }
 

@@ -39,8 +39,7 @@
 
 LBMenuView::LBMenuView(const char *name)
 	: LBPageView(name),
-	  fSelected(-1),
-	  fOffset(0)
+	  LBScopeHandler()
 {
 #if LBK_KEY_TYPICAL_NUMBER == 2
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
@@ -55,76 +54,13 @@ LBMenuView::LBMenuView(const char *name)
 
 LBMenuView::~LBMenuView()
 {
-	LBMenuItem *item;
-
-	while((item = (LBMenuItem*)fItems.RemoveItem((int32)0)) != NULL)
-	{
-		item->fMenuView = NULL;
-		delete item;
-	}
 }
 
 
 bool
-LBMenuView::AddItem(LBMenuItem *item)
+LBMenuView::IsValidKind(LBScopeItem *item) const
 {
-	return AddItem(item, fItems.CountItems());
-}
-
-
-bool
-LBMenuView::AddItem(LBMenuItem *item, int32 index)
-{
-	if(item == NULL || item->fMenuView != NULL) return false;
-	if(fItems.AddItem(item, index) == false) return false;
-	item->fMenuView = this;
-
-	// TODO: update fOffset, fSelect, etc.
-
-	return true;
-}
-
-
-bool
-LBMenuView::RemoveItem(LBMenuItem *item)
-{
-	if(item == NULL || item->fMenuView != this) return false;
-	return(RemoveItem(fItems.IndexOf(item)) != NULL);
-}
-
-
-LBMenuItem*
-LBMenuView::RemoveItem(int32 index)
-{
-	LBMenuItem *item = ItemAt(index);
-
-	if(item == NULL || fItems.RemoveItem(item) == false) return NULL;
-	item->fMenuView = NULL;
-
-	// TODO: update fOffset, fSelect, etc.
-
-	return item;
-}
-
-
-LBMenuItem*
-LBMenuView::ItemAt(int32 index) const
-{
-	return((LBMenuItem*)fItems.ItemAt(index));
-}
-
-
-int32
-LBMenuView::CountItems() const
-{
-	return fItems.CountItems();
-}
-
-
-int32
-LBMenuView::IndexOf(LBMenuItem *item) const
-{
-	return fItems.IndexOf(item);
+	return(is_kind_of(item, LBMenuItem));
 }
 
 
@@ -133,131 +69,22 @@ LBMenuView::FindItem(uint32 command) const
 {
 	LBMenuItem *item;
 
-	for(int32 k = 0; k < fItems.CountItems(); k++)
+	for(int32 k = 0; k < CountItems(); k++)
 	{
-		item = ItemAt(k);
+		item = cast_as(ItemAt(k), LBMenuItem);
 		if(item->Command() == command) return item;
 	}
 
-	return NULL; 
+	return NULL;
 }
 
 
 LBMenuItem*
 LBMenuView::CurrentSelection() const
 {
-	LBMenuItem *item = ItemAt(fSelected);
-	if(item == NULL || item->IsHidden()) return NULL;
-	return item;
-}
-
-
-void
-LBMenuView::ShowItem(int32 index)
-{
-	LBMenuItem *item = ItemAt(index);
-	if(item == NULL || item->IsHidden() == false) return;
-	item->fHidden = false;
-
-	// TODO: update fOffset, fSelect, etc.
-}
-
-
-void
-LBMenuView::HideItem(int32 index)
-{
-	LBMenuItem *item = ItemAt(index);
-	if(item == NULL || item->IsHidden()) return;
-	item->fHidden = true;
-
-	// TODO: update fOffset, fSelect, etc.
-}
-
-
-int32
-LBMenuView::CountVisibleItems(int32 fromIndex, int32 n) const
-{
-	int32 count = 0;
-	LBMenuItem *item;
-
-	if(fromIndex < 0) return 0;
-	if(n < 0) n = CountItems() - fromIndex;
-
-	for(int32 k = 0; k < n; k++)
-	{
-		item = ItemAt(fromIndex + k);
-		if(item == NULL) break;
-		if(item->IsHidden()) continue;
-		count++;
-	}
-
-	return count;
-}
-
-
-LBMenuItem*
-LBMenuView::PrevVisibleItem(int32 &index) const
-{
-	int32 k = index;
-	LBMenuItem *item = ItemAt(--k);
-
-	while(!(item == NULL || item->IsHidden() == false)) item = ItemAt(--k);
-	if(item == NULL) return NULL;
-
-	index = k;
-	return item;
-}
-
-
-LBMenuItem*
-LBMenuView::NextVisibleItem(int32 &index) const
-{
-	int32 k = index;
-	LBMenuItem *item = ItemAt(++k);
-
-	while(!(item == NULL || item->IsHidden() == false)) item = ItemAt(++k);
-	if(item == NULL) return NULL;
-
-	index = k;
-	return item;
-}
-
-
-LBMenuItem*
-LBMenuView::FirstVisibleItem(int32 &index) const
-{
-	LBMenuItem *item;
-
-	for(int32 k = 0; k < CountItems(); k++)
-	{
-		item = ItemAt(k);
-		if(item->IsHidden() == false)
-		{
-			index = k;
-			return item;
-		}
-	}
-
-	return NULL;
-}
-
-
-LBMenuItem*
-LBMenuView::LastVisibleItem(int32 &index) const
-{
-	LBMenuItem *item;
-
-	for(int32 k = CountItems() - 1; k >= 0; k--)
-	{
-		item = ItemAt(k);
-		if(item->IsHidden() == false)
-		{
-			index = k;
-			return item;
-		}
-	}
-
-	return NULL;
+	LBScopeItem *item = ItemAt(Position());
+	if(item == NULL || item->IsVisible() == false) return NULL;
+	return cast_as(item, LBMenuItem);
 }
 
 
@@ -265,15 +92,14 @@ void
 LBMenuView::Draw(BRect rect)
 {
 	LBPageView::Draw(rect);
-	if(fItems.CountItems() == 0) return;
+	if(CountItems() == 0) return;
 
 	uint16 w;
 	BRect r;
 	LBMenuItem *curItem = CurrentSelection();
 
 	// item label
-	r = Bounds();
-	r.bottom = r.top + 13;
+	r = ItemLabelBounds();
 	if(!(curItem == NULL || curItem->Label() == NULL) && r.Intersects(rect))
 	{
 		SetFontSize(12);
@@ -282,20 +108,18 @@ LBMenuView::Draw(BRect rect)
 	}
 
 	// item icons
-	r = Bounds();
-	r.top += 14;
+	r = ItemIconBounds();
 	if(r.Intersects(rect) == false) return;
 
-	int32 nMax = r.Width() / 40;
+	int32 nMax = VisibleItemsCountMax();
 	r.right = r.left + r.Width() / (float)nMax - 1.f;
 
-	LBMenuItem *aItem;
-	int32 index = fOffset;
-	for(int32 k = 0; k < nMax; k++, index++)
+	int32 index;
+	for(LBScopeItem *item = FirstVisibleItemAtScope(index);
+	    item != NULL;
+	    item = NextVisibleItemAtScope(index))
 	{
-		aItem = ItemAt(index);
-		while(!(aItem == NULL || aItem->IsHidden() == false)) aItem = ItemAt(++index);
-		if(aItem == NULL) break;
+		LBMenuItem *aItem = cast_as(item, LBMenuItem);
 
 		if(r.Intersects(rect))
 		{
@@ -325,39 +149,6 @@ LBMenuView::Draw(BRect rect)
 
 
 void
-LBMenuView::ResetOffsetIfNeeded()
-{
-	if(fSelected < 0)
-	{
-		fOffset = 0;
-	}
-	else if(fSelected < fOffset)
-	{
-		fOffset = fSelected;
-	}
-	else
-	{
-		int32 nMax = Bounds().Width() / 40;
-		LBMenuItem *aItem;
-		int32 lastIndex = fOffset;
-		for(int32 k = 0; k < nMax; k++, lastIndex++)
-		{
-			aItem = ItemAt(lastIndex);
-			while(!(aItem == NULL || aItem->IsHidden() == false)) aItem = ItemAt(++lastIndex);
-			if(aItem == NULL) break;
-			if(k == nMax - 1) break;
-		}
-
-		if(fSelected > lastIndex)
-		{
-			int32 n = CountVisibleItems(lastIndex + 1, fSelected - lastIndex);
-			while(n-- > 0) NextVisibleItem(fOffset);
-		}
-	}
-}
-
-
-void
 LBMenuView::KeyDown(uint8 key, uint8 clicks)
 {
 	LBPageView::KeyDown(key, clicks);
@@ -365,27 +156,21 @@ LBMenuView::KeyDown(uint8 key, uint8 clicks)
 	if(clicks != 0xff) return;
 	if(IsNavButtonHidden(key)) return;
 
-	lbk_icon_id btnIcon = GetNavButtonIcon((int32)key);
-
-	int32 saveSelected = fSelected;
-	switch(btnIcon)
+	int32 pos = -1;
+	switch(GetNavButtonIcon((int32)key))
 	{
 		case LBK_ICON_LEFT:
-			FirstVisibleItem(fSelected);
+			FirstVisibleItem(pos);
 			break;
 
 		case LBK_ICON_RIGHT:
-			LastVisibleItem(fSelected);
+			LastVisibleItem(pos);
 			break;
 
 		default:
-			break;
+			return;
 	}
-	if(saveSelected == fSelected) return;
-
-	ResetOffsetIfNeeded();
-	RefreshNavButtonIcons();
-	InvalidRect(Bounds());
+	SetPosition(pos);
 }
 
 void
@@ -415,25 +200,19 @@ LBMenuView::KeyUp(uint8 key, uint8 clicks)
 	}
 	if(clicks > 1) return;
 
-	int32 saveSelected = fSelected;
 	switch(btnIcon)
 	{
 		case LBK_ICON_LEFT:
-			PrevVisibleItem(fSelected);
+			RollDown();
 			break;
 
 		case LBK_ICON_RIGHT:
-			NextVisibleItem(fSelected);
+			RollUp();
 			break;
 
 		default:
 			break;
 	}
-	if(saveSelected == fSelected) return;
-
-	ResetOffsetIfNeeded();
-	RefreshNavButtonIcons();
-	InvalidRect(Bounds());
 }
 
 
@@ -442,11 +221,12 @@ LBMenuView::StandIn()
 {
 	LBPageView::StandIn();
 
-	if(fSelected < 0)
+	if(Position() < 0)
 	{
-		FirstVisibleItem(fSelected);
-		fOffset = max_c(0, fSelected);
+		int32 pos = -1;
 
+		FirstVisibleItem(pos);
+		SetPosition(pos);
 		RefreshNavButtonIcons();
 	}
 }
@@ -457,11 +237,12 @@ LBMenuView::Activated(bool state)
 {
 	LBPageView::Activated(state);
 
-	if(state && fSelected < 0)
+	if(state && Position() < 0)
 	{
-		FirstVisibleItem(fSelected);
-		fOffset = max_c(0, fSelected);
+		int32 pos = -1;
 
+		FirstVisibleItem(pos);
+		SetPosition(pos);
 		RefreshNavButtonIcons();
 	}
 }
@@ -470,7 +251,7 @@ LBMenuView::Activated(bool state)
 void
 LBMenuView::RefreshNavButtonIcons()
 {
-	int32 n = (fSelected <= 0 ? 0 : CountVisibleItems(0, fSelected));
+	int32 n = (Position() <= 0 ? 0 : CountVisibleItems(0, Position()));
 
 	// LEFT
 	if(n > 0)
@@ -499,7 +280,7 @@ LBMenuView::RefreshNavButtonIcons()
 #endif
 
 	// RIGHT
-	n = CountVisibleItems(fSelected + 1, -1);
+	n = CountVisibleItems(Position() + 1, -1);
 	if(n > 0)
 	{
 #if LBK_KEY_TYPICAL_NUMBER == 2
@@ -529,7 +310,59 @@ LBMenuView::ItemInvoked(LBMenuItem *item)
 void
 LBMenuView::Attached()
 {
+	LBMenuItem *item;
+
 	for(int32 k = 0; k < CountItems(); k++)
-		ItemAt(k)->SetTarget(this);
+	{
+		item = cast_as(ItemAt(k), LBMenuItem);
+		item->SetTarget(this);
+	}
+}
+
+
+BRect
+LBMenuView::ItemLabelBounds() const
+{
+	BRect r = Bounds();
+	r.bottom = r.top + 13;
+	return r;
+}
+
+
+BRect
+LBMenuView::ItemIconBounds() const
+{
+	BRect r = Bounds();
+	r.top += 14;
+	return r;
+}
+
+
+int32
+LBMenuView::VisibleItemsCountMax() const
+{
+	return(Bounds().Width() / 40);
+}
+
+
+void
+LBMenuView::PositionChanged(int32 pos, int32 old)
+{
+	InvalidRect(Bounds());
+	RefreshNavButtonIcons();
+}
+
+
+void
+LBMenuView::OffsetChanged(int32 offset, int32 old)
+{
+	InvalidRect(Bounds());
+}
+
+
+void
+LBMenuView::ScopeChanged()
+{
+	RefreshNavButtonIcons();
 }
 

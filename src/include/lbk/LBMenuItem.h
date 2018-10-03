@@ -32,12 +32,11 @@
 #define __LBK_MENU_ITEM_H__
 
 #include <lbk/LBIconDefs.h>
+#include <lbk/LBScopeItem.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class LBMenuView;
-
-class _EXPORT LBMenuItem : public BInvoker {
+class _EXPORT LBMenuItem : public LBScopeItem, public BInvoker {
 public:
 	LBMenuItem(const char *label,
 		   BMessage *message,
@@ -53,13 +52,8 @@ public:
 	bool		IsHidden() const;
 
 private:
-	friend class LBMenuView;
-
 	char *fLabel;
 	lbk_icon_id fIcon;
-	bool fHidden;
-
-	LBMenuView *fMenuView;
 };
 
 #endif /* __cplusplus */

@@ -31,13 +31,12 @@
 #ifndef __LBK_LIST_ITEM_H__
 #define __LBK_LIST_ITEM_H__
 
-#include <lbk/LBKConfig.h>
+#include <lbk/LBIconDefs.h>
+#include <lbk/LBScopeItem.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class LBListView;
-
-class _EXPORT LBListItem {
+class _EXPORT LBListItem : public LBScopeItem {
 public:
 	LBListItem(const char *text,
 		   lbk_icon_id idIcon);
@@ -52,13 +51,8 @@ public:
 	bool		IsHidden() const;
 
 private:
-	friend class LBListView;
-
 	char *fText;
 	lbk_icon_id fIcon;
-	bool fHidden;
-
-	LBListView *fListView;
 };
 
 #endif /* __cplusplus */
