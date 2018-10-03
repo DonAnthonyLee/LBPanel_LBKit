@@ -48,7 +48,7 @@ public:
 
 	LBScopeItem*		ItemAt(int32 index) const;
 	int32			CountItems() const;
-	int32			IndexOf(LBScopeItem *item) const;
+	int32			IndexOf(const LBScopeItem *item) const;
 
 	bool			SwapItems(int32 indexA, int32 indexB);
 	bool			MoveItem(int32 fromIndex, int32 toIndex);
