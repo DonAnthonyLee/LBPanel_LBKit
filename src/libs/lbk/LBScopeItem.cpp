@@ -33,7 +33,7 @@
 
 
 LBScopeItem::LBScopeItem()
-	: fHandler(NULL), fVisible(true)
+	: fScopeHandler(NULL), fVisible(true)
 {
 }
 
@@ -44,7 +44,7 @@ LBScopeItem::~LBScopeItem()
 	 * WARNING: NO GUARANTEE for ScopeHandler !!!
 	 */
 #if 0
-	if(fHandler != NULL)
+	if(fScopeHandler != NULL)
 		fprintf(stderr, "[LBScopeItem]: Item should be removed from handler before deleting !\n");
 	}
 #endif
@@ -52,9 +52,9 @@ LBScopeItem::~LBScopeItem()
 
 
 LBScopeHandler*
-LBScopeItem::Handler() const
+LBScopeItem::ScopeHandler() const
 {
-	return fHandler;
+	return fScopeHandler;
 }
 
 
@@ -63,8 +63,8 @@ LBScopeItem::Show()
 {
 	if(fVisible == false)
 	{
-		if(fHandler != NULL)
-			fHandler->ShowItem(this);
+		if(fScopeHandler != NULL)
+			fScopeHandler->ShowItem(this);
 		else
 			fVisible = true;
 	}
@@ -76,8 +76,8 @@ LBScopeItem::Hide()
 {
 	if(fVisible)
 	{
-		if(fHandler != NULL)
-			fHandler->HideItem(this);
+		if(fScopeHandler != NULL)
+			fScopeHandler->HideItem(this);
 		else
 			fVisible = false;
 	}
@@ -87,8 +87,7 @@ LBScopeItem::Hide()
 bool
 LBScopeItem::IsVisible() const
 {
-	if(fVisible == false) return false;
-	if(fHandler != NULL) return fHandler->IsItemVisible(this);
-	return true;
+	if(fScopeHandler != NULL) return fScopeHandler->IsItemVisible(this);
+	return fVisible;
 }
 
