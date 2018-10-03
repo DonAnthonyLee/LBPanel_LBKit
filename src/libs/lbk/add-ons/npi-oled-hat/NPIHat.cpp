@@ -360,6 +360,7 @@ NPIHat::SetLowColor(rgb_color c)
 	if(c.red == 0 && c.green == 0 && c.blue == 0) return B_OK; // black
 	return B_ERROR;
 }
+#endif
 
 
 status_t
@@ -409,6 +410,7 @@ NPIHat::Flush(bigtime_t &ts)
 }
 
 
+#ifdef LBK_ENABLE_MORE_FEATURES
 status_t
 NPIHat::GetOrientationOfKeys(orientation &o)
 {
