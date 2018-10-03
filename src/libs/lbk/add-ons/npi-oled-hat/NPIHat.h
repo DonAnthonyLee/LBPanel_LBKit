@@ -71,11 +71,9 @@ public:
 	virtual status_t	SetTimestampNow(bigtime_t &tsRet);
 	virtual status_t	DisableUpdate();
 	virtual status_t	EnableUpdate();
-#ifdef LBK_ENABLE_MORE_FEATURES
 	virtual status_t	MapBuffer(void **buf);
 	virtual status_t	UnmapBuffer();
 	virtual status_t	Flush(bigtime_t &ts);
-#endif
 
 	/* keys */
 	virtual status_t	GetCountOfKeys(uint8 &count);
