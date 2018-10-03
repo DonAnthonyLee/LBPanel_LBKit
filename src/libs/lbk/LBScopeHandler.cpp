@@ -32,7 +32,7 @@
 
 
 LBScopeHandler::LBScopeHandler(const char *name)
-	: fOffset(0), fPos(-1)
+	: fOffset(0), fPos(-1), fExpanded(true)
 {
 }
 
@@ -59,13 +59,7 @@ LBScopeHandler::AddItem(LBScopeItem *item)
 bool
 LBScopeHandler::AddItem(LBScopeItem *item, int32 index)
 {
-	int32 first = -1;
-	int32 last = -1;
-
 	if(index < 0 || item == NULL || item->fHandler != NULL) return false;
-
-	FirstVisibleItemAtScope(first);
-	LastVisibleItemAtScope(last);
 
 	if(fItems.AddItem(item, index) == false) return false;
 	item->fHandler = this;
@@ -74,18 +68,12 @@ LBScopeHandler::AddItem(LBScopeItem *item, int32 index)
 	int32 savePos = fPos;
 	bool scopeChanged = false;
 
+	// update offset and position if necessary
 	if(index <= fOffset) fOffset++;
 	if(index <= fPos) fPos++;
 
-	if(index >= first && index <= last && item->fVisible)
-	{
-		if(savePos == last) // keep the last position
-		{
-			fPos = last + 1;
-			PrevVisibleItem(fPos);
-		}
-		scopeChanged = true;
-	}
+	if(item->fVisible) // use default behavior if item is visible
+		scopeChanged = ReadjustWhenItemShown(index, fOffset, fPos);
 
 	if(saveOffset != fOffset)
 		OffsetChanged(fOffset, saveOffset);
@@ -111,42 +99,25 @@ LBScopeHandler::RemoveItem(LBScopeItem *item)
 LBScopeItem*
 LBScopeHandler::RemoveItem(int32 index)
 {
-	int32 first = -1;
-	int32 last = -1;
-
 	LBScopeItem *item = ItemAt(index);
 	if(item == NULL) return NULL;
-
-	FirstVisibleItemAtScope(first);
-	LastVisibleItemAtScope(last);
-
-	if(fItems.RemoveItem(item) == false) return NULL;
-	item->fHandler = NULL;
 
 	int32 saveOffset = fOffset;
 	int32 savePos = fPos;
 	bool scopeChanged = false;
 
-	if(index < fOffset && fOffset > 0) fOffset--;
-	if(index < fPos && fPos > 0) fPos--;
-
-	if(index >= first && index <= last && item->fVisible)
+	if(item->fVisible) // use default behavior if item is visible
 	{
-		if(savePos == index) // keep current position
-		{
-			fPos = index - 1;
-			if(NextVisibleItem(fPos) == NULL) fPos = -1;
-		}
-		scopeChanged = true;
+		item->fVisible = false;
+		scopeChanged = ReadjustWhenItemHidden(index, fOffset, fPos);
+		item->fVisible = true;
 	}
 
-	if(fOffset >= fItems.CountItems())
-		fOffset = max_c(0, fItems.CountItems() - 1);
+	fItems.RemoveItem(index);
+	item->fHandler = NULL;
 
-	if(fPos >= fItems.CountItems())
-	{
-		if(LastVisibleItem(fPos) == NULL) fPos = -1;
-	}
+	if(index < fOffset) fOffset--;
+	if(index < fPos) fPos--;
 
 	if(saveOffset != fOffset)
 		OffsetChanged(fOffset, saveOffset);
@@ -185,34 +156,84 @@ LBScopeHandler::IndexOf(LBScopeItem *item) const
 bool
 LBScopeHandler::SwapItems(int32 indexA, int32 indexB)
 {
-	bool retVal = false;
+	if(indexA < 0 || indexA >= fItems.CountItems()) return false;
+	if(indexB < 0 || indexB >= fItems.CountItems()) return false;
+	if(indexA == indexB) return true;
 
-	do
-	{
-		if((retVal = fItems.SwapItems(indexA, indexB)) == false) break;
+	int32 last = -1;
+	LastVisibleItemAtScope(last);
 
-		// TODO
+	if(fItems.SwapItems(indexA, indexB) == false) return false;
 
-	} while(false);
+	int32 saveOffset = fOffset;
+	int32 savePos = fPos;
 
-	return retVal;
+	// use default behavior
+	bool scopeChanged = ReadjustWhenItemsSwapped(indexA, indexB, last, fOffset, fPos);
+
+	if(saveOffset != fOffset)
+		OffsetChanged(fOffset, saveOffset);
+
+	if(savePos != fPos)
+		PositionChanged(fPos, savePos);
+
+	if(scopeChanged)
+		ScopeChanged();
+
+	return true;
 }
 
 
 bool
 LBScopeHandler::MoveItem(int32 fromIndex, int32 toIndex)
 {
-	bool retVal = false;
+	if(fromIndex < 0 || fromIndex >= fItems.CountItems()) return false;
+	if(toIndex < 0 || toIndex >= fItems.CountItems()) return false;
+	if(fromIndex == toIndex) return true;
 
-	do
+	LBScopeItem *item = ItemAt(fromIndex);
+	if(item == NULL) return false;
+
+	int32 saveOffset = fOffset;
+	int32 savePos = fPos;
+	bool scopeChanged = false;
+
+	if(item->fVisible) // use default behavior if item is visible
 	{
-		if((retVal = fItems.MoveItem(fromIndex, toIndex)) == false) break;
+		item->fVisible = false;
+		scopeChanged = ReadjustWhenItemHidden(fromIndex, fOffset, fPos);
+		item->fVisible = true;
+	}
 
-		// TODO
+	if(fItems.MoveItem(fromIndex, toIndex) == false)
+	{
+		fOffset = saveOffset;
+		fPos = savePos;
+		return false;
+	}
 
-	} while(false);
+	if(fromIndex < fOffset) fOffset--;
+	if(fromIndex < fPos) fPos--;
 
-	return retVal;
+	if(toIndex <= fOffset) fOffset++;
+	if(toIndex <= fPos) fPos++;
+
+	if(item->fVisible) // use default behavior if item is visible
+	{
+		if(ReadjustWhenItemShown(toIndex, fOffset, fPos))
+			scopeChanged = true;
+	}
+
+	if(saveOffset != fOffset)
+		OffsetChanged(fOffset, saveOffset);
+
+	if(savePos != fPos)
+		PositionChanged(fPos, savePos);
+
+	if(scopeChanged)
+		ScopeChanged();
+
+	return true;
 }
 
 
@@ -223,7 +244,11 @@ LBScopeHandler::SortItems(int (*cmpFunc)(const LBScopeItem**, const LBScopeItem*
 
 	fItems.SortItems((int (*)(const void*, const void*))cmpFunc);
 
-	// TODO
+	// Here we supposed that most of items changed, so it's unnecessary to keep the position.
+	SetPosition(-1);
+
+	// If nothing inside the scope, reset the offset.
+	if(CountVisibleItemsAtScope(fOffset, -1) == 0) SetOffset(0);
 }
 
 
@@ -249,17 +274,19 @@ LBScopeHandler::SetPosition(int32 pos)
 
 	if(fPos != pos)
 	{
-		int32 oldPos = fPos;
-		int32 oldOffset = fOffset;
+		int32 saveOffset = fOffset;
+		int32 savePos = fPos;
 
 		fPos = pos;
-		fOffset = RejustOffsetAfterPositionChanged();
-		PositionChanged(fPos, oldPos);
-		if(fOffset != oldOffset)
-		{
-			OffsetChanged(fOffset, oldOffset);
+		fOffset = ReadjustOffsetWhenPositionChanged(); // use default behavior
+
+		if(fOffset != saveOffset)
+			OffsetChanged(fOffset, saveOffset);
+
+		PositionChanged(fPos, savePos);
+
+		if(fOffset != saveOffset)
 			ScopeChanged();
-		}
 	}
 }
 
@@ -290,11 +317,29 @@ LBScopeHandler::SetOffset(int32 offset)
 {
 	if(fOffset != offset)
 	{
-		int32 oldOffset = fOffset;
+		int32 saveOffset = fOffset;
+		int32 savePos = fPos;
 
-		// TODO
 		fOffset = offset;
-		OffsetChanged(fOffset, oldOffset);
+		if(fPos >= 0)
+		{
+			if(fPos < fOffset)
+			{
+				fPos = fOffset - 1;
+				if(NextVisibleItemAtScope(fPos) == NULL) fPos = -1;
+			}
+			else
+			{
+				int32 last = -1;
+				LastVisibleItemAtScope(last);
+				if(fPos > last) fPos = last;
+			}
+		}
+
+		OffsetChanged(fOffset, saveOffset);
+
+		if(savePos != fPos)
+			PositionChanged(fPos, savePos);
 	}
 }
 
@@ -339,7 +384,20 @@ LBScopeHandler::ShowItem(int32 index)
 	if(item == NULL || item->fVisible) return;
 	item->fVisible = true;
 
-	// TODO
+	int32 saveOffset = fOffset;
+	int32 savePos = fPos;
+
+	// use default behavior
+	bool scopeChanged = ReadjustWhenItemShown(index, fOffset, fPos);
+
+	if(saveOffset != fOffset)
+		OffsetChanged(fOffset, saveOffset);
+
+	if(savePos != fPos)
+		PositionChanged(fPos, savePos);
+
+	if(scopeChanged)
+		ScopeChanged();
 }
 
 
@@ -358,45 +416,56 @@ LBScopeHandler::HideItem(int32 index)
 	if(item == NULL || item->fVisible == false) return;
 	item->fVisible = false;
 
-	// TODO
+	int32 saveOffset = fOffset;
+	int32 savePos = fPos;
+
+	// use default behavior
+	bool scopeChanged = ReadjustWhenItemHidden(index, fOffset, fPos);
+
+	if(saveOffset != fOffset)
+		OffsetChanged(fOffset, saveOffset);
+
+	if(savePos != fPos)
+		PositionChanged(fPos, savePos);
+
+	if(scopeChanged)
+		ScopeChanged();
 }
 
 
 bool
 LBScopeHandler::IsItemVisible(const LBScopeItem *item) const
 {
-	// TODO
-	return false;
+	if(item == NULL || item->fVisible == false) return false;
+	if(fExpanded == false) return false;
+	if(fVisible == false) return false;
+	if(Handler() != NULL) return Handler()->IsItemVisible(this);
+	return true;
+}
+
+
+bool
+LBScopeHandler::IsExpanded() const
+{
+	return fExpanded;
 }
 
 
 void
 LBScopeHandler::Expand()
 {
-	// TODO
+	if(fExpanded) return;
+	fExpanded = true;
+	ScopeChanged();
 }
 
 
 void
 LBScopeHandler::Collapse()
 {
-	// TODO
-}
-
-
-void
-LBScopeHandler::Show()
-{
-	// TODO
-	LBScopeItem::Show();
-}
-
-
-void
-LBScopeHandler::Hide()
-{
-	// TODO
-	LBScopeItem::Hide();
+	if(fExpanded == false) return;
+	fExpanded = false;
+	ScopeChanged();
 }
 
 
@@ -494,11 +563,36 @@ LBScopeHandler::LastVisibleItem(int32 &index) const
 }
 
 
+int32
+LBScopeHandler::CountVisibleItemsAtScope(int32 fromIndex, int32 n) const
+{
+	int32 count = 0, retVal = 0;
+	LBScopeItem *item;
+	int32 nMax = this->VisibleItemsCountMax();
+
+	if(fromIndex < 0 || nMax < 1) return 0;
+	if(n < 0) n = CountItems() - fromIndex;
+
+	for(int32 k = fOffset; k < fromIndex + n && count < nMax; k++)
+	{
+		item = ItemAt(k);
+		if(item == NULL) break;
+		if(item->fVisible == false) continue;
+		count++;
+		if(k >= fromIndex) retVal++;
+	}
+
+	return retVal;
+}
+
 
 LBScopeItem*
-LBScopeHandler::FirstVisibleItemAtScope(int32 &index) const
+LBScopeHandler::FirstVisibleItemAtScope(int32 &index, int32 fromIndex) const
 {
-	return FirstVisibleItem(index, fOffset);
+	int32 t = (fromIndex < 0 ? fOffset : fromIndex) - 1;
+	LBScopeItem *item = NextVisibleItemAtScope(t);
+	if(item != NULL) index = t;
+	return item;
 }
 
 
@@ -524,23 +618,148 @@ LBScopeHandler::LastVisibleItemAtScope(int32 &index) const
 }
 
 
-int32
-LBScopeHandler::RejustOffsetAfterPositionChanged()
+LBScopeItem*
+LBScopeHandler::PrevVisibleItemAtScope(int32 &index) const
 {
-	if(fPos < 0) return 0;
-	if(fPos < fOffset) return fPos;
+	LBScopeItem *item = NULL;
+	int32 nMax = this->VisibleItemsCountMax();
+	int32 t = fOffset;
 
-	int32 lastIndex = fOffset;
-	LastVisibleItemAtScope(lastIndex);
-
-	if(fPos > lastIndex)
+	for(int32 k = 0; k < nMax && t < index; k++, t++)
 	{
-		int32 n = CountVisibleItems(lastIndex + 1, fPos - lastIndex);
-		int32 offset = fOffset;
-		while(n-- > 0) NextVisibleItem(offset);
-		return offset;
+		LBScopeItem *aItem = ItemAt(t);
+		while(!(aItem == NULL || aItem->fVisible)) aItem = ItemAt(++t);
+		if(aItem == NULL) break;
+		item = aItem;
 	}
 
-	return fOffset;
+	if(item != NULL)
+		index = fItems.IndexOf(item);
+
+	return item;
+}
+
+
+LBScopeItem*
+LBScopeHandler::NextVisibleItemAtScope(int32 &index) const
+{
+	int32 nMax = this->VisibleItemsCountMax();
+	int32 t = fOffset;
+
+	for(int32 k = 0; k < nMax; k++, t++)
+	{
+		LBScopeItem *aItem = ItemAt(t);
+		while(!(aItem == NULL || aItem->fVisible)) aItem = ItemAt(++t);
+		if(aItem == NULL) break;
+		if(t > index)
+		{
+			index = t;
+			return aItem;
+		}
+	}
+
+	return NULL;
+}
+
+
+int32
+LBScopeHandler::ReadjustOffsetWhenPositionChanged() const
+{
+	if(fPos < 0) return fOffset; // remain original value
+	if(fPos < fOffset) return fPos; // make it start from "fPos"
+
+	int32 last = -1;
+	LastVisibleItemAtScope(last);
+
+	if(last < 0) return fPos;
+	if(fPos <= last) return fOffset;
+
+	// fPos > last, keep "fPos" at last position of scope
+	int32 n = CountVisibleItems(last + 1, fPos - last);
+	int32 offset = fOffset;
+	while(n-- > 0) NextVisibleItem(offset);
+	return offset;
+}
+
+
+bool
+LBScopeHandler::ReadjustWhenItemShown(int32 item_index, int32 &new_offset, int32 &new_pos) const
+{
+	int32 last = -1;
+	LastVisibleItemAtScope(last);
+
+	new_offset = Offset();
+	new_pos = min_c(Position(), last);
+
+	return(item_index >= Offset() && item_index <= last);
+}
+
+
+bool
+LBScopeHandler::ReadjustWhenItemHidden(int32 item_index, int32 &new_offset, int32 &new_pos) const
+{
+	bool scopeChanged = false;
+
+	new_offset = Offset();
+	new_pos = Position();
+
+	if(item_index >= Offset())
+	{
+		int32 nMax = this->VisibleItemsCountMax();
+		if(CountVisibleItems(Offset(), item_index - Offset()) < nMax)
+		{
+			new_pos = -1;
+
+			if(item_index == Offset() && item_index == CountItems() - 1)
+				new_offset--;
+			else
+				LastVisibleItemAtScope(new_pos);
+
+			scopeChanged = true;
+		}
+	}
+
+	return scopeChanged;
+}
+
+
+bool
+LBScopeHandler::ReadjustWhenItemsSwapped(int32 itemA_index, int32 itemB_index,
+					 int32 last_index_at_scope_before,
+					 int32 &new_offset, int32 &new_pos) const
+{
+	LBScopeItem *itemA = ItemAt(itemB_index);
+	LBScopeItem *itemB = ItemAt(itemA_index);
+	bool scopeChanged = false;
+
+	new_offset = Offset();
+	new_pos = Position();
+
+	if((itemA_index >= Offset() && itemA_index <= last_index_at_scope_before) ||
+	   (itemB_index >= Offset() && itemB_index <= last_index_at_scope_before))
+	{
+		if(itemA->fVisible != itemB->fVisible)
+		{
+			if((itemA->fVisible && itemA_index == Position()) ||
+			   (itemB->fVisible && itemB_index == Position()))
+			{
+				if(NextVisibleItemAtScope(new_pos) == NULL)
+				{
+					if(PrevVisibleItemAtScope(new_pos) == NULL) new_pos = -1;
+				}
+			} 
+
+			scopeChanged = true;
+		}
+	}
+
+	if(scopeChanged == false) // recheck scope
+	{
+		int32 t = -1;
+		LastVisibleItemAtScope(t);
+		if(t != last_index_at_scope_before) scopeChanged = true;
+	}
+
+	return scopeChanged;
 }
 
