@@ -31,7 +31,7 @@
 #include <lbk/LBScopeHandler.h>
 
 
-LBScopeHandler::LBScopeHandler(const char *name)
+LBScopeHandler::LBScopeHandler()
 	: fOffset(0), fPos(-1), fExpanded(true)
 {
 }
@@ -60,6 +60,7 @@ bool
 LBScopeHandler::AddItem(LBScopeItem *item, int32 index)
 {
 	if(index < 0 || item == NULL || item->fScopeHandler != NULL) return false;
+	if(IsValidKind(item) == false) return false;
 
 	if(fItems.AddItem(item, index) == false) return false;
 	item->fScopeHandler = this;
@@ -766,5 +767,12 @@ LBScopeHandler::ReadjustWhenItemsSwapped(int32 itemA_index, int32 itemB_index,
 	}
 
 	return scopeChanged;
+}
+
+
+bool
+LBScopeHandler::IsValidKind(LBScopeItem *item) const
+{
+	return true;
 }
 
