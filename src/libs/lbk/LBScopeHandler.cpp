@@ -43,7 +43,7 @@ LBScopeHandler::~LBScopeHandler()
 
 	while((item = (LBScopeItem*)fItems.RemoveItem((int32)0)) != NULL)
 	{
-		item->fHandler = NULL;
+		item->fScopeHandler = NULL;
 		delete item;
 	}
 }
@@ -59,10 +59,10 @@ LBScopeHandler::AddItem(LBScopeItem *item)
 bool
 LBScopeHandler::AddItem(LBScopeItem *item, int32 index)
 {
-	if(index < 0 || item == NULL || item->fHandler != NULL) return false;
+	if(index < 0 || item == NULL || item->fScopeHandler != NULL) return false;
 
 	if(fItems.AddItem(item, index) == false) return false;
-	item->fHandler = this;
+	item->fScopeHandler = this;
 
 	int32 saveOffset = fOffset;
 	int32 savePos = fPos;
@@ -91,7 +91,7 @@ LBScopeHandler::AddItem(LBScopeItem *item, int32 index)
 bool
 LBScopeHandler::RemoveItem(LBScopeItem *item)
 {
-	if(item == NULL || item->fHandler != this) return false;
+	if(item == NULL || item->fScopeHandler != this) return false;
 	return(RemoveItem(fItems.IndexOf(item)) != NULL);
 }
 
@@ -114,7 +114,7 @@ LBScopeHandler::RemoveItem(int32 index)
 	}
 
 	fItems.RemoveItem(index);
-	item->fHandler = NULL;
+	item->fScopeHandler = NULL;
 
 	if(index < fOffset) fOffset--;
 	if(index < fPos) fPos--;
@@ -147,9 +147,12 @@ LBScopeHandler::CountItems() const
 
 
 int32
-LBScopeHandler::IndexOf(LBScopeItem *item) const
+LBScopeHandler::IndexOf(const LBScopeItem *item) const
 {
-	return fItems.IndexOf(item);
+	if(item == NULL) return -1;
+
+	LBScopeItem *t = const_cast<LBScopeItem*>(item);
+	return fItems.IndexOf(reinterpret_cast<void*>(t));
 }
 
 
@@ -372,7 +375,7 @@ LBScopeHandler::RollDown()
 void
 LBScopeHandler::ShowItem(LBScopeItem *item)
 {
-	if(item == NULL || item->fHandler != this) return;
+	if(item == NULL || item->fScopeHandler != this) return;
 	ShowItem(fItems.IndexOf(item));
 }
 
@@ -404,7 +407,7 @@ LBScopeHandler::ShowItem(int32 index)
 void
 LBScopeHandler::HideItem(LBScopeItem *item)
 {
-	if(item == NULL || item->fHandler != this) return;
+	if(item == NULL || item->fScopeHandler != this) return;
 	HideItem(fItems.IndexOf(item));
 }
 
@@ -436,10 +439,12 @@ LBScopeHandler::HideItem(int32 index)
 bool
 LBScopeHandler::IsItemVisible(const LBScopeItem *item) const
 {
-	if(item == NULL || item->fVisible == false) return false;
+	int32 index = IndexOf(item);
+	if(index < 0 || item->fVisible == false) return false;
 	if(fExpanded == false) return false;
 	if(fVisible == false) return false;
-	if(Handler() != NULL) return Handler()->IsItemVisible(this);
+	if(CountVisibleItemsAtScope(index, 1) == 0) return false;
+	if(ScopeHandler() != NULL) return ScopeHandler()->IsItemVisible(this);
 	return true;
 }
 

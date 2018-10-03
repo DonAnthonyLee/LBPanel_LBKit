@@ -42,7 +42,7 @@ public:
 	LBScopeItem();
 	virtual ~LBScopeItem();
 
-	LBScopeHandler*		Handler() const;
+	LBScopeHandler*		ScopeHandler() const;
 
 	virtual void		Show();
 	virtual void		Hide();
@@ -51,7 +51,7 @@ public:
 private:
 	friend class LBScopeHandler;
 
-	LBScopeHandler *fHandler;
+	LBScopeHandler *fScopeHandler;
 	bool fVisible;
 };
 
