@@ -37,7 +37,7 @@
 
 class _EXPORT LBScopeHandler : public LBScopeItem {
 public:
-	LBScopeHandler(const char *name = NULL);
+	LBScopeHandler();
 	virtual ~LBScopeHandler();
 
 	bool			AddItem(LBScopeItem *item);
@@ -94,6 +94,8 @@ protected:
 	LBScopeItem*		LastVisibleItemAtScope(int32 &index) const;
 	LBScopeItem*		PrevVisibleItemAtScope(int32 &index) const;
 	LBScopeItem*		NextVisibleItemAtScope(int32 &index) const;
+
+	virtual bool		IsValidKind(LBScopeItem *item) const;
 
 private:
 	BList fItems;
