@@ -52,7 +52,9 @@ LBAlertView::LBAlertView(const char *title,
 	  fButtonMask(0),
 	  fInvoker(NULL)
 {
-	memset(fIcons, LBK_ICON_NONE, sizeof(fIcons));
+	// oled_icon is enum type (int), initialize each one of array instead of "memset".
+	for(size_t k = 0; k < sizeof(fIcons) / sizeof(fIcons[0]); k++)
+		fIcons[k] = LBK_ICON_NONE;
 
 	switch(type)
 	{
