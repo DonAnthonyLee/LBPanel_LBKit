@@ -101,7 +101,7 @@ private:
 	BList fItems;
 	int32 fOffset;
 	int32 fPos;
-	int32 fExpanded;
+	bool fExpanded;
 
 	/*
 	 * Override following virtual functions to change default behavior.
