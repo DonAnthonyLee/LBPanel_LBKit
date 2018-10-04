@@ -56,12 +56,18 @@ LBAlertView::LBAlertView(const char *title,
 
 	switch(type)
 	{
-#if 0
-		// TODO
 		case B_IDEA_ALERT:
+			fIcons[3] = LBK_ICON_IDEA;
+			break;
+
 		case B_INFO_ALERT:
+			fIcons[3] = LBK_ICON_INFO;
+			break;
+
 		case B_STOP_ALERT:
-#endif
+			fIcons[3] = LBK_ICON_STOP;
+			break;
+
 		case B_WARNING_ALERT:
 			fIcons[3] = LBK_ICON_WARNING;
 			break;
