@@ -55,6 +55,12 @@ LBView::LBView(const char *name)
 
 LBView::~LBView()
 {
+	if(Looper() != NULL)
+	{
+		// good or not ?
+		Looper()->RemoveHandler(this);
+	}
+
 	LBView *view;
 	while((view = (LBView*)fStickViews.RemoveItem((int32)0)) != NULL) delete view; 
 }
