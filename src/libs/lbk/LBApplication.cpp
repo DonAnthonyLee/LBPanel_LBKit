@@ -43,9 +43,7 @@
 #define DBGOUT(msg...)		do {} while (0)
 #endif
 
-#define LBK_APP_IPC_BY_FIFO
-
-#ifdef LBK_APP_IPC_BY_FIFO
+#ifdef LBK_APP_IPC_BY_FIFO // defined in "<lbk/LBKConfig.h>"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -241,10 +239,10 @@ LBApplication::LBApplication(const BList *cfg)
 #ifdef LBK_APP_IPC_BY_FIFO
 				int fd;
 				BPath pth;
-				BString strUID;
-				strUID << "/tmp/lbk_ipc_" << getuid();
+				BString str;
+				str << "/tmp/lbk_ipc_" << getuid();
 
-				BEntry entry(strUID.String());
+				BEntry entry(str.String());
 				entry.GetPath(&pth);
 				if(!(entry.Exists() && entry.IsDirectory()))
 				{
@@ -259,9 +257,9 @@ LBApplication::LBApplication(const BList *cfg)
 				entry.GetPath(&pth);
 
 				unlink(pth.Path());
-				if (mkfifo(pth.Path(), 0600) == -1 ||
-				    chmod(pth.Path(), 0600) == -1 ||
-				    (fd = open(pth.Path(), O_WRONLY)) < 0) {
+				if(mkfifo(pth.Path(), 0600) == -1 ||
+				   chmod(pth.Path(), 0600) == -1 ||
+				   (fd = open(pth.Path(), O_NONBLOCK | O_RDONLY)) < 0) {
 					fprintf(stderr,
 						"[LBApplication]: %s --- Failed to create fifo (%s) !\n",
 						__func__, pth.Path());
@@ -532,20 +530,22 @@ LBApplication::Go()
 			if(status > 0 && FD_ISSET(ipc->fd, &rset))
 			{
 				uint8 byte = 0x00;
-				if(read(ipc->fd, &byte, 1) == 1)
+				while(true)
 				{
-					switch(byte)
-					{
-						case 0xfe:
-							Lock();
-							PostMessage(LBK_APP_SETTINGS_UPDATED, this);
-							Unlock();
-							break;
+					// avoid EWOULDBLOCK
+					if(read(ipc->fd, &byte, 1) != 0) break;
+				}
+				switch(byte)
+				{
+					case 0xfe:
+						Lock();
+						PostMessage(LBK_APP_SETTINGS_UPDATED, this);
+						Unlock();
+						break;
 
-						default:
-							// TODO
-							break;
-					}
+					default:
+						// TODO
+						break;
 				}
 			}
 #else
