@@ -43,6 +43,20 @@
 #define DBGOUT(msg...)		do {} while (0)
 #endif
 
+#define LBK_APP_IPC_BY_FIFO
+
+#ifdef LBK_APP_IPC_BY_FIFO
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+typedef struct
+{
+	BString path;
+	int fd;
+} LBKAppIPC;
+#endif // LBK_APP_IPC_BY_FIFO
+
 typedef enum
 {
 	LBK_ADD_ON_NONE = 0,
@@ -70,6 +84,7 @@ typedef struct
 	BList *leftPageViews;
 	BList *rightPageViews;
 	BHandler *preferHandler;
+	bool valid;
 } LBPanelDeviceAddOnData;
 
 typedef struct
@@ -112,6 +127,7 @@ static LBAddOnData* lbk_app_load_panel_device_addon(const BPath &pth, const char
 	bzero(devData, sizeof(LBPanelDeviceAddOnData));
 	devData->leftPageViews = new BList();
 	devData->rightPageViews = new BList();
+	devData->valid = true;
 	data->data = devData;
 
 	return data;
@@ -172,7 +188,8 @@ static LBPanelDeviceAddOnData* lbk_app_get_panel_device_data(const BList &addOns
 LBApplication::LBApplication(const BList *cfg)
 	: BLooper(NULL, B_URGENT_DISPLAY_PRIORITY),
 	  fPulseRate(0),
-	  fPanelsCount(0)
+	  fPanelsCount(0),
+	  fIPC(NULL)
 {
 	fPipes[0] = -1;
 
@@ -219,8 +236,43 @@ LBApplication::LBApplication(const BList *cfg)
 				fPanelsCount++;
 				fAddOnsList.AddItem(data);
 			}
+			else if(name == "IPC" && fIPC == NULL)
+			{
+#ifdef LBK_APP_IPC_BY_FIFO
+				BEntry entry("/tmp/lbk_ipc", (const char*)NULL);
+				if(!(entry.Exists() && entry.IsDirectory()))
+				{
+					int fd = -1;
 
-			// TODO: other addons
+					if(mkdir(entry.Path(), 0700) != 0)
+					{
+						fprintf(stderr, "[LBApplication]: %s --- Failed to initialize IPC !\n", __func__);
+						continue;
+					}
+
+					entry.SetTo("/tmp/lbk_ipc", value);
+					unlink(entry.Path());
+					if (mkfifo(entry.Path(), 0600) == -1 ||
+					    chmod(entry.Path(), 0600) == -1 ||
+					    (fd = open(entry.Path(), O_WRONLY)) < 0) {
+						fprintf(stderr,
+							"[LBApplication]: %s --- Failed to create fifo (%s) !\n",
+							__func__, entry.Path());
+						if(fd == 0) close(fd);
+						continue;
+					}
+
+					LBKAppIPC *ipc = new LBKAppIPC;
+					ipc->path.SetTo(entry.Path());
+					ipc->fd = fd;
+					fIPC = (void*)ipc;
+				}
+#else
+				// TODO: other way
+#endif
+			}
+
+			// TODO: others
 		}
 	}
 }
@@ -252,6 +304,20 @@ LBApplication::~LBApplication()
 		unload_add_on(data->image);
 		delete data;
 	}
+
+	if(fIPC != NULL)
+	{
+		LBKAppIPC *ipc = (LBKAppIPC*)fIPC;
+
+#ifdef LBK_APP_IPC_BY_FIFO
+		unlink(ipc->path.String());
+		close(ipc->fd);
+#else
+		// TODO: other way
+#endif
+
+		delete ipc;
+	}
 }
 
 
@@ -259,7 +325,7 @@ bool
 LBApplication::AddPageView(LBView *view, bool left_side, int32 panel_index)
 {
 	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, panel_index);
-	if(dev == NULL || view == NULL) return false;
+	if(dev == NULL || dev->valid == false || view == NULL) return false;
 	if(view->fDev != NULL || view->Looper() != NULL || view->MasterView() != NULL) return false;
 
 	if((left_side ? dev->leftPageViews->AddItem(view) : dev->rightPageViews->AddItem(view)) == false) return false;
@@ -330,7 +396,7 @@ void
 LBApplication::ActivatePageView(int32 index, bool left_side, int32 panel_index)
 {
 	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, panel_index);
-	if(dev == NULL) return;
+	if(dev == NULL || dev->valid == false) return;
 
 	LBView *newView = PageViewAt(index, left_side, panel_index);
 	LBView *oldView = GetActivatedPageView(panel_index);
@@ -383,6 +449,7 @@ LBApplication::Go()
 
 		ActivatePageView(0, false, k);
 	}
+	LBKAppIPC *ipc = (LBKAppIPC*)fIPC;
 	Unlock();
 
 	fd_set rset;
@@ -398,9 +465,19 @@ LBApplication::Go()
 		if(count > 0 && timeout.tv_usec > LBK_KEY_INTERVAL / 3)
 			timeout.tv_usec = LBK_KEY_INTERVAL / 3;
 
+		int fdMax = fPipes[0];
 		FD_ZERO(&rset);
 		FD_SET(fPipes[0], &rset);
-		int status = select(fPipes[0] + 1, &rset, NULL, NULL, &timeout);
+		if(ipc != NULL)
+		{
+#ifdef LBK_APP_IPC_BY_FIFO
+			FD_SET(ipc->fd, &rset);
+			if(ipc->fd > fdMax) fdMax = ipc->fd;
+#else
+			// TODO: other way
+#endif
+		}
+		int status = select(fdMax + 1, &rset, NULL, NULL, &timeout);
 		if(status < 0)
 		{
 			perror("[LBApplication]: Unable to get event from input device");
@@ -443,6 +520,33 @@ LBApplication::Go()
 			Unlock();
 			pulse_sent_time[1] = real_time_clock_usecs();
 		}
+
+		if(ipc != NULL)
+		{
+#ifdef LBK_APP_IPC_BY_FIFO
+			if(status > 0 && FD_ISSET(ipc->fd, &rset))
+			{
+				uint8 byte = 0x00;
+				if(read(ipc->fd, &byte, 1) == 1)
+				{
+					switch(byte)
+					{
+						case 0xfe:
+							Lock();
+							PostMessage(LBK_APP_SETTINGS_UPDATED, this);
+							Unlock();
+							break;
+
+						default:
+							// TODO
+							break;
+					}
+				}
+			}
+#else
+			// TODO: other way
+#endif
+		}
 	}
 
 	Lock();
@@ -466,7 +570,16 @@ LBApplication::MessageReceived(BMessage *msg)
 		case B_QUIT_REQUESTED:
 			if(msg->FindInt32("panel_id", &id) == B_OK)
 			{
-				// TODO
+				dev = lbk_app_get_panel_device_data(fAddOnsList, id);
+				if(!(dev == NULL || dev->valid))
+				{
+					LBView *view;
+					while((view = (LBView*)dev->leftPageViews->RemoveItem(0)) != NULL) delete view;
+					while((view = (LBView*)dev->rightPageViews->RemoveItem(0)) != NULL) delete view;
+
+					dev->preferHandler = NULL;
+					dev->valid = false;
+				}
 			}
 			else
 			{
@@ -485,7 +598,6 @@ LBApplication::MessageReceived(BMessage *msg)
 			{
 				if((dev->keyState & (0x01 << key)) != 0) // already DOWN
 				{
-					// TODO: GPIO blocking I2C transfer, we should start the runner when DOWN
 					// auto-repeat (event.value = 2) event
 					if(when < dev->keyTimestamps[key]) break;
 					if(when - dev->keyTimestamps[key] < (bigtime_t)600000) break; // 0.6s
@@ -590,6 +702,11 @@ LBApplication::MessageReceived(BMessage *msg)
 					PostMessage(B_PULSE, this); // try again
 				}
 			}
+			break;
+
+		case LBK_APP_SETTINGS_UPDATED:
+			// TODO: read settings
+			DBGOUT("[LBApplication]: Settings updated.\n");
 			break;
 
 		default:
