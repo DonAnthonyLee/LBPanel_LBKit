@@ -35,6 +35,8 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
+#define LBK_APP_SETTINGS_UPDATED	'lBKs'
+
 class LBPanelDevice;
 
 class _EXPORT LBApplication : public BLooper {
@@ -69,6 +71,7 @@ private:
 	int fPipes[2];
 	bigtime_t fPulseRate;
 	int32 fPanelsCount;
+	void *fIPC;
 };
 
 #endif /* __cplusplus */
