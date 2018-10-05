@@ -239,34 +239,39 @@ LBApplication::LBApplication(const BList *cfg)
 			else if(name == "IPC" && fIPC == NULL)
 			{
 #ifdef LBK_APP_IPC_BY_FIFO
-				BEntry entry("/tmp/lbk_ipc", (const char*)NULL);
+				int fd;
+				BPath pth;
+				BString strUID;
+				strUID << "/tmp/lbk_ipc_" << getuid();
+
+				BEntry entry(strUID.String());
+				entry.GetPath(&pth);
 				if(!(entry.Exists() && entry.IsDirectory()))
 				{
-					int fd = -1;
-
-					if(mkdir(entry.Path(), 0700) != 0)
+					if(mkdir(pth.Path(), 0700) != 0)
 					{
 						fprintf(stderr, "[LBApplication]: %s --- Failed to initialize IPC !\n", __func__);
 						continue;
 					}
-
-					entry.SetTo("/tmp/lbk_ipc", value);
-					unlink(entry.Path());
-					if (mkfifo(entry.Path(), 0600) == -1 ||
-					    chmod(entry.Path(), 0600) == -1 ||
-					    (fd = open(entry.Path(), O_WRONLY)) < 0) {
-						fprintf(stderr,
-							"[LBApplication]: %s --- Failed to create fifo (%s) !\n",
-							__func__, entry.Path());
-						if(fd == 0) close(fd);
-						continue;
-					}
-
-					LBKAppIPC *ipc = new LBKAppIPC;
-					ipc->path.SetTo(entry.Path());
-					ipc->fd = fd;
-					fIPC = (void*)ipc;
 				}
+
+				entry.SetTo(pth.Path(), value);
+				entry.GetPath(&pth);
+
+				unlink(pth.Path());
+				if (mkfifo(pth.Path(), 0600) == -1 ||
+				    chmod(pth.Path(), 0600) == -1 ||
+				    (fd = open(pth.Path(), O_WRONLY)) < 0) {
+					fprintf(stderr,
+						"[LBApplication]: %s --- Failed to create fifo (%s) !\n",
+						__func__, pth.Path());
+					continue;
+				}
+
+				LBKAppIPC *ipc = new LBKAppIPC;
+				ipc->path.SetTo(pth.Path());
+				ipc->fd = fd;
+				fIPC = (void*)ipc;
 #else
 				// TODO: other way
 #endif
