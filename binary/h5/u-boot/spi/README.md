@@ -20,7 +20,7 @@ SPI Nor Flash（考虑后期将储存 OpenWrt 的 rootfs，建议不小于8M）
 
 + 字库
 
-所提供 u-boot-spi.bin 文件自 512K 后为压缩字库，含一套 12 点阵 Unicode 字库、4 套 ASCII 字库（14/16/24/32）、一套图标（共 10 个 32x32 图标）。
+所提供 u-boot-spi.bin 文件自 640K 后为压缩字库，含一套 12 点阵 Unicode 字库、4 套 ASCII 字库（14/16/24/32）、一套图标（共 10 个 32x32 图标）。
 
 + 检测 OLED Hat 按键状态
 
