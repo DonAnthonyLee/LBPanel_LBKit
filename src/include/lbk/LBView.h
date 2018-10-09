@@ -67,6 +67,7 @@ public:
 	virtual void	DrawIcon(lbk_icon_id idIcon, BPoint location);
 
 	uint8		FontSize() const;
+	uint8		FittingFontSize(BRect r) const;
 	void		SetFontSize(uint8 size);
 	uint16		StringWidth(const char *string) const;
 
