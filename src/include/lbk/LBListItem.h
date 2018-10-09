@@ -33,9 +33,10 @@
 
 #include <lbk/LBIconDefs.h>
 #include <lbk/LBScopeItem.h>
-#include <lbk/LBView.h>
 
 #ifdef __cplusplus /* Just for C++ */
+
+class LBListView;
 
 
 class _EXPORT LBListItem : public LBScopeItem {
@@ -46,7 +47,9 @@ public:
 	bool			IsHidden() const;
 
 private:
-	virtual void		Draw(LBView *owner, BRect r) = 0;
+	friend class LBListView;
+
+	virtual void		Draw(BRect r, int32 n) = 0;
 };
 
 
@@ -61,7 +64,7 @@ public:
 private:
 	char *fText;
 
-	virtual void		Draw(LBView *owner, BRect r);
+	virtual void		Draw(BRect r, int32 n);
 };
 
 
@@ -74,13 +77,13 @@ public:
 	virtual void	SetLabel(const char *label);
 
 	int32		Value() const;
-	virtual void	SetValue() const;
+	virtual void	SetValue(int32 value);
 
 private:
 	char *fLabel;
 	int32 fValue;
 
-	virtual void		Draw(LBView *owner, BRect r);
+	virtual void		Draw(BRect r, int32 n);
 };
 
 
