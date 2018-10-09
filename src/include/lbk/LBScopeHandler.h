@@ -75,13 +75,11 @@ public:
 	virtual void		Collapse();
 
 protected:
-	// Empty functions BEGIN --- just for derived class
-	virtual void		PositionChanged(int32 pos, int32 old);
-	virtual void		OffsetChanged(int32 offset, int32 old);
-	virtual void		ScopeChanged();
-	// Empty functions END
+	virtual void		PositionChanged(int32 pos, int32 old) = 0;
+	virtual void		OffsetChanged(int32 offset, int32 old) = 0;
+	virtual void		ScopeChanged() = 0;
 
-	virtual int32		VisibleItemsCountMax() const;
+	virtual int32		VisibleItemsCountMax() const = 0;
 
 	int32			CountVisibleItems(int32 fromIndex, int32 n) const;
 	LBScopeItem*		PrevVisibleItem(int32 &index) const;
@@ -95,7 +93,7 @@ protected:
 	LBScopeItem*		PrevVisibleItemAtScope(int32 &index) const;
 	LBScopeItem*		NextVisibleItemAtScope(int32 &index) const;
 
-	virtual bool		IsValidKind(LBScopeItem *item) const;
+	virtual bool		IsValidKind(LBScopeItem *item) const = 0;
 
 private:
 	BList fItems;
