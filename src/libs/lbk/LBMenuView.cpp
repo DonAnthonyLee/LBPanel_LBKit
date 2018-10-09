@@ -348,7 +348,7 @@ LBMenuView::VisibleItemsCountMax() const
 void
 LBMenuView::PositionChanged(int32 pos, int32 old)
 {
-	InvalidRect(Bounds());
+	Invalidate(Bounds());
 	RefreshNavButtonIcons();
 }
 
@@ -356,7 +356,7 @@ LBMenuView::PositionChanged(int32 pos, int32 old)
 void
 LBMenuView::OffsetChanged(int32 offset, int32 old)
 {
-	InvalidRect(Bounds());
+	Invalidate(Bounds());
 }
 
 

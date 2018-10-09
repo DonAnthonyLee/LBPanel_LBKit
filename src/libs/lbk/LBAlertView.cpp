@@ -99,7 +99,7 @@ LBAlertView::SetTitle(const char *title)
 
 	BRect r = LBView::Bounds();
 	r.bottom = 13;
-	InvalidRect(r);
+	Invalidate(r);
 }
 
 
@@ -114,7 +114,7 @@ LBAlertView::SetText(const char *text)
 	r.top = 14;
 	r.bottom -= 18;
 	r.InsetBy(0, 2);
-	InvalidRect();
+	Invalidate();
 }
 
 
@@ -130,7 +130,7 @@ LBAlertView::SetButtonIcon(int32 index, lbk_icon_id idIcon)
 
 		BRect r = LBView::Bounds();
 		r.top = r.bottom - 17;
-		InvalidRect(r);
+		Invalidate(r);
 	}
 }
 
@@ -175,7 +175,7 @@ LBAlertView::SetButtonAlignment(alignment align)
 
 		BRect r = LBView::Bounds();
 		r.top = r.bottom - 17;
-		InvalidRect(r);
+		Invalidate(r);
 	}
 }
 
@@ -292,7 +292,7 @@ LBAlertView::KeyDown(uint8 key, uint8 clicks)
 		BRect r = LBView::Bounds();
 		r.top = r.bottom - 17;
 
-		InvalidRect(r);
+		Invalidate(r);
 	}
 }
 
@@ -302,7 +302,7 @@ LBAlertView::KeyUp(uint8 key, uint8 clicks)
 {
 	BRect r = LBView::Bounds();
 	r.top = r.bottom - 17;
-	InvalidRect(r);
+	Invalidate(r);
 
 	if((fButtonMask & (0x01 << key)) == 0) return;
 

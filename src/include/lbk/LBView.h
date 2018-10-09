@@ -88,8 +88,8 @@ public:
 	bool		IsActivated() const;
 	virtual void	Activated(bool state);
 
-	void		InvalidRect();
-	void		InvalidRect(BRect r);
+	void		Invalidate();
+	void		Invalidate(BRect r);
 
 	bool		AddStickView(LBView *view);
 	bool		RemoveStickView(LBView *view);
