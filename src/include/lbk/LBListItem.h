@@ -33,27 +33,56 @@
 
 #include <lbk/LBIconDefs.h>
 #include <lbk/LBScopeItem.h>
+#include <lbk/LBView.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
+
 class _EXPORT LBListItem : public LBScopeItem {
 public:
-	LBListItem(const char *text,
-		   lbk_icon_id idIcon);
+	LBListItem();
 	virtual ~LBListItem();
 
+	bool			IsHidden() const;
+
+private:
+	virtual void		Draw(LBView *owner, BRect r) = 0;
+};
+
+
+class _EXPORT LBListStringItem : public LBListItem {
+public:
+	LBListStringItem(const char *text);
+	virtual ~LBListStringItem();
+
 	const char*	Text() const;
-	void		SetText(const char *text);
-
-	lbk_icon_id	Icon() const;
-	void		SetIcon(lbk_icon_id idIcon);
-
-	bool		IsHidden() const;
+	virtual void	SetText(const char *text);
 
 private:
 	char *fText;
-	lbk_icon_id fIcon;
+
+	virtual void		Draw(LBView *owner, BRect r);
 };
+
+
+class _EXPORT LBListControlItem : public LBListItem {
+public:
+	LBListControlItem(const char *label, int32 value);
+	virtual ~LBListControlItem();
+
+	const char*	Label() const;
+	virtual void	SetLabel(const char *label);
+
+	int32		Value() const;
+	virtual void	SetValue() const;
+
+private:
+	char *fLabel;
+	int32 fValue;
+
+	virtual void		Draw(LBView *owner, BRect r);
+};
+
 
 #endif /* __cplusplus */
 

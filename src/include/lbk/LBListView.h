@@ -39,29 +39,28 @@
 
 class _EXPORT LBListView : public LBPageView, public BInvoker, public LBScopeHandler {
 public:
-	LBListView(const char *name = NULL);
+	LBListView(int32 visible_items_count, const char *name = NULL);
 	virtual ~LBListView();
 
-	// When it's selectable, the current position means the current selection.
+	LBListItem*		CurrentSelection() const;
 	bool			IsSelectable() const;
-	bool			MakeSelectable(bool state);
+	void			MakeSelectable(bool state);
 
 	BMessage*		SelectionMessage() const;
 	void			SetSelectionMessage(BMessage *message);
 
-	void			SetInvocationMessage(BMessage *message);
-	BMessage*		InvocationMessage() const;
-	virtual status_t	Invoke(const BMessage *message = NULL);
-
 	// Empty functions BEGIN --- just for derived class
 	virtual void		SelectionChanged();
 	// Empty functions END
+
+	void			InvalidateItem(int32 index);
 
 	virtual void		Draw(BRect updateRect);
 	virtual void		KeyDown(uint8 key, uint8 clicks);
 	virtual void		KeyUp(uint8 key, uint8 clicks);
 	virtual void		StandIn();
 	virtual void		Activated(bool state);
+	virtual status_t	Invoke(const BMessage *message = NULL);
 
 protected:
 	virtual void		RefreshNavButtonIcons();
@@ -74,6 +73,7 @@ protected:
 
 private:
 	bool fSelectable;
+	int32 fVisibleItemsCount;
 	BMessage *fSelectionMessage;
 };
 
