@@ -295,6 +295,7 @@ LBScopeHandler::SetPosition(int32 pos)
 }
 
 
+#if 0
 void
 LBScopeHandler::PositionChanged(int32 pos, int32 old)
 {
@@ -307,6 +308,7 @@ LBScopeHandler::ScopeChanged()
 {
 	// EMPTY
 }
+#endif
 
 
 int32
@@ -348,11 +350,13 @@ LBScopeHandler::SetOffset(int32 offset)
 }
 
 
+#if 0
 void
 LBScopeHandler::OffsetChanged(int32 offset, int32 old)
 {
 	// EMPTY
 }
+#endif
 
 
 void
@@ -475,11 +479,13 @@ LBScopeHandler::Collapse()
 }
 
 
+#if 0
 int32
 LBScopeHandler::VisibleItemsCountMax() const
 {
 	return 0;
 }
+#endif
 
 
 int32
@@ -770,9 +776,11 @@ LBScopeHandler::ReadjustWhenItemsSwapped(int32 itemA_index, int32 itemB_index,
 }
 
 
+#if 0
 bool
 LBScopeHandler::IsValidKind(LBScopeItem *item) const
 {
 	return true;
 }
+#endif
 
