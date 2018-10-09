@@ -223,10 +223,10 @@ LBView::FittingFontSize(BRect r) const
 
 	if(fDev == NULL || r.Height() < 10) return 0;
 
-	uint8 height = (uint8)(r.Height() > 36 ? 32 : (r.Height() - 2));
+	uint8 height = (uint8)(r.Height() > 34 ? 32 : (r.Height() - 2));
 
-	while(height > 6 && fDev->IsFontHeightSupported(height) == false) height -= 2;
-	return(height <= 6 ? 0 : height);
+	while(height > 6 && fDev->IsFontHeightSupported(height) == false) height >>= 1;
+	return(height == 6 ? 0 : height);
 }
 
 
@@ -804,10 +804,10 @@ LBView::Clear(BRect r)
 #ifdef LBK_ENABLE_MORE_FEATURES
 	rgb_color c = LowColor();
 	SetLowColor(ViewColor());
-	FillRect(fUpdateRect, B_SOLID_LOW);
+	FillRect(r, B_SOLID_LOW);
 	SetLowColor(c);
 #else
-	FillRect(fUpdateRect, B_SOLID_LOW);
+	FillRect(r, B_SOLID_LOW);
 #endif
 }
 
