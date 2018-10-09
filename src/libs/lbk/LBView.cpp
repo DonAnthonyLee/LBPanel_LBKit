@@ -215,6 +215,21 @@ LBView::SetFontSize(uint8 size)
 }
 
 
+uint8
+LBView::FittingFontSize(BRect r) const
+{
+	if(fMasterView != NULL)
+		return fMasterView->FittingFontSize(r);
+
+	if(fDev == NULL || r.Height() < 10) return 0;
+
+	uint8 height = (uint8)(r.Height() > 36 ? 32 : (r.Height() - 2));
+
+	while(height > 6 && fDev->IsFontHeightSupported(height) == false) height -= 2;
+	return(height <= 6 ? 0 : height);
+}
+
+
 uint16
 LBView::StringWidth(const char *str) const
 {
