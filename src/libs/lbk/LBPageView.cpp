@@ -62,7 +62,7 @@ LBPageView::ShowNavButton(uint8 idBtn)
 		BRect r = LBView::Bounds();
 		r.top = r.bottom - 15;
 
-		InvalidRect(r);
+		Invalidate(r);
 	}
 }
 
@@ -80,7 +80,7 @@ LBPageView::HideNavButton(uint8 idBtn)
 		BRect r = LBView::Bounds();
 		r.top = r.bottom - 15;
 
-		InvalidRect(r);
+		Invalidate(r);
 	}
 }
 
@@ -109,7 +109,7 @@ LBPageView::SetNavButtonIcon(int32 idBtn, lbk_icon_id idIcon)
 			BRect r = LBView::Bounds();
 			r.top = r.bottom - 15;
 
-			InvalidRect(r);
+			Invalidate(r);
 		}
 	}
 }
@@ -177,7 +177,7 @@ LBPageView::KeyDown(uint8 key, uint8 clicks)
 		BRect r = LBView::Bounds();
 		r.top = r.bottom - 15;
 
-		InvalidRect(r);
+		Invalidate(r);
 	}
 }
 
@@ -191,7 +191,7 @@ LBPageView::KeyUp(uint8 key, uint8 clicks)
 		BRect r = LBView::Bounds();
 		r.top = r.bottom - 15;
 
-		InvalidRect(r);
+		Invalidate(r);
 	}
 }
 

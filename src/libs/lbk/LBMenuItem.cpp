@@ -36,8 +36,8 @@
 
 
 LBMenuItem::LBMenuItem(const char *label,
-			   BMessage *message,
-			   lbk_icon_id idIcon)
+		       BMessage *message,
+		       lbk_icon_id idIcon)
 	: LBScopeItem(),
 	  BInvoker(message, NULL),
 	  fLabel(NULL),
@@ -73,7 +73,7 @@ LBMenuItem::SetLabel(const char *label)
 	if(view == NULL || view->IsActivated() == false || view->CurrentSelection() != this) return;
 
 	BRect r = view->ItemLabelBounds();
-	view->InvalidRect(r);
+	view->Invalidate(r);
 }
 
 
@@ -96,7 +96,7 @@ LBMenuItem::SetIcon(lbk_icon_id idIcon)
 	if(view == NULL || view->IsActivated() == false) return;
 
 	BRect r = view->ItemIconBounds();
-	view->InvalidRect(r);
+	view->Invalidate(r);
 }
 
 

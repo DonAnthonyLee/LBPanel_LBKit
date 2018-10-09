@@ -476,25 +476,25 @@ LBView::Activated(bool state)
 	{
 		fUpdateRect = BRect();
 		fUpdateCount = 0;
-		InvalidRect(); // redraw later
+		Invalidate(); // redraw later
 	}
 }
 
 
 void
-LBView::InvalidRect()
+LBView::Invalidate()
 {
-	InvalidRect(LBView::Bounds());
+	Invalidate(LBView::Bounds());
 }
 
 
 void
-LBView::InvalidRect(BRect r)
+LBView::Invalidate(BRect r)
 {
 	if(fMasterView != NULL)
 	{
 		if(fMasterView->IsStoodIn())
-			fMasterView->InvalidRect(r);
+			fMasterView->Invalidate(r);
 		return;
 	}
 
@@ -660,7 +660,7 @@ LBView::StandIn()
 {
 	if(fMasterView == NULL || fMasterView->fStandingInView == this) return;
 	fMasterView->fStandingInView = this;
-	fMasterView->InvalidRect();
+	fMasterView->Invalidate();
 	fMasterView->fKeyState = 0; // reset the key state of master view too !
 	fKeyState = 0;
 	fStandInTimestamp = real_time_clock_usecs();
@@ -672,7 +672,7 @@ LBView::StandBack()
 {
 	if(fMasterView == NULL || fMasterView->fStandingInView != this) return;
 	fMasterView->fStandingInView = NULL;
-	fMasterView->InvalidRect();
+	fMasterView->Invalidate();
 	fStandInTimestamp = (bigtime_t)-1;
 }
 
