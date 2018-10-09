@@ -37,6 +37,14 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
+enum {
+	LBK_LIST_VIEW_NO_BORDER = 0x00,
+	LBK_LIST_VIEW_FORM,
+	LBK_LIST_VIEW_INTERLACED_ROWS,
+	LBK_LIST_VIEW_BORDER_STYLE_MAX_ID,
+};
+
+
 class _EXPORT LBListView : public LBPageView, public BInvoker, public LBScopeHandler {
 public:
 	LBListView(int32 visible_items_count, const char *name = NULL);
@@ -53,7 +61,13 @@ public:
 	virtual void		SelectionChanged();
 	// Empty functions END
 
-	void			InvalidateItem(int32 index);
+	alignment		ItemsAlignment() const;
+	void			SetItemsAlignment(alignment align);
+
+	uint8			BorderStyle() const;
+	void			SetBorderStyle(uint8 style);	
+
+	virtual void		InvalidateItem(int32 index);
 
 	virtual void		Draw(BRect updateRect);
 	virtual void		KeyDown(uint8 key, uint8 clicks);
@@ -64,6 +78,8 @@ public:
 
 protected:
 	virtual void		RefreshNavButtonIcons();
+	virtual void		DrawItemBorder(BRect r, int32 n);
+	virtual void		DrawSelection(BRect r, int32 n);
 
 	virtual int32		VisibleItemsCountMax() const;
 	virtual void		PositionChanged(int32 pos, int32 old);
@@ -74,6 +90,8 @@ protected:
 private:
 	bool fSelectable;
 	int32 fVisibleItemsCount;
+	alignment fItemsAlignment;
+	uint8 fBorderStyle;
 	BMessage *fSelectionMessage;
 };
 
