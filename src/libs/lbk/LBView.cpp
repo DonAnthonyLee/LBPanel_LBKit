@@ -79,6 +79,16 @@ LBView::FillRect(BRect r, pattern p)
 	r &= LBView::Bounds();
 	if(fDev == NULL || fActivated == false || r.IsValid() == false) return;
 
+	// avoid apart-drawing
+#ifdef ETK_MAJOR_VERSION
+	r.Floor();
+#else
+	r.left = floorf(r.left);
+	r.right = floorf(r.right);
+	r.top = floorf(r.right);
+	r.bottom = floorf(r.bottom);
+#endif
+
 #ifdef LBK_ENABLE_MORE_FEATURES
 	if(fDev->SetHighColor(fColors[0]) != B_OK) return;
 	if(fDev->SetLowColor(fColors[1]) != B_OK) return;
@@ -100,7 +110,17 @@ LBView::StrokeRect(BRect rect, bool erase)
 	BRect r;
 	pattern p = (erase ? B_SOLID_LOW : B_SOLID_HIGH);
 
-	if (fDev == NULL || fActivated == false || r.IsValid() == false) return;
+	if(fDev == NULL || fActivated == false || rect.IsValid() == false) return;
+
+	// avoid apart-drawing
+#ifdef ETK_MAJOR_VERSION
+	rect.Floor();
+#else
+	rect.left = floorf(rect.left);
+	rect.right = floorf(rect.right);
+	rect.top = floorf(rect.right);
+	rect.bottom = floorf(rect.bottom);
+#endif
 
 	r = rect;
 	r.bottom = r.top;
