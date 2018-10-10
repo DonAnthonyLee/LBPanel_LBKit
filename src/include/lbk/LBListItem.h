@@ -48,6 +48,7 @@ public:
 
 protected:
 	void			DrawString(const char *str, BRect r, int32 n);
+	void			Invalidate();
 
 private:
 	friend class LBListView;
@@ -64,8 +65,13 @@ public:
 	const char*		Text() const;
 	virtual void		SetText(const char *text);
 
+	void			SetIcon(lbk_icon_id icon);
+	void			RemoveIcon();
+
 private:
 	char *fText;
+	bool fHasIcon;
+	lbk_icon_id fIcon;
 
 	virtual void		Draw(BRect r, int32 n);
 };
