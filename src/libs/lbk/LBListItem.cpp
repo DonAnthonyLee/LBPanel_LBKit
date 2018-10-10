@@ -32,6 +32,7 @@
 #include <lbk/LBListView.h>
 
 #define ICON_IS_8x8(id)		((id) > LBK_ICON_ID_8x8_BEGIN && (id) < LBK_ICON_ID_8x8_END)
+#define ICON_IS_VALID(id)	((id) == LBK_ICON_NONE || ICON_IS_8x8(id))
 
 
 LBListItem::LBListItem()
@@ -49,6 +50,18 @@ bool
 LBListItem::IsHidden() const
 {
 	return(!IsVisible());
+}
+
+
+void
+LBListItem::Invalidate()
+{
+	if(IsVisible() == false) return;
+
+	LBListView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBListView));
+	if(view == NULL || view->IsActivated() == false) return;
+
+	view->InvalidateItem(view->IndexOf(this));
 }
 
 
@@ -92,7 +105,8 @@ LBListItem::DrawString(const char *str, BRect r, int32 n)
 
 LBListStringItem::LBListStringItem(const char *text)
 	: LBListItem(),
-	  fText(NULL)
+	  fText(NULL),
+	  fHasIcon(false)
 {
 	SetText(text);
 }
@@ -116,13 +130,31 @@ LBListStringItem::SetText(const char *text)
 {
 	if(fText != NULL) free(fText);
 	fText = (text != NULL ? strdup(text) : NULL);
+	Invalidate();
+}
 
-	if(IsVisible() == false) return;
 
-	LBListView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBListView));
-	if(view == NULL || view->IsActivated() == false) return;
+void
+LBListStringItem::SetIcon(lbk_icon_id icon)
+{
+	if(!ICON_IS_VALID(icon)) return;
+	if(fHasIcon && fIcon == icon) return;
 
-	view->InvalidateItem(view->IndexOf(this));
+	fHasIcon = true;
+	fIcon = icon;
+
+	Invalidate();
+}
+
+
+void
+LBListStringItem::RemoveIcon()
+{
+	if(fHasIcon == false) return;
+
+	fHasIcon = false;
+
+	Invalidate();
 }
 
 
@@ -136,6 +168,34 @@ LBListStringItem::Draw(BRect r, int32 n)
 	{
 		r.left += r.Height() + 1.f;
 		r.right -= r.Height() + 1.f;
+	}
+
+	if(fHasIcon)
+	{
+		const lbk_icon *icon = lbk_get_icon_data(fIcon);
+		if(icon != NULL)
+		{
+			bool erase_mode = false;
+			if(owner->BorderStyle() == LBK_LIST_VIEW_INTERLACED_ROWS && (n & 0x01)) erase_mode = true;
+
+			BRect tRect = r;
+			tRect.right = tRect.left + 11;
+
+			if(erase_mode)
+			{
+				lbk_icon icon_inverse;
+				icon_inverse.type = LBK_ICON_8x8;
+				for(size_t k = 0; k < 8; k++)
+					icon_inverse.data[k] = ~(icon->data[k]);
+				owner->DrawIcon(&icon_inverse, tRect.Center() - BPoint(4, 4));
+			}
+			else
+			{
+				owner->DrawIcon(icon, tRect.Center() - BPoint(4, 4));
+			}
+		}
+
+		r.left += 12;
 	}
 
 	DrawString(fText, r, n);
@@ -169,13 +229,7 @@ LBListControlItem::SetLabel(const char *label)
 {
 	if(fLabel != NULL) free(fLabel);
 	fLabel = (label != NULL ? strdup(label) : NULL);
-
-	if(IsVisible() == false) return;
-
-	LBListView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBListView));
-	if(view == NULL || view->IsActivated() == false) return;
-
-	view->InvalidateItem(view->IndexOf(this));
+	Invalidate();
 }
 
 
@@ -191,13 +245,7 @@ LBListControlItem::SetValue(int32 value)
 {
 	if(fValue == value) return;
 	fValue = value;
-
-	if(IsVisible() == false) return;
-
-	LBListView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBListView));
-	if(view == NULL || view->IsActivated() == false) return;
-
-	view->InvalidateItem(view->IndexOf(this));
+	Invalidate();
 }
 
 
