@@ -346,7 +346,7 @@ status_t
 LBListView::Invoke(const BMessage *msg)
 {
 	const EMessage *message = (msg ? msg : Message());
-	if(!message) return B_BAD_VALUE;
+	if(message == NULL) return B_BAD_VALUE;
 
 	BMessage aMsg(*message);
 	aMsg.AddInt32("index", Position());
@@ -360,10 +360,16 @@ LBListView::Invoke(const BMessage *msg)
 void
 LBListView::InvalidateItem(int32 index)
 {
+#if 0
 	if(index < Offset() || fVisibleItemsCount == 0) return;
+#else
+	if(IsItemVisible(ItemAt(index)) == false) return;
+#endif
 
 	int32 count = CountVisibleItems(Offset(), index - Offset() + 1);
+#if 0
 	if(count > fVisibleItemsCount) return;
+#endif
 
 	BRect r = Bounds();
 	r.bottom = r.Height() / (float)fVisibleItemsCount - 1.f;
@@ -423,7 +429,12 @@ LBListView::DrawItemBorder(BRect r, int32 n)
 			break;
 
 		case LBK_LIST_VIEW_INTERLACED_ROWS:
-			FillRect(r, (n & 0x01) ? B_SOLID_HIGH : B_SOLID_LOW);
+			if((n & 0x01) == 0) break;
+			FillRect(r, B_SOLID_HIGH);
+			break;
+
+		default:
+			break;
 	}
 }
 
