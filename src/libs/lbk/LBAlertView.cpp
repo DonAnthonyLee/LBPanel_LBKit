@@ -41,18 +41,18 @@
 
 
 LBAlertView::LBAlertView(const char *title,
-			     const char *text,
-			     lbk_icon_id icon3,
-			     lbk_icon_id icon2,
-			     lbk_icon_id icon1,
-			     alert_type type)
+			 const char *text,
+			 lbk_icon_id icon3,
+			 lbk_icon_id icon2,
+			 lbk_icon_id icon1,
+			 alert_type type)
 	: LBView(NULL),
 	  fTitle(title),
 	  fText(text),
 	  fButtonMask(0),
 	  fInvoker(NULL)
 {
-	// oled_icon is enum type (int), initialize each one of array instead of "memset".
+	// lbk_icon_id is enum type (int), initialize each one of array instead of "memset".
 	for(size_t k = 0; k < sizeof(fIcons) / sizeof(fIcons[0]); k++)
 		fIcons[k] = LBK_ICON_NONE;
 
