@@ -52,7 +52,7 @@ public:
 
 	LBListItem*		CurrentSelection() const;
 	bool			IsSelectable() const;
-	void			MakeSelectable(bool state);
+	void			MakeSelectable(bool state = true);
 
 	BMessage*		SelectionMessage() const;
 	void			SetSelectionMessage(BMessage *message);

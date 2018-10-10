@@ -46,6 +46,9 @@ public:
 
 	bool			IsHidden() const;
 
+protected:
+	void			DrawString(const char *str, BRect r, int32 n);
+
 private:
 	friend class LBListView;
 
@@ -58,8 +61,8 @@ public:
 	LBListStringItem(const char *text);
 	virtual ~LBListStringItem();
 
-	const char*	Text() const;
-	virtual void	SetText(const char *text);
+	const char*		Text() const;
+	virtual void		SetText(const char *text);
 
 private:
 	char *fText;
@@ -70,14 +73,14 @@ private:
 
 class _EXPORT LBListControlItem : public LBListItem {
 public:
-	LBListControlItem(const char *label, int32 value);
+	LBListControlItem(const char *label, int32 value = B_CONTROL_OFF);
 	virtual ~LBListControlItem();
 
-	const char*	Label() const;
-	virtual void	SetLabel(const char *label);
+	const char*		Label() const;
+	virtual void		SetLabel(const char *label);
 
-	int32		Value() const;
-	virtual void	SetValue(int32 value);
+	int32			Value() const;
+	virtual void		SetValue(int32 value);
 
 private:
 	char *fLabel;
