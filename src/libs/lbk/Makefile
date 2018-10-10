@@ -20,6 +20,8 @@ OBJECTS_1 = \
 	LBScopeItem.o \
 	LBScopeHandler.o \
 	LBAlertView.o \
+	LBListItem.o \
+	LBListView.o \
 	LBMenuItem.o \
 	LBMenuView.o
 
