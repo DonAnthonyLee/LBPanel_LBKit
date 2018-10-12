@@ -29,7 +29,7 @@
  * --------------------------------------------------------------------------*/
 
 #include <stdio.h>
-#include <lbk/LBKConfig.h>
+#include <lbk/LBKit.h>
 
 #ifdef LBK_APP_IPC_BY_FIFO
 	#include <sys/stat.h>
@@ -41,7 +41,7 @@
 #endif // !LBK_APP_IPC_BY_FIFO
 
 
-void show_usage(void)
+static void show_usage(void)
 {
 	printf("lbk-notify - Notify the application using LBKit.\n\n");
 	printf("usage: lbk-notify ipc_name message_type\n\
@@ -50,6 +50,7 @@ void show_usage(void)
         Valid value:\n\
             SETTINGS_UPDATED   Notify the applicaiton that the settings have been updated.\n");
 }
+
 
 int main(int argc, char **argv)
 {
