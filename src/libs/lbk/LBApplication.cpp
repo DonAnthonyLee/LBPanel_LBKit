@@ -576,15 +576,14 @@ LBApplication::MessageReceived(BMessage *msg)
 			if(msg->FindInt32("panel_id", &id) == B_OK)
 			{
 				dev = lbk_app_get_panel_device_data(fAddOnsList, id);
-				if(!(dev == NULL || dev->valid))
-				{
-					LBView *view;
-					while((view = (LBView*)dev->leftPageViews->RemoveItem(0)) != NULL) delete view;
-					while((view = (LBView*)dev->rightPageViews->RemoveItem(0)) != NULL) delete view;
+				if(dev == NULL || dev->valid == false) break;
 
-					dev->preferHandler = NULL;
-					dev->valid = false;
-				}
+				LBView *view;
+				while((view = (LBView*)dev->leftPageViews->RemoveItem(0)) != NULL) delete view;
+				while((view = (LBView*)dev->rightPageViews->RemoveItem(0)) != NULL) delete view;
+
+				dev->preferHandler = NULL;
+				dev->valid = false;
 			}
 			else
 			{
@@ -655,9 +654,9 @@ LBApplication::MessageReceived(BMessage *msg)
 			DBGOUT("[LBApplication]: B_PULSE received.\n");
 			if(msg->HasBool("no_button_check"))
 			{
-				for(int32 m = 0; m < CountPanels(); m++)
+				for(id = 0; id < CountPanels(); id++)
 				{
-					dev = lbk_app_get_panel_device_data(fAddOnsList, m);
+					dev = lbk_app_get_panel_device_data(fAddOnsList, id);
 					if(dev->preferHandler != NULL)
 						PostMessage(B_PULSE, dev->preferHandler);
 				}
@@ -667,11 +666,11 @@ LBApplication::MessageReceived(BMessage *msg)
 			stopRunner = true;
 			when = real_time_clock_usecs();
 
-			for(int32 m = 0; m < CountPanels(); m++)
+			for(id = 0; id < CountPanels(); id++)
 			{
-				dev = lbk_app_get_panel_device_data(fAddOnsList, m);
+				dev = lbk_app_get_panel_device_data(fAddOnsList, id);
 
-				uint8 nKeys = CountPanelKeys(m);
+				uint8 nKeys = CountPanelKeys(id);
 				for(uint8 k = 0; k < nKeys; k++)
 				{
 					if((dev->keyState & (0x01 << k)) != 0) continue; // DOWN, no need
@@ -709,9 +708,24 @@ LBApplication::MessageReceived(BMessage *msg)
 			}
 			break;
 
-		case LBK_APP_SETTINGS_UPDATED:
-			// TODO: read settings
-			DBGOUT("[LBApplication]: Settings updated.\n");
+		case LBK_APP_SETTINGS_UPDATED: // derived class should read the settings then pass it to LBApplication.
+			if(msg->HasMessage("settings") == false) break;
+			for(id = 0; id < CountPanels(); id++)
+			{
+				dev = lbk_app_get_panel_device_data(fAddOnsList, id);
+				if(dev == NULL || dev->valid == false) continue;
+
+				for(int32 k = 0; k < dev->leftPageViews->CountItems(); k++)
+				{
+					LBView *view = (LBView*)dev->leftPageViews->ItemAt(k);
+					PostMessage(msg, view);
+				}
+				for(int32 k = 0; k < dev->rightPageViews->CountItems(); k++)
+				{
+					LBView *view = (LBView*)dev->rightPageViews->ItemAt(k);
+					PostMessage(msg, view);
+				}
+			}
 			break;
 
 		default:
