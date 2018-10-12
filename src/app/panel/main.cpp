@@ -38,6 +38,16 @@
 #include "TMainPageView.h"
 #include "TMenuPageView.h"
 
+#ifdef ETK_MAJOR_VERSION
+	#undef SEEK_END
+	#undef SEEK_CUR
+	#undef SEEK_SET
+
+	#define SEEK_SET	E_SEEK_SET
+	#define SEEK_CUR	E_SEEK_CUR
+	#define SEEK_END	E_SEEK_END
+#endif
+
 
 void show_usage(const char *cmd)
 {
@@ -49,7 +59,7 @@ void show_usage(const char *cmd)
 
 int main(int argc, char **argv)
 {
-	BPath path_conf("/etc/oled_panel.conf");
+	BPath path_conf("/etc/LBPanel.conf");
 	BFile f;
 
 	for(int n = 1; n < argc; n++)
@@ -61,7 +71,7 @@ int main(int argc, char **argv)
 		else
 		{
 			show_usage(argv[0]);
-			exit(1);
+			exit(-1);
 		}
 	}
 
@@ -71,12 +81,40 @@ int main(int argc, char **argv)
 		printf("Unable to open config file (%s), use default settings !\n", path_conf.Path());
 
 		cfg.AddItem(new BString("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so"));
+		cfg.AddItem(new BString("IPC=LBPanel"));
 
 		// TODO: more
 	}
 	else
 	{
-		// TODO
+		char *buf = NULL;
+		off_t fsize = (off_t)f.Seek(0, SEEK_END);
+		f.Seek(0, SEEK_SET);
+
+		if(fsize == (off_t)-1 || fsize > 65535 ||
+		   (buf = (char*)malloc((size_t)fsize)) == NULL ||
+		   f.Read(buf, fsize) != (ssize_t)fsize)
+		{
+			if(buf != NULL) free(buf);
+			fprintf(stdout, "Unable to read config file (%s) !\n", path_conf.Path());
+			exit(-1);
+		}
+
+		BString str(buf);
+		free(buf);
+
+		int32 offset = 0, found;
+		while((found = str.FindFirst("\n", offset)) > 0)
+		{
+			if(found > offset && str[offset] != '#')
+			{
+				BString *item = new BString(str.String() + offset, found - offset);
+				cfg.AddItem(item);
+			}
+			offset = found + 1;
+		}
+
+		cfg.AddItem(new BString("IPC=LBPanel"), 0);
 	}
 	f.Unset();
 
@@ -86,7 +124,8 @@ int main(int argc, char **argv)
 	// TODO: a lot
 	app.AddPageView(new TMainPageView(), false);
 	app.AddPageView(new TMenuPageView(), false);
-	app.Go(); // the "app" only handle input events
+
+	app.Go();
 
 	printf("End\n");
 	return 0;
