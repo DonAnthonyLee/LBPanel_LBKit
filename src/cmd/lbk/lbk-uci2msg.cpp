@@ -32,10 +32,11 @@
 #include <lbk/LBKit.h>
 
 
-void show_usage(void)
+static void show_usage(void)
 {
 	printf("lbk-uci2msg - Convert uci config to *Message flattened data.\n\n");
-	printf("usage: lbk-uci2msg uci_config_file msg_data\n\
+	printf("usage: lbk-uci2msg [-d] uci_config_file msg_data\n\
+    -d                         Output the content of *Message.\n\
     uci_config_file            Path of uci config file to read.\n\
     msg_data                   Path of *Message fattened data to write.\n");
 }
@@ -65,7 +66,7 @@ static status_t file_get_line(BFile &f, BString &line, BString &buf)
 }
 
 
-status_t uci_get_next_item(BString &line, int32 &offset, BString &item)
+static status_t uci_get_next_item(BString &line, int32 &offset, BString &item)
 {
 	BString retStr, str;
 	int32 found;
@@ -97,7 +98,7 @@ status_t uci_get_next_item(BString &line, int32 &offset, BString &item)
 }
 
 
-int uci_cvt_msg(BFile &fIn, BMessage *msg)
+static status_t uci_cvt_msg(BFile &fIn, BMessage *msg)
 {
 	int32 count = 0, found, offset;
 	EString tmpBuf, line;
@@ -118,12 +119,13 @@ int uci_cvt_msg(BFile &fIn, BMessage *msg)
 
 		while(file_get_line(fIn, line, tmpBuf) == B_OK)
 		{
-			found = line.FindFirst("option ");
+			if((found = line.FindFirst("option ")) < 0)
+				found = line.FindFirst("list ");
+
 			if(found > 0)
 			{
 				BString tmpStr(line, found);
-				tmpStr.RemoveAll(" ");
-				tmpStr.RemoveAll("\t");
+				tmpStr.RemoveSet(" \t");
 				if(tmpStr.Length() != 0) continue;
 				line.Remove(0, found);
 				found = 0;
@@ -133,36 +135,39 @@ int uci_cvt_msg(BFile &fIn, BMessage *msg)
 			{
 				BString name, value;
 
-				offset = 7;
+				line.ReplaceAll("'\\''", "&quote;");
+
+				offset = (line[0] == 'o' ? 7 : 5);
 				st = uci_get_next_item(line, offset, name);
-				if(st != B_OK) break;
+				if(st != B_OK) continue;
+				if(name.FindFirst("/") >= 0) continue; // refuse to parse if name contains "/"
+				if(name.FindFirst("@") >= 0) continue; // refuse to parse if name contains "@"
 
 				st = uci_get_next_item(line, offset, value);
-				if(st != B_OK) break;
+				if(st != B_OK) continue;
 
 				if(section.Length() > 0)
 				{
-					name.Prepend(":");
+					name.Prepend("/");
 					name.Prepend(section);
 				}
-				name.Prepend(":");
+				name.Prepend("/");
 				name.Prepend(domain);
 
-				if(msg->AddString(name.String(), value.String()) != B_OK) return -1;
+				value.ReplaceAll("&quote;", "'");
+
+				if(msg->AddString(name.String(), value.String()) != B_OK) return B_ERROR;
 				count++;
 			}
 			else
 			{
-				// TODO: list
-
-				line.RemoveAll(" ");
-				line.RemoveAll("\t");
+				line.RemoveSet(" \t");
 				if(line.Length() == 0) break;
 			}
 		}
 	}
 
-	return(count > 0 ? 0 : -1);
+	return(count > 0 ? B_OK : B_ERROR);
 }
 
 
@@ -170,6 +175,17 @@ int main(int argc, char **argv)
 {
 	EFile fIn, fOut;
 	BMessage msg;
+	bool output = false;
+	int n;
+
+	for (n = 1; n < argc; n++) {
+		if (n < argc - 1 && strcmp(argv[n], "-d") == 0) {
+			output = true;
+		} else {
+			break;
+		}
+	}
+	argc -= (--n);
 
 	if(argc != 3)
 	{
@@ -177,8 +193,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	fIn.SetTo(argv[1], B_READ_ONLY);
-	fOut.SetTo(argv[2], B_CREATE_FILE | B_ERASE_FILE | B_WRITE_ONLY);
+	fIn.SetTo(argv[n + 1], B_READ_ONLY);
+	fOut.SetTo(argv[n + 2], B_CREATE_FILE | B_ERASE_FILE | B_WRITE_ONLY);
 
 	if(fIn.InitCheck() != B_OK || fOut.InitCheck() != B_OK)
 	{
@@ -186,7 +202,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if(uci_cvt_msg(fIn, &msg) != 0)
+	if(uci_cvt_msg(fIn, &msg) != B_OK)
 	{
 		fprintf(stderr, "Failed to convert uci config to *Message !\n");
 		exit(1);
@@ -202,11 +218,10 @@ int main(int argc, char **argv)
 	else if(fOut.Write(data, len) != (ssize_t)len)
 		fprintf(stderr, "Failed to write !\n");
 
-#if 0
-	msg.PrintToStream();
-#endif
-
 	if(data != NULL) free(data);
+
+	if(output)
+		msg.PrintToStream();
 
 	return 0;
 }
