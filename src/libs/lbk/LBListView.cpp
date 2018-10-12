@@ -289,6 +289,7 @@ LBListView::RefreshNavButtonIcons()
 void
 LBListView::SelectionChanged()
 {
+	// EMPTY
 }
 
 
