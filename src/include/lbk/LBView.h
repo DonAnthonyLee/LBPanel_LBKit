@@ -72,7 +72,7 @@ public:
 	uint16		StringWidth(const char *string) const;
 
 	void		EnableUpdate(bool state);
-	bool		IsNeededToRegen() const;
+	virtual bool	IsNeededToRegen() const;
 
 	bool		GetPowerState() const;
 	void		SetPowerState(bool state);
