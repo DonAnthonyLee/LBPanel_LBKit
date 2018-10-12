@@ -38,7 +38,7 @@ static void show_usage(void)
 	printf("usage: lbk-uci2msg [-d] uci_config_file msg_data\n\
     -d                         Output the content of *Message.\n\
     uci_config_file            Path of uci config file to read.\n\
-    msg_data                   Path of *Message fattened data to write.\n");
+    msg_data                   Path of *Message flattened data to write.\n");
 }
 
 
@@ -158,6 +158,12 @@ static status_t uci_cvt_msg(BFile &fIn, BMessage *msg)
 
 				if(msg->AddString(name.String(), value.String()) != B_OK) return B_ERROR;
 				count++;
+			}
+			else if(line.FindFirst("config ") == 0)
+			{
+				tmpBuf.Prepend("\n");
+				tmpBuf.Prepend(line);
+				break;
 			}
 			else
 			{
