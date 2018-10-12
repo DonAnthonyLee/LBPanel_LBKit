@@ -101,7 +101,7 @@ static status_t uci_get_next_item(BString &line, int32 &offset, BString &item)
 static status_t uci_cvt_msg(BFile &fIn, BMessage *msg)
 {
 	int32 count = 0, found, offset;
-	EString tmpBuf, line;
+	BString tmpBuf, line;
 	status_t st;
 
 	while(file_get_line(fIn, line, tmpBuf) == B_OK)
@@ -179,7 +179,7 @@ static status_t uci_cvt_msg(BFile &fIn, BMessage *msg)
 
 int main(int argc, char **argv)
 {
-	EFile fIn, fOut;
+	BFile fIn, fOut;
 	BMessage msg;
 	bool output = false;
 	int n;
