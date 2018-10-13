@@ -35,6 +35,7 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
+#define LBK_QUIT_REQUESTED		'lBKq'
 #define LBK_APP_SETTINGS_UPDATED	'lBKs'
 
 class LBPanelDevice;
@@ -58,8 +59,8 @@ public:
 	bigtime_t	PulseRate() const;
 	void		SetPulseRate(bigtime_t rate);
 
+	virtual bool	QuitRequested();
 	virtual void	MessageReceived(BMessage *msg);
-
 
 protected:
 	int32		CountPanels() const;
@@ -67,6 +68,7 @@ protected:
 	uint8		CountPanelKeys(int32 index) const;
 
 private:
+	bool fQuitLooper;
 	BList fAddOnsList;
 	int fPipes[2];
 	bigtime_t fPulseRate;
