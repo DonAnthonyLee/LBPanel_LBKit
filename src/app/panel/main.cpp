@@ -118,14 +118,17 @@ int main(int argc, char **argv)
 	}
 	f.Unset();
 
-	LBApplication app(&cfg);
+	LBApplication *app = new LBApplication(&cfg);
 	for(int32 k = 0; k < cfg.CountItems(); k++) delete ((BString*)cfg.ItemAt(k));
 
 	// TODO: a lot
-	app.AddPageView(new TMainPageView(), false);
-	app.AddPageView(new TMenuPageView(), false);
+	app->AddPageView(new TMainPageView(), false);
+	app->AddPageView(new TMenuPageView(), false);
 
-	app.Go();
+	app->Go();
+
+	app->Lock();
+	app->Quit();
 
 	printf("End\n");
 	return 0;
