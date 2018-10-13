@@ -185,6 +185,7 @@ static LBPanelDeviceAddOnData* lbk_app_get_panel_device_data(const BList &addOns
 
 LBApplication::LBApplication(const BList *cfg)
 	: BLooper(NULL, B_URGENT_DISPLAY_PRIORITY),
+	  fQuitLooper(false),
 	  fPulseRate(0),
 	  fPanelsCount(0),
 	  fIPC(NULL)
@@ -425,6 +426,22 @@ LBApplication::GetActivatedPageView(int32 panel_index) const
 }
 
 
+bool
+LBApplication::QuitRequested()
+{
+	fQuitLooper = true;
+
+	if(fPipes[1] >= 0)
+	{
+		uint8 byte = 0xff;
+		while(write(fPipes[1], &byte, 1) != 1) snooze(100000);
+	}
+
+	// The looper will be deleted automatically if this return "true".
+	return false;
+}
+
+
 void
 LBApplication::Go()
 {
@@ -462,7 +479,7 @@ LBApplication::Go()
 	bigtime_t pulse_rate = 0;
 
 	timeout.tv_sec = 0;
-	while(IsRunning())
+	while(IsRunning() && fQuitLooper == false)
 	{
 		timeout.tv_usec = (pulse_rate > 0 && pulse_rate < (bigtime_t)500000) ? pulse_rate : 500000;
 		if(count > 0 && timeout.tv_usec > LBK_KEY_INTERVAL / 3)
@@ -572,7 +589,7 @@ LBApplication::MessageReceived(BMessage *msg)
 
 	switch(msg->what)
 	{
-		case B_QUIT_REQUESTED:
+		case LBK_QUIT_REQUESTED:
 			if(msg->FindInt32("panel_id", &id) == B_OK)
 			{
 				dev = lbk_app_get_panel_device_data(fAddOnsList, id);
@@ -587,7 +604,7 @@ LBApplication::MessageReceived(BMessage *msg)
 			}
 			else
 			{
-				BLooper::MessageReceived(msg);
+				PostMessage(B_QUIT_REQUESTED, this);
 			}
 			break;
 

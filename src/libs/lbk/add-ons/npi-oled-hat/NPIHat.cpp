@@ -41,6 +41,8 @@
 #include <stdint.h>
 #include <oled_ssd1306_ioctl.h>
 
+#include <lbk/LBApplication.h> // for "LBK_QUIT_REQUESTED"
+
 #include "Config.h"
 #include "NPIHat.h"
 
@@ -530,7 +532,7 @@ NPIHat::InputEventsObserver(void *arg)
 		self->SendMessageToApp(&msg);
 	}
 
-	self->SendMessageToApp(B_QUIT_REQUESTED);
+	self->SendMessageToApp(LBK_QUIT_REQUESTED);
 	return 0;
 }
 
