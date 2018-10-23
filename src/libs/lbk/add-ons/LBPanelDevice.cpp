@@ -49,7 +49,11 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 {
 	if(msg == NULL || fID < 0) return;
 
-	if(CountLocks() != 0)
+#ifdef ETK_MAJOR_VERSION
+	if(IsLockedByCurrentThread())
+#else
+	if(LockingThread() == find_thread(NULL))
+#endif
 	{
 		fprintf(stderr,
 			"[LBPanelDevice]: %s --- Can't call this function by locking itself !\n",
