@@ -524,9 +524,7 @@ LBApplication::Go()
 		if(count > 0 && real_time_clock_usecs() - pulse_sent_time[0] >= (bigtime_t)(LBK_KEY_INTERVAL / 2))
 		{
 			count--;
-			Lock();
 			PostMessage(B_PULSE, this);
-			Unlock();
 			pulse_sent_time[0] = real_time_clock_usecs();
 		}
 
@@ -535,9 +533,7 @@ LBApplication::Go()
 			BMessage aMsg(B_PULSE);
 			aMsg.AddBool("no_button_check", true);
 
-			Lock();
 			PostMessage(&aMsg, this);
-			Unlock();
 			pulse_sent_time[1] = real_time_clock_usecs();
 		}
 
@@ -555,9 +551,7 @@ LBApplication::Go()
 				switch(byte)
 				{
 					case 0xfe:
-						Lock();
 						PostMessage(LBK_APP_SETTINGS_UPDATED, this);
-						Unlock();
 						break;
 
 					default:
@@ -571,9 +565,7 @@ LBApplication::Go()
 		}
 	}
 
-	Lock();
 	PostMessage(B_QUIT_REQUESTED, this);
-	Unlock();
 }
 
 
