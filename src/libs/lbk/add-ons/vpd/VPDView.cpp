@@ -34,13 +34,7 @@
 VPDView::VPDView(BRect frame, const char* title, uint32 resizingMode)
 	: BView(frame, title, resizingMode, B_WILL_DRAW)
 {
-	SetViewColor(200, 200, 200);
-
-	BFont font;
-	GetFont(&font);
-	font.SetSize(20);
-
-	SetFont(&font, B_FONT_SIZE);
+	// TODO
 }
 
 
@@ -51,7 +45,6 @@ VPDView::~VPDView()
 
 void VPDView::Draw(BRect updateRect)
 {
-	MovePenTo(20, 20);
-	DrawString("Hello World.");
+	// TODO
 }
 
