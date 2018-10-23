@@ -47,7 +47,9 @@ public:
 	VPDWindow(BRect frame,
 		  const char* title,
 		  uint16 w, uint16 h,
-		  uint8 keys_count, int32 id);
+		  uint8 keys_count,
+		  uint8 point_size,
+		  int32 id);
 	virtual ~VPDWindow();
 
 	virtual bool	QuitRequested();
