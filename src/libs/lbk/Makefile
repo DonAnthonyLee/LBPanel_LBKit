@@ -45,9 +45,6 @@ all: targets addons $(TARGET)
 $(C_PROGRAM): $(C_PROGRAM).o
 	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
-$(C_PROGRAM): $(C_PROGRAM).o
-	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
-
 $(CXX_PROGRAM): $(CXX_PROGRAM).o
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
@@ -65,7 +62,7 @@ addons:
 	done
 
 $(TARGET_1): $(OBJECTS_1)
-	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) -fPIC -shared $^ -o $@ $(LDFLAGS)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) -shared $^ -o $@ $(LDFLAGS)
 
 $(TARGET_2): $(OBJECTS_2)
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
