@@ -5,27 +5,11 @@ SINGLE_C_FILE_PROGRAMS =
 SINGLE_CXX_FILE_PROGRAMS =
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
 
-TARGET_1 = liblbk.so
+TARGET_1 = vpd.so
 TARGET_2 =
 TARGET_3 =
 
-ADD_ONS_DIRS = \
-	npi-oled-hat \
-	vpd
-
-OBJECTS_1 = \
-	add-ons/LBPanelDevice.o \
-	LBView.o \
-	LBPageView.o \
-	LBApplication.o \
-	LBIconData.o \
-	LBScopeItem.o \
-	LBScopeHandler.o \
-	LBAlertView.o \
-	LBListItem.o \
-	LBListView.o \
-	LBMenuItem.o \
-	LBMenuView.o
+OBJECTS_1 = VPDView.o VPDApp.o VPD.o
 
 OBJECTS_2 =
 OBJECTS_3 =
@@ -36,11 +20,11 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../include
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../include
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../../../include -I../../../include
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../../../include -I../../../include
 LDFLAGS =  $(shell lite-beapi-config --libs)
 
-all: targets addons $(TARGET)
+all: targets $(TARGET)
 
 $(C_PROGRAM): $(C_PROGRAM).o
 	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
@@ -59,11 +43,6 @@ targets:
 		(test $$f = .none || CXX=$(CXX) $(MAKE) $(MAKEFLAGS) CXX_PROGRAM=$$f $$f) \
 	done
 
-addons:
-	for f in $(ADD_ONS_DIRS) .none; do \
-		(test $$f = .none || CC=$(CC) $(MAKE) $(MAKEFLAGS) -C add-ons/$$f) \
-	done
-
 $(TARGET_1): $(OBJECTS_1)
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) -fPIC -shared $^ -o $@ $(LDFLAGS)
 
@@ -74,9 +53,6 @@ $(TARGET_3): $(OBJECTS_3)
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
 clean:
-	for f in $(ADD_ONS_DIRS) .none; do \
-		(test $$f = .none || $(MAKE) $(MAKEFLAGS) clean -C add-ons/$$f) \
-	done
 	for f in $(TARGET) $(OBJECTS) .none; do \
 		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
 	done
