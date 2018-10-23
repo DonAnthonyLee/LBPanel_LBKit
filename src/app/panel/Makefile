@@ -28,9 +28,6 @@ all: targets $(TARGET)
 $(C_PROGRAM): $(C_PROGRAM).o
 	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
-$(C_PROGRAM): $(C_PROGRAM).o
-	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
-
 $(CXX_PROGRAM): $(CXX_PROGRAM).o
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
