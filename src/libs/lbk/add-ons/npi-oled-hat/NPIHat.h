@@ -99,5 +99,5 @@ private:
 
 #endif /* __cplusplus */
 
-#endif /* __LBK_PANEL_DEVICE_H__ */
+#endif /* __NPI_OLED_HAT_DEVICE_H__ */
 
