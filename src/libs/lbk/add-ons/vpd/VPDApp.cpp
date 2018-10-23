@@ -46,7 +46,7 @@ VPDApplication::~VPDApplication()
 }
 
 
-VPDWindow::VPDWindow(BRect frame, const char* title, uint16 w, uint16 h, uint8 keys_count, int32 id)
+VPDWindow::VPDWindow(BRect frame, const char* title, uint16 w, uint16 h, uint8 keys_count, uint8 point_size, int32 id)
 	: BWindow(frame, title,
 		  (title == NULL || *title == 0) ? B_BORDERED_WINDOW : B_TITLED_WINDOW,
 		  B_NOT_RESIZABLE | B_QUIT_ON_WINDOW_CLOSE)
@@ -76,16 +76,38 @@ VPDWindow::VPDWindow(BRect frame, const char* title, uint16 w, uint16 h, uint8 k
 		frame.top = menubar->Frame().bottom + 1;
 	}
 
-	r = frame;
-	if(r.Width() > (float)(w - 1))
-		r.InsetBy((r.Width() - (float)(w - 1)) / 2.f, 0);
-	r.bottom = r.top + (float)(h - 1);
-	AddChild(new VPDView(r, "screen", B_FOLLOW_NONE));
-	frame.top = r.bottom + 1;
+	if(keys_count > 0) frame.bottom -= 30;
+
+	VPDView *view = new VPDView(frame, "screen", B_FOLLOW_LEFT | B_FOLLOW_TOP);
+	view->SetWidth(w);
+	view->SetHeight(h);
+	view->SetPointSize(point_size);
+	if(id >= 0)
+	{
+		BString str;
+		str << id;
+
+		view->SetLabel(str.String());
+	}
+#if 0
+	// TEST
+	else
+	{
+		view->SetLabel("VPD");
+	}
+	if(view->BufferLength() > 0)
+		memset(view->Buffer(), 0x0a, view->BufferLength());
+#endif
+	AddChild(view);
+
+	view->ResizeToPreferred();
+	if(view->Frame() != frame)
+		ResizeBy(view->Frame().Width() - frame.Width(), view->Frame().Height() - frame.Height());
 
 	if(keys_count == 0) return;
 
-	r = frame;
+	r = Bounds();
+	r.top = view->Frame().bottom + 1;
 	r.right = r.left + r.Width() / (float)keys_count - 1.f;
 
 	for(uint8 m = 0; m < keys_count; m++)
@@ -96,7 +118,7 @@ VPDWindow::VPDWindow(BRect frame, const char* title, uint16 w, uint16 h, uint8 k
 		BMessage *msg = new BMessage(VPD_MSG_KEY);
 		msg->AddInt8("id", (int8)m);
 
-		BButton *btn = new BButton(r.InsetByCopy(5, 2), NULL, label.String(), msg, B_FOLLOW_LEFT_RIGHT | B_FOLLOW_BOTTOM);
+		BButton *btn = new BButton(r.InsetByCopy(5, 2), NULL, label.String(), msg, B_FOLLOW_NONE);
 		AddChild(btn);
 
 		r.OffsetBy(r.Width() + 1, 0);

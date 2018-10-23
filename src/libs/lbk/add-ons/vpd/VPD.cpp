@@ -28,6 +28,8 @@
  *
  * --------------------------------------------------------------------------*/
 
+#include <stdio.h>
+
 #include "VPDApp.h"
 #include "VPD.h"
 
@@ -121,6 +123,7 @@ LBVPD::InitCheck(const char *options)
 	BPoint pt(100, 100);
 	BString title("Virutal Device for LBKit");
 	int32 id = -1;
+	uint8 point_size = 1;
 	BScreen screen;
 
 	opt.ReplaceAll(",", " ");
@@ -143,6 +146,10 @@ LBVPD::InitCheck(const char *options)
 			item.Truncate(found);
 		}
 
+#if 0
+		fprintf(stdout, "[VPD]: item=\"%s\", value=\"%s\"\n", item.String(), value.String());
+#endif
+
 		if(item == "width")
 		{
 			int v = atoi(value.String());
@@ -152,6 +159,11 @@ LBVPD::InitCheck(const char *options)
 		{
 			int v = atoi(value.String());
 			if(v > 0 && v <= 2048) fHeight = (uint16)v;
+		}
+		else if(item == "point_size")
+		{
+			int v = atoi(value.String());
+			if(v > 0 && v <= 255) point_size = (uint8)v;
 		}
 		else if(item == "keys_count")
 		{
@@ -209,11 +221,12 @@ LBVPD::InitCheck(const char *options)
 #endif
 	}
 
-	BRect r(pt, pt + BPoint(fWidth - 1, fHeight - 1) + BPoint(0, 50));
-	VPDWindow *win = new VPDWindow(r, title.String(), fWidth, fHeight, fKeysCount, id);
+	BRect r(pt, pt + BPoint(200, 200));
+	VPDWindow *win = new VPDWindow(r, title.String(), fWidth, fHeight, fKeysCount, point_size, id);
 
 	win->Lock();
 	win->Show();
+	fMsgr = BMessenger(win, win);
 	win->Unlock();
 
 	return B_OK;

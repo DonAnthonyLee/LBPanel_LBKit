@@ -40,7 +40,28 @@ public:
 	VPDView(BRect frame, const char *name, uint32 resizingMode);
 	virtual ~VPDView();
 
+	void			SetWidth(uint16 w);
+	void			SetHeight(uint16 h);
+	void			SetPointSize(uint8 s);
+	void			SetLabel(const char *str);
+
+	uint8*			Buffer() const;
+	size_t			BufferLength() const;
+
+	virtual void		GetPreferredSize(float *width, float *height);
 	virtual void		Draw(BRect updateRect);
+
+private:
+	uint16 fWidth;
+	uint16 fHeight;
+	uint8 fPointSize;
+	uint8 fDepth;
+	char *fLabel;
+	uint8 *fBuffer;
+	size_t fBufferLength;
+
+	rgb_color		PixelAt(uint16 x, uint16 y);
+	void			ResizeBuffer();
 };
 
 #endif /* __cplusplus */

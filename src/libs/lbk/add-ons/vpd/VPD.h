@@ -90,6 +90,7 @@ private:
 	uint16 fHeight;
 	uint8 fKeysCount;
 	bool fState;
+	BMessenger fMsgr;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	uint8 fDepth;
 	color_space fColorSpace;
