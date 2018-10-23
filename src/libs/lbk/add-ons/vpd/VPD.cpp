@@ -60,12 +60,54 @@ LBVPD::LBVPD()
 
 	if(be_app != NULL) return;
 
-	// TODO: init be_app
+#ifdef ETK_MAJOR_VERSION
+	if((fThread = etk_create_thread(this->RunBeApp,
+					E_URGENT_DISPLAY_PRIORITY,
+					NULL,
+					NULL)) == NULL ||
+	   etk_resume_thread(fThread) != E_OK)
+	{
+		if(fThread != NULL)
+		{
+			etk_delete_thread(fThread);
+			fThread = NULL;
+		}
+		ETK_WARNING("[VPD]: Unable to create thread !\n");
+	}
+#else
+	thread_id tid = spawn_thread(this->RunBeApp, "lbk_vpd_app", B_URGENT_DISPLAY_PRIORITY, NULL);
+	if(tid < 0 || resume_thread(tid) != B_OK)
+	{
+		fprintf(stderr, "[VPD]: Unable to spawn thread !\n");
+	}
+	else
+	{
+		fThread = reinterpret_cast<void*>((int)tid);
+	}
+#endif
 }
 
 
 LBVPD::~LBVPD()
 {
+#ifdef ETK_MAJOR_VERSION
+	if(fThread != NULL)
+	{
+		if(be_app != NULL)
+			be_app->PostMessage(B_QUIT_REQUESTED);
+
+		e_status_t status;
+		etk_wait_for_thread(fThread, &status);
+
+		etk_delete_thread(fThread);
+	}
+#else
+	thread_id tid = (fThread == NULL ? 0 : (thread_id)reinterpret_cast<int>(fThread));
+	if(tid > 0 && be_app != NULL)
+	{
+		be_app->PostMessage(B_QUIT_REQUESTED);
+	}
+#endif
 }
 
 
@@ -73,6 +115,7 @@ status_t
 LBVPD::InitCheck(const char *options)
 {
 	if(be_app == NULL) return B_ERROR;
+	while(be_app->IsRunning() == false) snooze(100000);
 
 	BString opt(options);
 	BPoint pt(100, 100);
@@ -391,7 +434,10 @@ LBVPD::GetScreenOffsetOfKeys(uint16 &offsetLeftTop,
 int32
 LBVPD::RunBeApp(void *arg)
 {
-	// TODO
-	return -1;
+	VPDApplication *app = new VPDApplication();
+
+	app->Run();
+
+	return 0;
 }
 
