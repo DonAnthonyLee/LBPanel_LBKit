@@ -96,7 +96,12 @@ VPDWindow::VPDWindow(BRect frame, const char* title, uint16 w, uint16 h, uint8 k
 		view->SetLabel("VPD");
 	}
 	if(view->BufferLength() > 0)
+	{
 		memset(view->Buffer(), 0x0a, view->BufferLength());
+		view->SetFontHeight(12);
+		view->DrawStringOnBuffer("测试ABCDEFG123", 10, 10);
+		view->SetPowerState(false);
+	}
 #endif
 	AddChild(view);
 
