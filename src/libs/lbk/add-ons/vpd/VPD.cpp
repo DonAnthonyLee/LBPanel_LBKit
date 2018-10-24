@@ -121,7 +121,7 @@ LBVPD::InitCheck(const char *options)
 
 	BString opt(options);
 	BPoint pt(100, 100);
-	BString title("Virutal Device for LBKit");
+	BString title("Virutal Panel Device for LBKit");
 	int32 id = -1;
 	uint8 point_size = 1;
 	BScreen screen;
