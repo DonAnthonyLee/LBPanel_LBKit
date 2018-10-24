@@ -48,6 +48,15 @@ public:
 	uint8*			Buffer() const;
 	size_t			BufferLength() const;
 
+	void			FillRectOnBuffer(uint16 x, uint16 y,
+						 uint16 w, uint16 h,
+						 pattern p, bool patternVertical = false);
+	void			DrawStringOnBuffer(const char *str,
+						   uint16 x, uint16 y,
+						   bool erase_mode = false);
+	bool			SetFontHeight(uint8 h);
+	void			SetPowerState(bool state);
+
 	virtual void		GetPreferredSize(float *width, float *height);
 	virtual void		Draw(BRect updateRect);
 
@@ -59,6 +68,7 @@ private:
 	char *fLabel;
 	uint8 *fBuffer;
 	size_t fBufferLength;
+	bool fPowerState;
 
 	rgb_color		PixelAt(uint16 x, uint16 y);
 	void			ResizeBuffer();
