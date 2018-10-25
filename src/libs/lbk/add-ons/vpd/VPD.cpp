@@ -106,11 +106,11 @@ LBVPD::~LBVPD()
 
 #if 0
 	/*
-	 * WHY WE DISABLE FOLLOWING CODES ?
+	 * Note: WHY DID WE DISABLE THE FOLLOWING CODES ?
 	 * 	"BApplication" will try to quit all loopers when quitting,
-	 *	include the "LBApplication" which derived from "BLooper".
-	 * 	So, we leave it alone even knowing it's a bad idea, but,
-	 * 	it's only a virtual one, who care ?
+	 *	including the "LBApplication" which derived from "BLooper".
+	 * 	So, just leave it alone even knowing it's a bad idea, but,
+	 * 	it's just a virtual device, who cares ?
 	 */
 #ifdef ETK_MAJOR_VERSION
 	if(fThread != NULL)
@@ -409,7 +409,7 @@ LBVPD::SetPowerState(bool state,
 		if(st != B_OK) return st;
 		ts = fTimestamp = real_time_clock_usecs();
 
-		// storing the state to local var for "GetPowerState()".
+		// store the state to local var for "GetPowerState()".
 		fState = state;
 	}
 
@@ -538,16 +538,24 @@ LBVPD::RunBeApp(void *arg)
 
 
 void
-LBVPD::KeyDown(uint8 key)
+LBVPD::KeyDown(uint8 key, bigtime_t when)
 {
-	// TODO
+	BMessage msg(B_KEY_DOWN);
+	msg.AddInt8("key", *((int8*)&key));
+	msg.AddInt64("when", when);
+
+	SendMessageToApp(&msg);
 }
 
 
 void
-LBVPD::KeyUp(uint8 key)
+LBVPD::KeyUp(uint8 key, bigtime_t when)
 {
-	// TODO
+	BMessage msg(B_KEY_UP);
+	msg.AddInt8("key", *((int8*)&key));
+	msg.AddInt64("when", when);
+
+	SendMessageToApp(&msg);
 }
 
 
