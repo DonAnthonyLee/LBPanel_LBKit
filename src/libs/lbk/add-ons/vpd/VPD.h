@@ -88,8 +88,8 @@ public:
 	 * KeyDown()/KeyUp()/QuitRequested():
 	 * 	Callback functions for VPDWindow, should be MT-SAFE
 	 */
-	void			KeyDown(uint8 key);
-	void			KeyUp(uint8 key);
+	void			KeyDown(uint8 key, bigtime_t when);
+	void			KeyUp(uint8 key, bigtime_t when);
 	void			QuitRequested();
 
 private:

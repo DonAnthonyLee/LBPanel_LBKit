@@ -46,7 +46,6 @@ public:
 };
 
 
-#define VPD_MSG_CAPTRUE		'vmgc'
 #define VPD_MSG_KEY		'vmgk'
 #define VPD_MSG_POWER_STATE	'vmgp'
 #define VPD_MSG_ENABLE_UPDATE	'vmgu'
@@ -72,6 +71,27 @@ public:
 
 private:
 	LBVPD *fVPD;
+};
+
+
+class VPDButton : public BButton {
+public:
+	VPDButton(BRect frame,
+		  const char *label,
+		  int8 fID);
+	virtual ~VPDButton();
+
+	virtual void	MouseDown(BPoint where);
+	virtual void	MouseUp(BPoint where);
+	virtual void	MouseMoved(BPoint where, uint32 code, const BMessage *msg);
+	virtual void	KeyDown(const char *bytes, int32 numBytes);
+	virtual void	KeyUp(const char *bytes, int32 numBytes);
+
+private:
+	int8 fID;
+	BMessageRunner *fKeyMsgRunner;
+
+	void		ValueChanged();
 };
 
 #endif /* __cplusplus */
