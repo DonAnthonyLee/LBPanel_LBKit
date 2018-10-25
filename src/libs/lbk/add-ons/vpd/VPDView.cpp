@@ -28,6 +28,7 @@
  *
  * --------------------------------------------------------------------------*/
 
+#include "VPDApp.h"
 #include "VPDView.h"
 
 #ifdef ETK_MAJOR_VERSION
@@ -43,7 +44,8 @@ VPDView::VPDView(BRect frame, const char* title, uint32 resizingMode)
 	: BView(frame, title, resizingMode, B_WILL_DRAW),
 	  fPointSize(1),
 	  fLabel(NULL),
-	  fPowerState(true)
+	  fPowerState(true),
+	  fUpdateEnabled(true)
 {
 	SetViewColor(230, 230, 230);
 	SetLowColor(230, 230, 230);
@@ -329,5 +331,116 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 	delete pixmap;
 #endif
 	delete bitmap;
+}
+
+
+void
+VPDView::MessageReceived(BMessage *msg)
+{
+	switch(msg->what)
+	{
+		case VPD_MSG_POWER_STATE:
+			{
+				bool state;
+
+				if(msg->FindBool("state", &state) != B_OK) break;
+				SetPowerState(state);
+			}
+			break;
+
+		case VPD_MSG_ENABLE_UPDATE:
+			{
+				bool update;
+
+				if(msg->FindBool("update", &update) != B_OK) break;
+				if(fUpdateEnabled == update) break;
+
+				fUpdateEnabled = update;
+				if(fUpdateEnabled)
+				{
+					// TODO
+					Invalidate();
+				}
+			}
+			break;
+
+		case VPD_MSG_FILL_RECT:
+			{
+				BRect r;
+				pattern p;
+				bool vpat;
+
+				if(msg->FindRect("rect", &r) != B_OK) break;
+				if(msg->FindInt64("pattern", (int64*)&p) != B_OK) break;
+				if(msg->FindBool("vpattern", &vpat) != B_OK) break;
+
+				r &= BRect(0, 0, fBuffer.Width() - 1, fBuffer.Height() - 1);
+				if(r.IsValid() == false) break;
+
+				FillRectOnBuffer(r.left, r.top, r.Width() + 1, r.Height() + 1, p, vpat);
+				if(fUpdateEnabled)
+				{
+					// TODO
+					Invalidate();
+				}
+			}
+			break;
+
+		case VPD_MSG_DRAW_STRING:
+			{
+				BString str;
+				BPoint pt;
+				uint8 fontHeight;
+				bool erase;
+
+				if(msg->FindString("string", &str) != B_OK) break;
+				if(msg->FindPoint("location", &pt) != B_OK) break;
+				if(msg->FindInt8("height", (int8*)&fontHeight) != B_OK) break;
+				if(msg->FindBool("erase_mode", &erase) != B_OK) break;
+
+				if(str.Length() == 0) break;
+				if(BRect(0, 0, fBuffer.Width() - 1, fBuffer.Height() - 1).Contains(pt) == false) break;
+				if(SetFontHeight(fontHeight) == false) break;
+
+				DrawStringOnBuffer(str.String(), pt.x, pt.y, erase);
+				if(fUpdateEnabled)
+				{
+					// TODO
+					Invalidate();
+				}
+			}
+			break;
+
+		case VPD_MSG_STRING_WIDTH:
+			{
+				BString str;
+				uint8 fontHeight;
+				uint16 w = 0;
+
+				if(msg->FindString("string", &str) != B_OK) break;
+				if(msg->FindInt8("height", (int8*)&fontHeight) != B_OK) break;
+				if(msg->IsSourceWaiting() == false) break;
+
+				if(str.Length() > 0)
+				{
+					PushState();
+					if(SetFontHeight(fontHeight))
+					{
+						BFont font;
+						GetFont(&font);
+						w = (uint16)font.StringWidth(str.String());
+					}
+					PopState();
+				}
+
+				BMessage aMsg(B_REPLY);
+				aMsg.AddInt16("width", *((int16*)&w));
+				msg->SendReply(&aMsg);
+			}
+			break;
+
+		default:
+			BView::MessageReceived(msg);
+	}
 }
 

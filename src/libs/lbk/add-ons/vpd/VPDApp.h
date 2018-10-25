@@ -35,6 +35,8 @@
 
 #include <lbk/add-ons/LBPanelBuffer.h>
 
+#include "VPD.h"
+
 #ifdef __cplusplus /* Just for C++ */
 
 class VPDApplication : public BApplication {
@@ -42,6 +44,15 @@ public:
 	VPDApplication();
 	virtual ~VPDApplication();
 };
+
+
+#define VPD_MSG_CAPTRUE		'vmgc'
+#define VPD_MSG_KEY		'vmgk'
+#define VPD_MSG_POWER_STATE	'vmgp'
+#define VPD_MSG_ENABLE_UPDATE	'vmgu'
+#define VPD_MSG_FILL_RECT	'vmgr'
+#define VPD_MSG_DRAW_STRING	'vmgs'
+#define VPD_MSG_STRING_WIDTH	'vmgw'
 
 
 class VPDWindow : public BWindow {
@@ -52,11 +63,15 @@ public:
 		  uint8 keys_count,
 		  uint8 point_size,
 		  int32 id,
-		  lbk_color_space cspace);
+		  lbk_color_space cspace,
+		  LBVPD *vpd);
 	virtual ~VPDWindow();
 
 	virtual bool	QuitRequested();
 	virtual void	MessageReceived(BMessage *msg);
+
+private:
+	LBVPD *fVPD;
 };
 
 #endif /* __cplusplus */
