@@ -447,7 +447,13 @@ LBApplication::Go()
 {
 	if(IsRunning())
 	{
-		printf("[LBApplication]: It's forbidden to run Go() more than ONE time !\n");
+		fprintf(stderr, "[LBApplication]: It's forbidden to run Go() more than ONE time !\n");
+		return;
+	}
+
+	if(CountPanels() == 0)
+	{
+		fprintf(stderr, "[LBApplication]: No panels !\n");
 		return;
 	}
 
