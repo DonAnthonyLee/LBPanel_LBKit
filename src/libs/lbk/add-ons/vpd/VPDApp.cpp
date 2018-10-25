@@ -35,11 +35,13 @@
 VPDApplication::VPDApplication()
 	: BApplication("application/x-vnd.lbk-vpd-app")
 {
+	// TODO
 }
 
 
 VPDApplication::~VPDApplication()
 {
+	// TODO
 }
 
 
@@ -66,8 +68,6 @@ VPDWindow::VPDWindow(BRect frame, const char* title,
 		BMenuBar *menubar = new BMenuBar(r, NULL);
 
 		BMenu *menu = new BMenu("File", B_ITEMS_IN_COLUMN);
-		menu->AddItem(new BMenuItem("Capture screen...", new BMessage(VPD_MSG_CAPTRUE)));
-		menu->AddSeparatorItem();
 		menu->AddItem(new BMenuItem("Quit", new BMessage(B_QUIT_REQUESTED), 'q', B_COMMAND_KEY));
 		menubar->AddItem(menu);
 
@@ -109,11 +109,7 @@ VPDWindow::VPDWindow(BRect frame, const char* title,
 		BString label;
 		label << "K" << m + 1;
 
-		BMessage *msg = new BMessage(VPD_MSG_KEY);
-		msg->AddInt8("id", (int8)m);
-
-		BButton *btn = new BButton(r.InsetByCopy(5, 2), NULL, label.String(), msg, B_FOLLOW_NONE);
-		AddChild(btn);
+		AddChild(new VPDButton(r.InsetByCopy(5, 2), label.String(), (int8)m));
 
 		r.OffsetBy(r.Width() + 1, 0);
 	}
@@ -141,15 +137,22 @@ void
 VPDWindow::MessageReceived(BMessage *msg)
 {
 	BView *view;
+	int8 keyID;
+	bigtime_t when;
+	bool keyState;
 
 	switch(msg->what)
 	{
 		case VPD_MSG_KEY:
-			// TODO
-			break;
-
-		case VPD_MSG_CAPTRUE:
-			// TODO
+			if(fVPD == NULL) break;
+			if(msg->FindInt8("id", &keyID) != B_OK || keyID < 0 || keyID >= 8) break;
+			if(msg->FindBool("state", &keyState) != B_OK) break;
+			if(msg->FindInt64("when", &when) != B_OK)
+				when = real_time_clock_usecs();
+			if(keyState)
+				fVPD->KeyDown((uint8)keyID, when);
+			else
+				fVPD->KeyUp((uint8)keyID, when);
 			break;
 
 		case VPD_MSG_POWER_STATE:
@@ -164,5 +167,109 @@ VPDWindow::MessageReceived(BMessage *msg)
 		default:
 			BWindow::MessageReceived(msg);
 	}
+}
+
+
+VPDButton::VPDButton(BRect frame, const char *label, int8 id)
+	: BButton(frame, NULL, label, NULL, B_FOLLOW_NONE),
+	  fID(id),
+	  fKeyMsgRunner(NULL)
+{
+}
+
+
+VPDButton::~VPDButton()
+{
+	if(fKeyMsgRunner != NULL)
+		delete fKeyMsgRunner;
+}
+
+
+void
+VPDButton::ValueChanged()
+{
+	BMessage msg(VPD_MSG_KEY);
+	msg.AddInt8("id", (int8)fID);
+	msg.AddInt64("when", real_time_clock_usecs());
+	msg.AddBool("state", Value() == B_CONTROL_ON);
+
+	if(Value() == B_CONTROL_ON && fKeyMsgRunner == NULL)
+	{
+		BMessenger msgr(Looper(), Looper());
+		msg.RemoveInt64("when");
+		fKeyMsgRunner = new BMessageRunner(msgr, &msg, 200000);
+	}
+	else if(Value() == B_CONTROL_OFF && fKeyMsgRunner != NULL)
+	{
+		delete fKeyMsgRunner;
+		fKeyMsgRunner = NULL;
+
+		Looper()->PostMessage(&msg);
+	}
+}
+
+
+void
+VPDButton::MouseDown(BPoint where)
+{
+	int32 v1, v2;
+
+	v1 = Value();
+	BButton::MouseDown(where);
+	v2 = Value();
+
+	if(v1 != v2) ValueChanged();
+}
+
+
+void
+VPDButton::MouseUp(BPoint where)
+{
+	int32 v1, v2;
+
+	v1 = Value();
+	BButton::MouseUp(where);
+	v2 = Value();
+
+	if(v1 != v2) ValueChanged();
+}
+
+
+void
+VPDButton::MouseMoved(BPoint where, uint32 code, const BMessage *msg)
+{
+	int32 v1, v2;
+
+	v1 = Value();
+	BButton::MouseMoved(where, code, msg);
+	v2 = Value();
+
+	if(v1 != v2) ValueChanged();
+}
+
+
+void
+VPDButton::KeyDown(const char *bytes, int32 numBytes)
+{
+	int32 v1, v2;
+
+	v1 = Value();
+	BButton::KeyDown(bytes, numBytes);
+	v2 = Value();
+
+	if(v1 != v2) ValueChanged();
+}
+
+
+void
+VPDButton::KeyUp(const char *bytes, int32 numBytes)
+{
+	int32 v1, v2;
+
+	v1 = Value();
+	BButton::KeyUp(bytes, numBytes);
+	v2 = Value();
+
+	if(v1 != v2) ValueChanged();
 }
 
