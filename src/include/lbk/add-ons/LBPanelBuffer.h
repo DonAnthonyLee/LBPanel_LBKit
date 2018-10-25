@@ -67,6 +67,14 @@ public:
 	void			SetPixel(uint16 x, uint16 y, rgb_color c);
 	rgb_color		GetPixel(uint16 x, uint16 y) const;
 
+	// HighColor/LowColor: for pattern
+	rgb_color		HighColor() const;
+	rgb_color		LowColor() const;
+	void			SetHighColor(rgb_color c);
+	void			SetHighColor(uint8 r, uint8 g, uint8 b, uint8 a = 255);
+	void			SetLowColor(rgb_color c);
+	void			SetLowColor(uint8 r, uint8 g, uint8 b, uint8 a = 255);
+
 	void			FillRect(uint16 x, uint16 y,
 					 uint16 w, uint16 h,
 					 pattern p, bool patternVertical = false);
@@ -77,6 +85,7 @@ private:
 	lbk_color_space fColorSpace;
 	void *fBits;
 	size_t fBitsLength;
+	rgb_color fColors[2];
 
 	virtual void*		AllocBitsData(size_t len);
 	virtual void		FreeBitsData(void *data, size_t len);
