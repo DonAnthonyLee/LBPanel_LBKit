@@ -38,6 +38,8 @@ LBPanelBuffer::LBPanelBuffer()
 	  fBits(NULL),
 	  fBitsLength(0)
 {
+	SetHighColor(255, 255, 255);
+	SetLowColor(0, 0, 0);
 }
 
 
@@ -48,6 +50,8 @@ LBPanelBuffer::LBPanelBuffer(uint16 w, uint16 h, lbk_color_space cspace)
 	  fBits(NULL),
 	  fBitsLength(0)
 {
+	SetHighColor(255, 255, 255);
+	SetLowColor(0, 0, 0);
 	ResizeTo(w, h, cspace);
 }
 
@@ -114,7 +118,7 @@ LBPanelBuffer::ResizeTo(uint16 w, uint16 h, lbk_color_space cspace)
 	fWidth = w;
 	fHeight = h;
 
-	return false;
+	return true;
 }
 
 
@@ -239,6 +243,53 @@ LBPanelBuffer::SetPixel(uint16 x, uint16 y, rgb_color c)
 			// TODO
 			break;
 	}
+}
+
+
+rgb_color
+LBPanelBuffer::HighColor() const
+{
+	return fColors[0];
+}
+
+rgb_color
+LBPanelBuffer::LowColor() const
+{
+	return fColors[1];
+}
+
+
+void
+LBPanelBuffer::SetHighColor(rgb_color c)
+{
+	*((uint32*)&fColors[0]) = *((uint32*)&c);
+}
+
+
+void
+LBPanelBuffer::SetHighColor(uint8 r, uint8 g, uint8 b, uint8 a)
+{
+	fColors[0].red = r;
+	fColors[0].green = g;
+	fColors[0].blue = b;
+	fColors[0].alpha = a;
+}
+
+
+void
+LBPanelBuffer::SetLowColor(rgb_color c)
+{
+	*((uint32*)&fColors[1]) = *((uint32*)&c);
+}
+
+
+void
+LBPanelBuffer::SetLowColor(uint8 r, uint8 g, uint8 b, uint8 a)
+{
+	fColors[1].red = r;
+	fColors[1].green = g;
+	fColors[1].blue = b;
+	fColors[1].alpha = a;
 }
 
 
