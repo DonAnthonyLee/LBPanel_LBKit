@@ -30,6 +30,8 @@
 
 #include <stdio.h>
 
+#include <lbk/LBApplication.h> // for "LBK_QUIT_REQUESTED"
+
 #include "VPDApp.h"
 #include "VPD.h"
 
@@ -50,7 +52,8 @@ LBVPD::LBVPD()
 	  fWidth(128),
 	  fHeight(64),
 	  fKeysCount(3),
-	  fState(true)
+	  fState(true),
+	  fTimestamp(0)
 {
 #ifdef LBK_ENABLE_MORE_FEATURES
 	fDepth = 1;
@@ -92,6 +95,23 @@ LBVPD::LBVPD()
 
 LBVPD::~LBVPD()
 {
+	if(fMsgr.LockTarget() == B_OK)
+	{
+		BLooper *looper = NULL;
+
+		fMsgr.Target(&looper);
+		if(looper != NULL)
+			looper->Quit();
+	}
+
+#if 0
+	/*
+	 * WHY WE DISABLE FOLLOWING CODES ?
+	 * 	"BApplication" will try to quit all loopers when quitting,
+	 *	include the "LBApplication" which derived from "BLooper".
+	 * 	So, we leave it alone even knowing it's a bad idea, but,
+	 * 	it's only a virtual one, who care ?
+	 */
 #ifdef ETK_MAJOR_VERSION
 	if(fThread != NULL)
 	{
@@ -108,7 +128,11 @@ LBVPD::~LBVPD()
 	if(tid > 0 && be_app != NULL)
 	{
 		be_app->PostMessage(B_QUIT_REQUESTED);
+
+		status_t status;
+		wait_for_thread(tid, &status);
 	}
+#endif
 #endif
 }
 
@@ -116,7 +140,7 @@ LBVPD::~LBVPD()
 status_t
 LBVPD::InitCheck(const char *options)
 {
-	if(be_app == NULL) return B_ERROR;
+	if(be_app == NULL || fMsgr.IsValid()) return B_ERROR;
 	while(be_app->IsRunning() == false) snooze(100000);
 
 	BString opt(options);
@@ -223,7 +247,7 @@ LBVPD::InitCheck(const char *options)
 	}
 
 	BRect r(pt, pt + BPoint(200, 200));
-	VPDWindow *win = new VPDWindow(r, title.String(), fWidth, fHeight, fKeysCount, point_size, id, cspace);
+	VPDWindow *win = new VPDWindow(r, title.String(), fWidth, fHeight, fKeysCount, point_size, id, cspace, this);
 
 	win->Lock();
 	win->Show();
@@ -286,14 +310,37 @@ LBVPD::FillRect(BRect rect,
 		bool patternVertical,
 		bigtime_t &ts)
 {
-	// TODO
-	return B_ERROR;
+	BMessage msg(VPD_MSG_FILL_RECT);
+	msg.AddRect("rect", rect);
+	msg.AddInt64("pattern", *((int64*)&p));
+	msg.AddBool("vpattern", patternVertical);
+
+	status_t st = fMsgr.SendMessage(&msg);
+	if(st == B_OK)
+		ts = fTimestamp = real_time_clock_usecs();
+
+	return st;
 }
 
 
 bool
 LBVPD::IsFontHeightSupported(uint8 fontHeight)
 {
+	BMessage replyMsg;
+	BMessage msg(VPD_MSG_STRING_WIDTH);
+	msg.AddString("string", "A");
+	msg.AddInt8("height", *((int8*)&fontHeight));
+
+	status_t st = fMsgr.SendMessage(&msg, &replyMsg);
+	if(st != B_OK) return false;
+
+	uint16 w = 0;
+
+	if(replyMsg.what != B_REPLY ||
+	   replyMsg.FindInt16("width", (int16*)&w) != B_OK ||
+	   w == 0)
+		return false;
+
 	return true;
 }
 
@@ -305,8 +352,17 @@ LBVPD::DrawString(const char *str,
 		  bool erase,
 		  bigtime_t &ts)
 {
-	// TODO
-	return B_ERROR;
+	BMessage msg(VPD_MSG_DRAW_STRING);
+	msg.AddString("string", str);
+	msg.AddPoint("location", pt);
+	msg.AddInt8("height", *((int8*)&fontHeight));
+	msg.AddBool("erase_mode", erase);
+
+	status_t st = fMsgr.SendMessage(&msg);
+	if(st == B_OK)
+		ts = fTimestamp = real_time_clock_usecs();
+
+	return st;
 }
 
 
@@ -315,8 +371,19 @@ LBVPD::MeasureStringWidth(const char *str,
 			  uint8 fontHeight,
 			  uint16 &width)
 {
-	// TODO
-	return B_ERROR;
+	BMessage replyMsg;
+	BMessage msg(VPD_MSG_STRING_WIDTH);
+	msg.AddString("string", str);
+	msg.AddInt8("height", *((int8*)&fontHeight));
+
+	status_t st = fMsgr.SendMessage(&msg, &replyMsg);
+	if(st != B_OK) return st;
+
+	if(replyMsg.what != B_REPLY ||
+	   replyMsg.FindInt16("width", (int16*)&width) != B_OK)
+		return B_ERROR;
+
+	return B_OK;
 }
 
 
@@ -335,7 +402,14 @@ LBVPD::SetPowerState(bool state,
 {
 	if(state != fState)
 	{
-		// TODO
+		BMessage msg(VPD_MSG_POWER_STATE);
+		msg.AddBool("state", state);
+
+		status_t st = fMsgr.SendMessage(&msg);
+		if(st != B_OK) return st;
+		ts = fTimestamp = real_time_clock_usecs();
+
+		// storing the state to local var for "GetPowerState()".
 		fState = state;
 	}
 
@@ -346,32 +420,38 @@ LBVPD::SetPowerState(bool state,
 status_t
 LBVPD::GetTimestamp(bigtime_t &ts)
 {
-	// TODO
-	return B_ERROR;
+	ts = fTimestamp;
+
+	return B_OK;
 }
 
 
 status_t
 LBVPD::SetTimestampNow(bigtime_t &tsRet)
 {
-	// TODO
-	return B_ERROR;
+	tsRet = fTimestamp = real_time_clock_usecs();
+
+	return B_OK;
 }
 
 
 status_t
 LBVPD::DisableUpdate()
 {
-	// TODO
-	return B_ERROR;
+	BMessage msg(VPD_MSG_ENABLE_UPDATE);
+	msg.AddBool("update", false);
+
+	return fMsgr.SendMessage(&msg);
 }
 
 
 status_t
 LBVPD::EnableUpdate()
 {
-	// TODO
-	return B_ERROR;
+	BMessage msg(VPD_MSG_ENABLE_UPDATE);
+	msg.AddBool("update", true);
+
+	return fMsgr.SendMessage(&msg);
 }
 
 
@@ -451,7 +531,29 @@ LBVPD::RunBeApp(void *arg)
 	VPDApplication *app = new VPDApplication();
 
 	app->Run();
+	delete app;
 
 	return 0;
+}
+
+
+void
+LBVPD::KeyDown(uint8 key)
+{
+	// TODO
+}
+
+
+void
+LBVPD::KeyUp(uint8 key)
+{
+	// TODO
+}
+
+
+void
+LBVPD::QuitRequested()
+{
+	SendMessageToApp(LBK_QUIT_REQUESTED);
 }
 

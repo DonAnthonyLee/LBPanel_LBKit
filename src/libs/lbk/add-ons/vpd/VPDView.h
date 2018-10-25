@@ -61,12 +61,14 @@ public:
 
 	virtual void		GetPreferredSize(float *width, float *height);
 	virtual void		Draw(BRect updateRect);
+	virtual void		MessageReceived(BMessage *msg);
 
 private:
 	LBPanelBuffer fBuffer;
 	uint8 fPointSize;
 	char *fLabel;
 	bool fPowerState;
+	bool fUpdateEnabled;
 };
 
 #endif /* __cplusplus */

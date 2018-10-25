@@ -31,9 +31,6 @@
 #include "VPDApp.h"
 #include "VPDView.h"
 
-#define VPD_MSG_CAPTRUE		'vmgc'
-#define VPD_MSG_KEY		'vmgk'
-
 
 VPDApplication::VPDApplication()
 	: BApplication("application/x-vnd.lbk-vpd-app")
@@ -51,10 +48,12 @@ VPDWindow::VPDWindow(BRect frame, const char* title,
 		     uint8 keys_count,
 		     uint8 point_size,
 		     int32 id,
-		     lbk_color_space cspace)
+		     lbk_color_space cspace,
+		     LBVPD *vpd)
 	: BWindow(frame, title,
 		  (title == NULL || *title == 0) ? B_BORDERED_WINDOW : B_TITLED_WINDOW,
-		  B_NOT_RESIZABLE | B_QUIT_ON_WINDOW_CLOSE)
+		  B_NOT_RESIZABLE | B_QUIT_ON_WINDOW_CLOSE),
+	  fVPD(vpd)
 {
 	BRect r;
 	frame.OffsetTo(0, 0);
@@ -93,20 +92,6 @@ VPDWindow::VPDWindow(BRect frame, const char* title,
 
 		view->SetLabel(str.String());
 	}
-#if 1
-	// TEST
-	else
-	{
-		view->SetLabel("VPD");
-	}
-	if(view->BufferLength() > 0)
-	{
-		memset(view->Buffer(), 0x0a, view->BufferLength());
-		view->SetFontHeight(12);
-		view->DrawStringOnBuffer("测试ABCDEFG123", 10, 10);
-		view->SetPowerState(false);
-	}
-#endif
 	AddChild(view);
 
 	view->ResizeToPreferred();
@@ -143,7 +128,11 @@ VPDWindow::~VPDWindow()
 bool
 VPDWindow::QuitRequested()
 {
-	// TODO
+	if(fVPD != NULL)
+	{
+		fVPD->QuitRequested();
+		fVPD = NULL;
+	}
 	return false;
 }
 
@@ -151,6 +140,8 @@ VPDWindow::QuitRequested()
 void
 VPDWindow::MessageReceived(BMessage *msg)
 {
+	BView *view;
+
 	switch(msg->what)
 	{
 		case VPD_MSG_KEY:
@@ -159,6 +150,15 @@ VPDWindow::MessageReceived(BMessage *msg)
 
 		case VPD_MSG_CAPTRUE:
 			// TODO
+			break;
+
+		case VPD_MSG_POWER_STATE:
+		case VPD_MSG_ENABLE_UPDATE:
+		case VPD_MSG_FILL_RECT:
+		case VPD_MSG_DRAW_STRING:
+		case VPD_MSG_STRING_WIDTH:
+			if((view = FindView("screen")) == NULL) break;
+			view->MessageReceived(msg);
 			break;
 
 		default:
