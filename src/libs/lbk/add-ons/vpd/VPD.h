@@ -84,12 +84,21 @@ public:
 						      uint16 &OffsetRightBottom);
 #endif
 
+	/*
+	 * KeyDown()/KeyUp()/QuitRequested():
+	 * 	Callback functions for VPDWindow, should be MT-SAFE
+	 */
+	void			KeyDown(uint8 key);
+	void			KeyUp(uint8 key);
+	void			QuitRequested();
+
 private:
 	void *fThread;
 	uint16 fWidth;
 	uint16 fHeight;
 	uint8 fKeysCount;
 	bool fState;
+	bigtime_t fTimestamp;
 	BMessenger fMsgr;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	uint8 fDepth;
