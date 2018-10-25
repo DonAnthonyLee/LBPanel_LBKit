@@ -593,6 +593,19 @@ LBApplication::MessageReceived(BMessage *msg)
 
 				dev->preferHandler = NULL;
 				dev->valid = false;
+
+				bool noValidPanels = true;
+				for(id = 0; id < CountPanels(); id++)
+				{
+					dev = lbk_app_get_panel_device_data(fAddOnsList, id);
+					if(dev->valid)
+					{
+						noValidPanels = false;
+						break;
+					}
+				}
+				if(noValidPanels)
+					PostMessage(B_QUIT_REQUESTED, this);
 			}
 			else
 			{
