@@ -46,7 +46,12 @@ VPDApplication::~VPDApplication()
 }
 
 
-VPDWindow::VPDWindow(BRect frame, const char* title, uint16 w, uint16 h, uint8 keys_count, uint8 point_size, int32 id)
+VPDWindow::VPDWindow(BRect frame, const char* title,
+		     uint16 w, uint16 h,
+		     uint8 keys_count,
+		     uint8 point_size,
+		     int32 id,
+		     lbk_color_space cspace)
 	: BWindow(frame, title,
 		  (title == NULL || *title == 0) ? B_BORDERED_WINDOW : B_TITLED_WINDOW,
 		  B_NOT_RESIZABLE | B_QUIT_ON_WINDOW_CLOSE)
@@ -79,8 +84,7 @@ VPDWindow::VPDWindow(BRect frame, const char* title, uint16 w, uint16 h, uint8 k
 	if(keys_count > 0) frame.bottom -= 30;
 
 	VPDView *view = new VPDView(frame, "screen", B_FOLLOW_LEFT | B_FOLLOW_TOP);
-	view->SetWidth(w);
-	view->SetHeight(h);
+	view->ResizeBuffer(w, h, cspace);
 	view->SetPointSize(point_size);
 	if(id >= 0)
 	{
@@ -89,7 +93,7 @@ VPDWindow::VPDWindow(BRect frame, const char* title, uint16 w, uint16 h, uint8 k
 
 		view->SetLabel(str.String());
 	}
-#if 0
+#if 1
 	// TEST
 	else
 	{

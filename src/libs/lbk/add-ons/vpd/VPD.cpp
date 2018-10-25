@@ -125,6 +125,7 @@ LBVPD::InitCheck(const char *options)
 	int32 id = -1;
 	uint8 point_size = 1;
 	BScreen screen;
+	lbk_color_space cspace = LBK_CS_MONO_Y;
 
 	opt.ReplaceAll(",", " ");
 	while(opt.FindFirst("  ") >= 0) opt.ReplaceAll("  ", " ");
@@ -222,7 +223,7 @@ LBVPD::InitCheck(const char *options)
 	}
 
 	BRect r(pt, pt + BPoint(200, 200));
-	VPDWindow *win = new VPDWindow(r, title.String(), fWidth, fHeight, fKeysCount, point_size, id);
+	VPDWindow *win = new VPDWindow(r, title.String(), fWidth, fHeight, fKeysCount, point_size, id, cspace);
 
 	win->Lock();
 	win->Show();
