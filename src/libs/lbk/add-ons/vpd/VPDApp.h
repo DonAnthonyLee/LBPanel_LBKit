@@ -33,6 +33,8 @@
 
 #include <be/Be.h>
 
+#include <lbk/add-ons/LBPanelBuffer.h>
+
 #ifdef __cplusplus /* Just for C++ */
 
 class VPDApplication : public BApplication {
@@ -49,7 +51,8 @@ public:
 		  uint16 w, uint16 h,
 		  uint8 keys_count,
 		  uint8 point_size,
-		  int32 id);
+		  int32 id,
+		  lbk_color_space cspace);
 	virtual ~VPDWindow();
 
 	virtual bool	QuitRequested();

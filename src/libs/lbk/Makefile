@@ -15,6 +15,7 @@ ADD_ONS_DIRS = \
 
 OBJECTS_1 = \
 	add-ons/LBPanelDevice.o \
+	add-ons/LBPanelBuffer.o \
 	LBView.o \
 	LBPageView.o \
 	LBApplication.o \

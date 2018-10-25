@@ -33,6 +33,8 @@
 
 #include <be/Be.h>
 
+#include <lbk/add-ons/LBPanelBuffer.h>
+
 #ifdef __cplusplus /* Just for C++ */
 
 class VPDView : public BView {
@@ -40,13 +42,15 @@ public:
 	VPDView(BRect frame, const char *name, uint32 resizingMode);
 	virtual ~VPDView();
 
-	void			SetWidth(uint16 w);
-	void			SetHeight(uint16 h);
 	void			SetPointSize(uint8 s);
 	void			SetLabel(const char *str);
 
+	bool			SetFontHeight(uint8 h);
+	void			SetPowerState(bool state);
+
 	uint8*			Buffer() const;
 	size_t			BufferLength() const;
+	void			ResizeBuffer(uint16 w, uint16 h, lbk_color_space cspace);
 
 	void			FillRectOnBuffer(uint16 x, uint16 y,
 						 uint16 w, uint16 h,
@@ -54,24 +58,15 @@ public:
 	void			DrawStringOnBuffer(const char *str,
 						   uint16 x, uint16 y,
 						   bool erase_mode = false);
-	bool			SetFontHeight(uint8 h);
-	void			SetPowerState(bool state);
 
 	virtual void		GetPreferredSize(float *width, float *height);
 	virtual void		Draw(BRect updateRect);
 
 private:
-	uint16 fWidth;
-	uint16 fHeight;
+	LBPanelBuffer fBuffer;
 	uint8 fPointSize;
-	uint8 fDepth;
 	char *fLabel;
-	uint8 *fBuffer;
-	size_t fBufferLength;
 	bool fPowerState;
-
-	rgb_color		PixelAt(uint16 x, uint16 y);
-	void			ResizeBuffer();
 };
 
 #endif /* __cplusplus */

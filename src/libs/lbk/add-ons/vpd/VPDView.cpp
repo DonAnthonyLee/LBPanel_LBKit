@@ -32,20 +32,17 @@
 
 #ifdef ETK_MAJOR_VERSION
 	#ifdef ETK_BIG_ENDIAN
-		#define B_HOST_IS_BENDIAN
+		#define B_HOST_IS_BENDIAN	1
+	#else
+		#define B_HOST_IS_BENDIAN	0
 	#endif
 #endif
 
 
 VPDView::VPDView(BRect frame, const char* title, uint32 resizingMode)
 	: BView(frame, title, resizingMode, B_WILL_DRAW),
-	  fWidth(0),
-	  fHeight(0),
 	  fPointSize(1),
-	  fDepth(1),
 	  fLabel(NULL),
-	  fBuffer(NULL),
-	  fBufferLength(0),
 	  fPowerState(true)
 {
 	SetViewColor(230, 230, 230);
@@ -56,29 +53,6 @@ VPDView::VPDView(BRect frame, const char* title, uint32 resizingMode)
 VPDView::~VPDView()
 {
 	if(fLabel != NULL) free(fLabel);
-	if(fBuffer != NULL) free(fBuffer);
-}
-
-
-void
-VPDView::SetWidth(uint16 w)
-{
-	if(fWidth != w)
-	{
-		fWidth = w;
-		ResizeBuffer();
-	}
-}
-
-
-void
-VPDView::SetHeight(uint16 h)
-{
-	if(fHeight != h)
-	{
-		fHeight = h;
-		ResizeBuffer();
-	}
 }
 
 
@@ -119,8 +93,8 @@ VPDView::SetFontHeight(uint8 h)
 
 	GetFont(&font);
 
-	float t = h - ((h < 24) ? 4 : 8);
-	for(int k = 0; k < 8; k++)
+	uint8 t = h - ((h < 24) ? 4 : 8);
+	for(uint8 k = 0; k < 8; k++)
 	{
 		font.SetSize(t + k);
 		font.GetHeight(&fontHeight);
@@ -148,57 +122,24 @@ VPDView::SetPowerState(bool state)
 }
 
 
-void
-VPDView::ResizeBuffer()
-{
-	if(fBuffer != NULL)
-	{
-		free(fBuffer);
-		fBuffer = NULL;
-		fBufferLength = 0;
-	}
-
-	if(fWidth > 0 && fHeight > 0)
-	{
-		size_t s = 0;
-
-		switch(fDepth)
-		{
-			case 1:
-				s = (size_t)(fHeight >> 3);
-				if((fHeight & 0x07) != 0) s++;
-				s *= (size_t)fWidth;
-				break;
-
-			default:
-				// TODO
-				break;
-		}
-
-		if(s > 0)
-		{
-			fBuffer = (uint8*)malloc(s);
-			if(fBuffer != NULL)
-			{
-				bzero(fBuffer, s);
-				fBufferLength = s;
-			}
-		}
-	}
-}
-
-
 uint8*
 VPDView::Buffer() const
 {
-	return fBuffer;
+	return (uint8*)fBuffer.Bits();
 }
 
 
 size_t
 VPDView::BufferLength() const
 {
-	return fBufferLength;
+	return fBuffer.BitsLength();
+}
+
+
+void
+VPDView::ResizeBuffer(uint16 w, uint16 h, lbk_color_space cspace)
+{
+	if(fBuffer.ResizeTo(w, h, cspace)) Invalidate();
 }
 
 
@@ -208,40 +149,14 @@ VPDView::GetPreferredSize(float *width, float *height)
 	float w = 0, h = 0;
 	float space = (fPointSize < 2) ? 0 : ((fPointSize < 4) ? 1 : 2);
 
-	if(fWidth > 0)
-		w = (float)fWidth * (float)fPointSize + (float)(fWidth - 1) * (float)space;
+	if(fBuffer.Width() > 0)
+		w = (float)fBuffer.Width() * (float)fPointSize + (float)(fBuffer.Width() - 1) * (float)space;
 
-	if(fHeight > 0)
-		h = (float)fHeight * (float)fPointSize + (float)(fHeight - 1) * (float)space;
+	if(fBuffer.Height() > 0)
+		h = (float)fBuffer.Height() * (float)fPointSize + (float)(fBuffer.Height() - 1) * (float)space;
 
 	if(width != NULL) *width = w;
 	if(height != NULL) *height = h;
-}
-
-
-rgb_color
-VPDView::PixelAt(uint16 x, uint16 y)
-{
-	rgb_color c = ViewColor();
-	uint32 offset;
-
-	if(x < fWidth && y < fHeight && fBuffer != NULL)
-	{
-		switch(fDepth)
-		{
-			case 1:
-				offset = (uint32)x + (uint32)fWidth * (uint32)(y >> 3);
-				if((*(fBuffer + offset) & (0x01 << (y & 0x07))) != 0)
-					c.red = c.green = c.blue = (fPowerState ? 50 : 200);
-				break;
-
-			default:
-				// TODO
-				break;
-		}
-	}
-
-	return c;
 }
 
 
@@ -252,17 +167,31 @@ VPDView::Draw(BRect updateRect)
 	uint16 space = (fPointSize < 2) ? 0 : ((fPointSize < 4) ? 1 : 2);
 
 #if 1
-	if(fDepth != 1) return;
+	if(fBuffer.Depth() != 1) return;
 #endif
 
 	r.Set(0, 0, fPointSize - 1, fPointSize - 1);
-	for(uint16 y = 0; y < fHeight; y++)
+	for(uint16 y = 0; y < fBuffer.Height(); y++)
 	{
-		for(uint16 x = 0; x < fWidth; x++)
+		for(uint16 x = 0; x < fBuffer.Width(); x++)
 		{
 			if(r.Intersects(updateRect))
 			{
-				rgb_color c = PixelAt(x, y);
+				rgb_color c = fBuffer.GetPixel(x, y);
+				if(c.alpha == 0)
+				{
+					c = ViewColor();
+				}
+				else switch(fBuffer.Depth())
+				{
+					case 1:
+						c.red = c.green = c.blue = (fPowerState ? 50 : 200);
+						break;
+
+					default:
+						// TODO
+						break;
+				}
 				SetHighColor(c);
 				FillRect(r, B_SOLID_HIGH);
 			}
@@ -309,83 +238,14 @@ VPDView::Draw(BRect updateRect)
 void
 VPDView::FillRectOnBuffer(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool patternVertical)
 {
-	if(fBuffer == NULL || x >= fWidth || y >= fHeight || w == 0 || h == 0) return;
-
-	if(w > fWidth - x) w = fWidth - x;
-	if(h > fHeight - y) h = fHeight - y;
-
-	if(fDepth == 1)
-	{
-		uint16 k, m;
-
-		uint8 patterns[8];
-		if(patternVertical)
-		{
-			memcpy(patterns, p.data, sizeof(patterns));
-		}
-		else for(k = 0; k < 8; k++)
-		{
-			if(p.data[k] == 0x00 || p.data[k] == 0xff)
-				patterns[k] = p.data[k];
-			else for(m = 0; m < 8; m++)
-				patterns[k] |= ((p.data[m] >> (7 - k + m)) & (0x01 << m));
-		}
-
-		uint8 offset = (y & 0x07);
-		uint8 pat, mask;
-		uint16 cy;
-
-		for(m = 0; m < h;)
-		{
-			cy = y + m;
-
-			mask = 0xff;
-			if(m == 0 && offset > 0)
-			{
-				mask <<= offset;
-				m += (8 - offset);
-			}
-			else
-			{
-				m += 8;
-			}
-
-			if(m > h)
-				mask &= ~(0xff << (8 - (m - h)));
-
-			for(k = 0; k < w; k++)
-			{
-				pat = patterns[k & 0x07];
-				if(offset > 0)
-				{
-					if(m == 8 - offset)
-					{
-						pat <<= offset;
-					}
-					else
-					{
-						pat <<= offset;
-						pat |= (patterns[k & 0x07] >> (8 - offset));
-					}
-				}
-
-				uint8 *data = fBuffer + (uint32)(x + k) + (uint32)fWidth * (uint32)(cy >> 3);
-				*data &= ~mask;
-				*data |= (pat & mask);
-			}
-		}
-	}
-	else
-	{
-		// TODO
-	}
+	fBuffer.FillRect(x, y, w, h, p, patternVertical);
 }
 
 
 void
 VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode)
 {
-	if(fBuffer == NULL || str == NULL || *str == 0 || x >= fWidth || y >= fHeight) return;
+	if(fBuffer.Bits() == NULL || str == NULL || *str == 0 || x >= fBuffer.Width() || y >= fBuffer.Height()) return;
 
 	BFont font;
 	font_height fontHeight;
@@ -395,14 +255,17 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 
 	uint16 w = (uint16)font.StringWidth(str);
 	uint16 h = (uint16)(fontHeight.ascent + fontHeight.descent);
-	if(w > fWidth - x) w = fWidth - x;
-	if(h > fHeight - y) h = fHeight - y;
+	if(w > fBuffer.Width() - x)
+		w = fBuffer.Width() - x;
+	if(h > fBuffer.Height() - y)
+		h = fBuffer.Height() - y;
+	if(w == 0 || h == 0) return;
 
 	BBitmap *bitmap = new BBitmap(BRect(0, 0, w - 1, h - 1), B_RGB32);
 	BView *view = new BView(bitmap->Bounds(), NULL, B_FOLLOW_ALL, 0);
 
 	view->SetFont(&font, B_FONT_ALL);
-	if(fDepth == 1)
+	if(fBuffer.Depth() == 1)
 		view->ForceFontAliasing(false);
 	view->SetHighColor(0, 0, 0);
 	view->SetLowColor(255, 255, 255);
@@ -418,7 +281,7 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 
 	uint32 *data;
 #ifdef ETK_MAJOR_VERSION
-	EPixmap *pixmap = new EPixmap(bitmap->Bounds(), B_RGB32);
+	EPixmap *pixmap = new EPixmap(bitmap->Bounds(), E_RGB32);
 	bitmap->Lock();
 	bitmap->GetPixmap(pixmap, bitmap->Bounds());
 	bitmap->Unlock();
@@ -437,7 +300,7 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 			{
 				rgb_color c;
 				uint32 v = *bits++;
-#ifdef B_HOST_IS_BENDIAN
+#if B_HOST_IS_BENDIAN
 				c.red = (v >> 8) & 0xff;
 				c.green = (v >> 16) & 0xff;
 				c.blue = (v >> 24) & 0xff;
@@ -447,11 +310,11 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 				c.blue = v & 0xff;
 #endif
 
-				switch(fDepth)
+				switch(fBuffer.Depth())
 				{
 					case 1:
 						if(c.red > 150 && c.green > 150 && c.blue > 150) break;
-						FillRectOnBuffer(x + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
+						fBuffer.FillRect(x + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
 						break;
 
 					default:
