@@ -29,7 +29,9 @@
  * --------------------------------------------------------------------------*/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "TMainPageView.h"
 
@@ -39,10 +41,18 @@
 
 
 TMainPageView::TMainPageView(const char *name)
-	: LBPageView(name), fTabIndex(0), f24Hours(false), fShowSeconds(false), fShowTimestamp(0)
+	: LBPageView(name),
+	  fTabIndex(0),
+	  f24Hours(false), fShowSeconds(false), fShowTimestamp(0),
+	  fInterfacesCount(0)
 {
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
 	SetNavButtonIcon(2, LBK_ICON_RIGHT);
+
+#if 1
+	// TEST
+	fInterfacesCount = 1;
+#endif
 
 	// TODO
 }
@@ -73,13 +83,19 @@ TMainPageView::GetTime(BString *strDate, BString *strTime, BString *strWeek) con
 			if(t.tm_hour < 12)
 				*strTime << (t.tm_hour < 6 ? "凌晨" : "上午");
 			else
-				*strTime << (t.tm_hour < 18 ? "下午" : "晚上");
+				*strTime << (t.tm_hour < 18 ? (t.tm_hour < 14 ? "中午" : "下午") : "晚上");
 		}
 
-		*strTime << (f24Hours ? t.tm_hour : (t.tm_hour % 12));
-		*strTime << ":" << t.tm_min;
+		char buf[16];
+		bzero(buf, sizeof(buf));
+
 		if(fShowSeconds)
-			*strTime << ":" << t.tm_sec;
+			snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
+				 (f24Hours ? t.tm_hour : (t.tm_hour % 12)), t.tm_min, t.tm_sec);
+		else
+			snprintf(buf, sizeof(buf), "%02d:%02d",
+				 (f24Hours ? t.tm_hour : (t.tm_hour % 12)), t.tm_min);
+		strTime->Append(buf);
 	}
 
 	if(strWeek != NULL)
@@ -96,46 +112,55 @@ void
 TMainPageView::Pulse()
 {
 	BRect r;
-	BString strDate, strTime, strWeek;
 
-	if(fTabIndex != 0) return;
-
-	GetTime(&strDate, &strTime, &strWeek);
-
-	if(strDate != fDate)
+	if(fTabIndex == 0) // Date And Time
 	{
-		fDate = strDate;
+		BString strDate, strTime, strWeek;
 
-		r = LBView::Bounds();
-		r.bottom = 13;
-		InvalidRect(r);
+		GetTime(&strDate, &strTime, &strWeek);
+
+		if(strDate != fDate)
+		{
+			fDate = strDate;
+
+			r = LBView::Bounds();
+			r.bottom = 13;
+			Invalidate(r);
+		}
+
+		if(strTime != fTime)
+		{
+			fTime = strTime;
+
+			r = LBView::Bounds();
+			r.top = 14;
+			r.bottom -= 14;
+			Invalidate(r);
+		}
+
+		if(strWeek != fWeek)
+		{
+			fWeek = strWeek;
+
+			r = LBView::Bounds();
+			r.top = r.bottom - 13;
+			Invalidate(r);
+		}
+
+		if(fShowTimestamp == 0 || real_time_clock_usecs() - fShowTimestamp < 2000000) return;
+		fShowTimestamp = 0;
+
+		cast_as(Looper(), LBApplication)->SetPulseRate(fShowSeconds ? 1000000 : 10000000);
+		HideNavButton(0);
+		HideNavButton(2);
 	}
-
-	if(strTime != fTime)
+	else if(fTabIndex == -1) // Board Info
 	{
-		fTime = strTime;
+		r = Bounds();
+		r.top += r.Height() / 3.f;
 
-		r = LBView::Bounds();
-		r.top = 14;
-		r.bottom -= 14;
-		InvalidRect(r);
+		Invalidate(r);
 	}
-
-	if(strWeek != fWeek)
-	{
-		fWeek = strWeek;
-
-		r = LBView::Bounds();
-		r.top = r.bottom - 13;
-		InvalidRect(r);
-	}
-
-	if(fShowTimestamp == 0 || real_time_clock_usecs() - fShowTimestamp < 2000000) return;
-	fShowTimestamp = 0;
-
-	cast_as(Looper(), LBApplication)->SetPulseRate(fShowSeconds ? 1000000 : 10000000);
-	HideNavButton(0);
-	HideNavButton(2);
 }
 
 
@@ -170,13 +195,13 @@ TMainPageView::DrawClock(BRect rect)
 
 			SetFontSize(12);
 			w1 = StringWidth(str.String());
-			SetFontSize(32);
+			SetFontSize(24);
 			w = w1 + 2 + StringWidth(fTime.String() + 6);
 
 			BPoint pt = r.Center() - BPoint(w / 2.f, 23 / 2.f);
 			DrawString(fTime.String() + 6, pt + BPoint(w1 + 2, 0), true);
 			SetFontSize(12);
-			DrawString(str.String(), pt + BPoint(0, 12), true);
+			DrawString(str.String(), pt + BPoint(0, 10), true);
 		}
 		else
 		{
@@ -200,38 +225,142 @@ TMainPageView::DrawClock(BRect rect)
 void
 TMainPageView::DrawBoardInfo(BRect rect)
 {
-#if 1
-	// TEST
-	int k;
-	BPoint pt(0, 0);
+	BFile f;
+	char buffer[128];
 
-	for(k = LBK_ICON_ID_16x16_BEGIN + 1; k < LBK_ICON_ID_16x16_END; k++)
+	BRect r = Bounds();
+	r.bottom = r.top + r.Height() / 3.f - 1.f;
+
+	SetFontSize(12);
+
+	// hostname
+	if(r.Intersects(rect))
 	{
-		DrawIcon((lbk_icon_id)k, pt);
-		pt.x += 17;
-		if(pt.x + 16 > LBView::Bounds().right)
+		BString str("主机: ");
+
+		bzero(buffer, sizeof(buffer));
+		gethostname(buffer, sizeof(buffer));
+		str.Append(buffer[0] == 0 ? "[无]" : buffer);
+
+		BRect r1 = r.InsetByCopy(2, 2);
+		DrawString(str.String(),
+			   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
+	}
+
+	// loadavg
+	r.OffsetBy(0, r.Height() + 1);
+	if(r.Intersects(rect))
+	{
+		BString str("负载: ");
+
+		if(f.SetTo("/proc/loadavg", B_READ_ONLY) == B_OK)
 		{
-			pt.x = 0;
-			pt.y += 17;
+			bzero(buffer, sizeof(buffer));
+			f.Read(buffer, sizeof(buffer));
+			f.Unset();
+
+			if(buffer[0] != 0)
+			{
+				str.Append(buffer);
+
+				int32 found = -1;
+				for(int32 k = 0; k < 4; k++)
+					found = str.FindFirst(" ", found + 1);
+				if(found > 0)
+					str.Truncate(found);
+			}
 		}
+
+		BRect r1 = r.InsetByCopy(2, 2);
+		DrawString(str.String(),
+			   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
 	}
 
-	pt.Set(0, 33);
-	for(k = LBK_ICON_ID_32x32_BEGIN + 1; k < LBK_ICON_ID_32x32_END; k++)
+	// mem
+	r.OffsetBy(0, r.Height() + 1);
+	if(r.Intersects(rect))
 	{
-		DrawIcon((lbk_icon_id)k, pt);
-		pt.x += 33;
+		BString str("内存: ");
+
+		BRect r1 = r.InsetByCopy(2, 2);
+		DrawString(str.String(),
+			   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
+		r1.left += StringWidth(str.String()) + 1;
+
+		uint32 total_mem = 0; // kB
+		uint32 free_mem = 0; // kB
+
+		if(f.SetTo("/proc/meminfo", B_READ_ONLY) == B_OK)
+		{
+			bzero(buffer, sizeof(buffer));
+			f.Read(buffer, sizeof(buffer));
+			f.Unset();
+
+			BString lines(buffer);
+			int32 offset = 0;
+
+			for(int32 k = 0 ; k < 2; k++)
+			{
+				int32 found = lines.FindFirst("\n", offset);
+				if(found <= offset) break;
+
+				BString line(lines.String() + offset, found - offset);
+				offset = found + 1;
+
+				found = line.FindLast(" ", line.Length() - 4);
+				if(found < 0) break;
+
+				line.Remove(0, found + 1);
+				line.Truncate(line.Length() - 3);
+
+				if(k == 0)
+					total_mem = (uint32)strtoul(line.String(), NULL, 10);
+				else
+					free_mem = (uint32)strtoul(line.String(), NULL, 10);
+			}
+		}
+
+		str.Truncate(0);
+		str << ((total_mem - free_mem) >> 10) << "/" << (total_mem >> 10) << " MB";
+		DrawString(str.String(),
+			   r1.Center() - BPoint(StringWidth(str.String()) / 2.f, 11 / 2.f));
+
+		r1.InsetBy(0, -1);
+		if(total_mem > free_mem)
+		{
+			StrokeRect(r1);
+			r1.InsetBy(1, 1);
+			r1.right -= r.Width() * (float)free_mem / (float)total_mem;
+		}
+		InvertRect(r1);
 	}
+}
+
+
+void
+TMainPageView::DrawCPUInfo(BRect rect)
+{
+	// TODO
+
+#if 1
+	BString aStr("CPU Info");
+
+	SetFontSize(16);
+
+	uint16 w = StringWidth(aStr.String());
+	DrawString(aStr.String(),
+		   LBView::Bounds().Center() - BPoint(w / 2.f, 15 / 2.f));
 #endif
 }
 
 
 void
-TMainPageView::DrawClientsInfo(BRect rect)
+TMainPageView::DrawInterfaceInfo(BRect rect, int32 id)
 {
+	// TODO
+
 #if 1
-	// TEST
-	BString aStr("Nothing yet");
+	BString aStr("Interface");
 
 	SetFontSize(16);
 
@@ -255,10 +384,19 @@ TMainPageView::Draw(BRect updateRect)
 	{
 		updateRect &= Bounds();
 
-		if(fTabIndex == -1)
-			DrawBoardInfo(updateRect);
-		else
-			DrawClientsInfo(updateRect);
+		switch(fTabIndex)
+		{
+			case -2:
+				DrawCPUInfo(updateRect);
+				break;
+
+			case -1:
+				DrawBoardInfo(updateRect);
+				break;
+
+			default:
+				DrawInterfaceInfo(updateRect, fTabIndex - 1);
+		}
 	}
 }
 
@@ -270,7 +408,7 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 
 	if(clicks == 0xff && key == 1) // K2 long press
 	{
-		LBAlertView *view = new LBAlertView("关机",
+		LBAlertView *view = new LBAlertView("关闭机器",
 						    "是否确定\n进行关机操作?",
 						    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
 						    B_WARNING_ALERT);
@@ -283,12 +421,12 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 	}
 
 	fShowTimestamp = real_time_clock_usecs();
-	if(fTabIndex > -1)
+	if(fTabIndex > -2)
 		ShowNavButton(0);
 	else
 		HideNavButton(0);
 
-	if(fTabIndex < 1)
+	if(fTabIndex < fInterfacesCount)
 		ShowNavButton(2);
 	else
 		HideNavButton(2);
@@ -306,11 +444,11 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 
 	if(clicks == 1)
 	{
-		if(key == 0 && fTabIndex > -1) // Left
+		if(key == 0 && fTabIndex > -2) // Left
 		{
 			fTabIndex--;
 		}
-		else if(key == 2 && fTabIndex < 1) // Right
+		else if(key == 2 && fTabIndex < fInterfacesCount) // Right
 		{
 			fTabIndex++;
 		}
@@ -339,23 +477,23 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 
 	if(saveIndex != fTabIndex)
 	{
-		if(fTabIndex == 0)
+		if(fTabIndex <= 0)
 			cast_as(Looper(), LBApplication)->SetPulseRate(500000);
 		else
 			cast_as(Looper(), LBApplication)->SetPulseRate(0);
 
 		fShowTimestamp = real_time_clock_usecs();
-		if(fTabIndex > -1)
+		if(fTabIndex > -2)
 			ShowNavButton(0);
 		else
 			HideNavButton(0);
 
-		if(fTabIndex < 1)
+		if(fTabIndex < fInterfacesCount)
 			ShowNavButton(2);
 		else
 			HideNavButton(2);
 
-		InvalidRect();
+		Invalidate();
 	}
 }
 
@@ -366,7 +504,7 @@ TMainPageView::Set24Hours(bool state)
 	if(f24Hours != state)
 	{
 		f24Hours = state;
-		InvalidRect();
+		Invalidate();
 	}
 }
 
@@ -377,7 +515,7 @@ TMainPageView::ShowSeconds(bool state)
 	if(fShowSeconds != state)
 	{
 		fShowSeconds = state;
-		InvalidRect();
+		Invalidate();
 	}
 }
 
@@ -387,8 +525,10 @@ TMainPageView::Activated(bool state)
 {
 	LBPageView::Activated(state);
 
-	if(state == false)
+	if(state == false || fTabIndex > 0)
 		cast_as(Looper(), LBApplication)->SetPulseRate(0);
+	else
+		cast_as(Looper(), LBApplication)->SetPulseRate(500000);
 }
 
 
@@ -405,18 +545,16 @@ TMainPageView::MessageReceived(BMessage *msg)
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
 			if(msg->FindInt32("which", &which) != B_OK) break;
 			if(clicks > 1) break;
+
 			view = FindStickView("PowerOffRequested");
 			if(view == NULL) break;
 			view->StandBack();
-			if(which != 1)
-			{
-				RemoveStickView(view);
-				delete view;
-				break;
-			}
+			RemoveStickView(view);
+			delete view;
 
-			view = new LBAlertView("关机",
-					       "正在关机...",
+			if(which != 1) break;
+			view = new LBAlertView("关闭机器",
+					       "正在关机，请稍候...",
 					       LBK_ICON_NONE, LBK_ICON_NONE, LBK_ICON_NONE,
 					       B_EMPTY_ALERT);
 			AddStickView(view);
@@ -426,7 +564,7 @@ TMainPageView::MessageReceived(BMessage *msg)
 			break;
 
 		case POWER_OFF_MSG:
-			if(msg->HasBool("delay") == false) // in order to show the "Shuting down..."
+			if(msg->HasBool("delay") == false) // in order to show the "Shutting down..."
 			{
 				msg->AddBool("delay", true);
 				Looper()->PostMessage(msg, this);
