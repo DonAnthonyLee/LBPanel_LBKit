@@ -61,6 +61,7 @@ public:
 
 	void		FillRect(BRect r, pattern p = B_SOLID_HIGH);
 	void		StrokeRect(BRect r, bool erase = false);
+	void		InvertRect(BRect r);
 	void		DrawString(const char *string, BPoint location, bool erase = false);
 	void		DrawIcon(const lbk_icon *icon, BPoint location);
 

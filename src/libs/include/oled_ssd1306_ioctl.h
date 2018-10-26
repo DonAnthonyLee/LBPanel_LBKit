@@ -32,6 +32,7 @@ enum {
 	_OLED_SSD1306_POWER,
 	_OLED_SSD1306_STRING_WIDTH,
 	_OLED_SSD1306_BUFFER,
+	_OLED_SSD1306_INVERT,
 };
 
 typedef struct {
@@ -76,6 +77,14 @@ typedef struct {
 	uint64_t ts;
 } _oled_ssd1306_buffer_t;
 
+typedef struct {
+	uint8_t x;
+	uint8_t y;
+	uint8_t w;
+	uint8_t h;
+	uint64_t ts;
+} _oled_ssd1306_invert_t;
+
 #define OLED_SSD1306_IOC_BASE			0x3c
 
 #define OLED_SSD1306_IOC_TIMESTAMP		_IOR(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_TIMESTAMP, _oled_ssd1306_get_ts_t)
@@ -85,6 +94,7 @@ typedef struct {
 #define OLED_SSD1306_IOC_POWER			_IOWR(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_POWER, _oled_ssd1306_power_t)
 #define OLED_SSD1306_IOC_STRING_WIDTH		_IOWR(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_STRING_WIDTH, _oled_ssd1306_string_width_t)
 #define OLED_SSD1306_IOC_BUFFER			_IOWR(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_BUFFER, _oled_ssd1306_buffer_t)
+#define OLED_SSD1306_IOC_INVERT			_IOWR(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_INVERT, _oled_ssd1306_invert_t)
 
 #endif /* __OLED_SSD1306_IOCTL_H__ */
 

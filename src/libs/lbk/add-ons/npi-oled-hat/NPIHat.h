@@ -64,6 +64,8 @@ public:
 	virtual status_t	MeasureStringWidth(const char *str,
 						   uint8 fontHeight,
 						   uint16 &width);
+	virtual status_t	InvertRect(BRect rect,
+					   bigtime_t &ts);
 	virtual status_t	GetPowerState(bool &state);
 	virtual status_t	SetPowerState(bool state,
 					      bigtime_t &ts);
