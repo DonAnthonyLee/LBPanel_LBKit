@@ -146,6 +146,33 @@ LBView::StrokeRect(BRect rect, bool erase)
 
 
 void
+LBView::InvertRect(BRect r)
+{
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->fStandingInView == this)
+			fMasterView->InvertRect(r);
+		return;
+	}
+
+	r &= LBView::Bounds();
+	if(fDev == NULL || fActivated == false || r.IsValid() == false) return;
+
+	// avoid apart-drawing
+#ifdef ETK_MAJOR_VERSION
+	r.Floor();
+#else
+	r.left = floorf(r.left);
+	r.right = floorf(r.right);
+	r.top = floorf(r.right);
+	r.bottom = floorf(r.bottom);
+#endif
+
+	fDev->InvertRect(r, fTimestamp);
+}
+
+
+void
 LBView::DrawString(const char *str, BPoint pt, bool erase)
 {
 	if(fMasterView != NULL)
