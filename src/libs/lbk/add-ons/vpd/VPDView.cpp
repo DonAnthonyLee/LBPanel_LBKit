@@ -45,7 +45,7 @@ VPDView::VPDView(BRect frame, const char* title, uint32 resizingMode)
 	  fPointSize(1),
 	  fLabel(NULL),
 	  fPowerState(true),
-	  fUpdateEnabled(true)
+	  fBufferUpdateEnabled(true)
 {
 	SetViewColor(230, 230, 230);
 	SetLowColor(230, 230, 230);
@@ -145,20 +145,43 @@ VPDView::ResizeBuffer(uint16 w, uint16 h, lbk_color_space cspace)
 }
 
 
+BRect
+VPDView::DrawingArea(uint16 x, uint16 y, uint16 w, uint16 h) const
+{
+	BRect r;
+
+	if(x < fBuffer.Width() && y < fBuffer.Height())
+	{
+		if(w > fBuffer.Width() - x)
+			w = fBuffer.Width() - x;
+		if(h > fBuffer.Height() - y)
+			h = fBuffer.Height() - y;
+
+		if(w > 0 && h > 0)
+		{
+			uint32 space = (fPointSize < 2) ? 0 : ((fPointSize < 4) ? 1 : 2);
+
+			r.left = (float)(x * ((uint32)fPointSize + space));
+			r.top = (float)(y * ((uint32)fPointSize + space));
+			r.right = r.left + (float)((uint32)w * (uint32)fPointSize + (uint32)(w - 1) * space - 1);
+			r.bottom = r.top + (float)((uint32)h * (uint32)fPointSize + (uint32)(h - 1) * space - 1);
+		}
+	}
+
+	return r;
+}
+
+
 void
 VPDView::GetPreferredSize(float *width, float *height)
 {
-	float w = 0, h = 0;
-	float space = (fPointSize < 2) ? 0 : ((fPointSize < 4) ? 1 : 2);
+	BRect r = DrawingArea(0, 0, fBuffer.Width(), fBuffer.Height());
 
-	if(fBuffer.Width() > 0)
-		w = (float)fBuffer.Width() * (float)fPointSize + (float)(fBuffer.Width() - 1) * (float)space;
+	if(width != NULL)
+		*width = r.IsValid() ? r.Width() : 0;
 
-	if(fBuffer.Height() > 0)
-		h = (float)fBuffer.Height() * (float)fPointSize + (float)(fBuffer.Height() - 1) * (float)space;
-
-	if(width != NULL) *width = w;
-	if(height != NULL) *height = h;
+	if(height != NULL)
+		*height = r.IsValid() ? r.Height() : 0;
 }
 
 
@@ -237,17 +260,23 @@ VPDView::Draw(BRect updateRect)
 }
 
 
-void
+BRect
 VPDView::FillRectOnBuffer(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool patternVertical)
 {
 	fBuffer.FillRect(x, y, w, h, p, patternVertical);
+
+	return DrawingArea(x, y, w, h);
 }
 
 
-void
+BRect
 VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode)
 {
-	if(fBuffer.Bits() == NULL || str == NULL || *str == 0 || x >= fBuffer.Width() || y >= fBuffer.Height()) return;
+	BRect retVal;
+
+	if(fBuffer.Bits() == NULL ||
+	   str == NULL || *str == 0 ||
+	   x >= fBuffer.Width() || y >= fBuffer.Height()) return retVal;
 
 	BFont font;
 	font_height fontHeight;
@@ -261,7 +290,9 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 		w = fBuffer.Width() - x;
 	if(h > fBuffer.Height() - y)
 		h = fBuffer.Height() - y;
-	if(w == 0 || h == 0) return;
+
+	retVal = DrawingArea(x, y, w, h);
+	if(retVal.IsValid() == false) return retVal;
 
 	BBitmap *bitmap = new BBitmap(BRect(0, 0, w - 1, h - 1), B_RGB32);
 	BView *view = new BView(bitmap->Bounds(), NULL, B_FOLLOW_ALL, 0);
@@ -331,6 +362,8 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 	delete pixmap;
 #endif
 	delete bitmap;
+
+	return retVal;
 }
 
 
@@ -353,36 +386,48 @@ VPDView::MessageReceived(BMessage *msg)
 				bool update;
 
 				if(msg->FindBool("update", &update) != B_OK) break;
-				if(fUpdateEnabled == update) break;
+				if(fBufferUpdateEnabled == update) break;
 
-				fUpdateEnabled = update;
-				if(fUpdateEnabled)
+				fBufferUpdateEnabled = update;
+				if(fBufferUpdateEnabled && fBufferUpdateRect.IsValid())
 				{
-					// TODO
-					Invalidate();
+					Invalidate(fBufferUpdateRect);
+					fBufferUpdateRect = BRect();
 				}
 			}
 			break;
 
 		case VPD_MSG_FILL_RECT:
+		case VPD_MSG_INVERT_RECT:
 			{
 				BRect r;
 				pattern p;
 				bool vpat;
 
 				if(msg->FindRect("rect", &r) != B_OK) break;
-				if(msg->FindInt64("pattern", (int64*)&p) != B_OK) break;
-				if(msg->FindBool("vpattern", &vpat) != B_OK) break;
+				if(msg->what == VPD_MSG_FILL_RECT)
+				{
+					if(msg->FindInt64("pattern", (int64*)&p) != B_OK) break;
+					if(msg->FindBool("vpattern", &vpat) != B_OK) break;
+				}
 
 				r &= BRect(0, 0, fBuffer.Width() - 1, fBuffer.Height() - 1);
 				if(r.IsValid() == false) break;
 
-				FillRectOnBuffer(r.left, r.top, r.Width() + 1, r.Height() + 1, p, vpat);
-				if(fUpdateEnabled)
-				{
-					// TODO
-					Invalidate();
-				}
+				if(msg->what == VPD_MSG_FILL_RECT)
+					fBuffer.FillRect(r.left, r.top, r.Width() + 1, r.Height() + 1, p, vpat);
+				else
+					fBuffer.InvertRect(r.left, r.top, r.Width() + 1, r.Height() + 1);
+
+				r = DrawingArea(r.left, r.top, r.Width() + 1, r.Height() + 1);
+				if(r.IsValid() == false) break;
+
+				if(fBufferUpdateEnabled)
+					Invalidate(r);
+				else if(fBufferUpdateRect.IsValid())
+					fBufferUpdateRect |= r;
+				else
+					fBufferUpdateRect = r;
 			}
 			break;
 
@@ -402,12 +447,15 @@ VPDView::MessageReceived(BMessage *msg)
 				if(BRect(0, 0, fBuffer.Width() - 1, fBuffer.Height() - 1).Contains(pt) == false) break;
 				if(SetFontHeight(fontHeight) == false) break;
 
-				DrawStringOnBuffer(str.String(), pt.x, pt.y, erase);
-				if(fUpdateEnabled)
-				{
-					// TODO
-					Invalidate();
-				}
+				BRect r = DrawStringOnBuffer(str.String(), pt.x, pt.y, erase);
+				if(r.IsValid() == false) break;
+
+				if(fBufferUpdateEnabled)
+					Invalidate(r);
+				else if(fBufferUpdateRect.IsValid())
+					fBufferUpdateRect |= r;
+				else
+					fBufferUpdateRect = r;
 			}
 			break;
 

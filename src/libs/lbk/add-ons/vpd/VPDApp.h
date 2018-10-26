@@ -50,6 +50,7 @@ public:
 #define VPD_MSG_POWER_STATE	'vmgp'
 #define VPD_MSG_ENABLE_UPDATE	'vmgu'
 #define VPD_MSG_FILL_RECT	'vmgr'
+#define VPD_MSG_INVERT_RECT	'vmgi'
 #define VPD_MSG_DRAW_STRING	'vmgs'
 #define VPD_MSG_STRING_WIDTH	'vmgw'
 

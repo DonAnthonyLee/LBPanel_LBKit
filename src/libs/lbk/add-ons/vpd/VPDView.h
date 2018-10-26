@@ -52,10 +52,10 @@ public:
 	size_t			BufferLength() const;
 	void			ResizeBuffer(uint16 w, uint16 h, lbk_color_space cspace);
 
-	void			FillRectOnBuffer(uint16 x, uint16 y,
+	BRect			FillRectOnBuffer(uint16 x, uint16 y,
 						 uint16 w, uint16 h,
 						 pattern p, bool patternVertical = false);
-	void			DrawStringOnBuffer(const char *str,
+	BRect			DrawStringOnBuffer(const char *str,
 						   uint16 x, uint16 y,
 						   bool erase_mode = false);
 
@@ -68,7 +68,10 @@ private:
 	uint8 fPointSize;
 	char *fLabel;
 	bool fPowerState;
-	bool fUpdateEnabled;
+	bool fBufferUpdateEnabled;
+	BRect fBufferUpdateRect;
+
+	BRect			DrawingArea(uint16 x, uint16 y, uint16 w, uint16 h) const;
 };
 
 #endif /* __cplusplus */

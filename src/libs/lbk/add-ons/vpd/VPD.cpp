@@ -53,7 +53,8 @@ LBVPD::LBVPD()
 	  fHeight(64),
 	  fKeysCount(3),
 	  fState(true),
-	  fTimestamp(0)
+	  fTimestamp(0),
+	  fBuffer(NULL)
 {
 #ifdef LBK_ENABLE_MORE_FEATURES
 	fDepth = 1;
@@ -103,6 +104,9 @@ LBVPD::~LBVPD()
 		if(looper != NULL)
 			looper->Quit();
 	}
+
+	if(fBuffer != NULL)
+		free(fBuffer);
 
 #if 0
 	/*
@@ -388,6 +392,21 @@ LBVPD::MeasureStringWidth(const char *str,
 
 
 status_t
+LBVPD::InvertRect(BRect rect,
+		  bigtime_t &ts)
+{
+	BMessage msg(VPD_MSG_INVERT_RECT);
+	msg.AddRect("rect", rect);
+
+	status_t st = fMsgr.SendMessage(&msg);
+	if(st == B_OK)
+		ts = fTimestamp = real_time_clock_usecs();
+
+	return st;
+}
+
+
+status_t
 LBVPD::GetPowerState(bool &state)
 {
 	state = fState;
@@ -458,6 +477,8 @@ LBVPD::EnableUpdate()
 status_t
 LBVPD::MapBuffer(void **buf)
 {
+	if(fBuffer != NULL) return B_ERROR;
+
 	// TODO
 	return B_ERROR;
 }
@@ -466,14 +487,20 @@ LBVPD::MapBuffer(void **buf)
 status_t
 LBVPD::UnmapBuffer()
 {
-	// TODO
-	return B_ERROR;
+	if(fBuffer == NULL) return B_ERROR;
+
+	free(fBuffer);
+	fBuffer = NULL;
+
+	return B_OK;
 }
 
 
 status_t
 LBVPD::Flush(bigtime_t &ts)
 {
+	if(fBuffer == NULL) return B_ERROR;
+
 	// TODO
 	return B_ERROR;
 }
