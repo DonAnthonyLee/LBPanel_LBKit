@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 	BList cfg;
 	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK)
 	{
-		printf("Unable to open config file (%s), use default settings !\n", path_conf.Path());
+		fprintf(stderr, "Unable to open config file (%s), use default settings !\n", path_conf.Path());
 
 		cfg.AddItem(new BString("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so"));
 		cfg.AddItem(new BString("IPC=LBPanel"));
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 		   f.Read(buf, fsize) != (ssize_t)fsize)
 		{
 			if(buf != NULL) free(buf);
-			fprintf(stdout, "Unable to read config file (%s) !\n", path_conf.Path());
+			fprintf(stderr, "Unable to read config file (%s) !\n", path_conf.Path());
 			exit(-1);
 		}
 
@@ -130,7 +130,6 @@ int main(int argc, char **argv)
 	app->Lock();
 	app->Quit();
 
-	printf("End\n");
 	return 0;
 }
 
