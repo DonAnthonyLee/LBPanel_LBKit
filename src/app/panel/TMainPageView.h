@@ -62,11 +62,13 @@ private:
 	BString fTime;
 	BString fWeek;
 	int32 fInterfacesCount;
+	int32 fCPUSCount;
+	bigtime_t *fCPUTime;
 
 	void GetTime(BString*, BString*, BString*) const;
 
 	void DrawBoardInfo(BRect r);
-	void DrawClock(BRect r);
+	void DrawDateAndTime(BRect r);
 	void DrawCPUInfo(BRect r);
 	void DrawInterfaceInfo(BRect r, int32 id);
 };
