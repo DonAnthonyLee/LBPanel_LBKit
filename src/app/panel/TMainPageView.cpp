@@ -35,6 +35,12 @@
 
 #include "TMainPageView.h"
 
+#ifdef ETK_MAJOR_VERSION
+	#define BDirectory		EDirectory
+#endif
+
+// TODO: Specified by config
+#define BOARD_CPU_THERMAL_ZONE		"/sys/devices/virtual/thermal/thermal_zone0"
 
 #define POWER_REQUESTED_CONFIRM_MSG	'pwof'
 #define POWER_OFF_MSG			'pwOF'
@@ -44,10 +50,18 @@ TMainPageView::TMainPageView(const char *name)
 	: LBPageView(name),
 	  fTabIndex(0),
 	  f24Hours(false), fShowSeconds(false), fShowTimestamp(0),
-	  fInterfacesCount(0)
+	  fInterfacesCount(0),
+	  fCPUTime(NULL)
 {
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
 	SetNavButtonIcon(2, LBK_ICON_RIGHT);
+
+	BDirectory dir("/sys/bus/cpu");
+	if((fCPUSCount = dir.CountEntries() - 1) > 0)
+	{
+		fCPUTime = (bigtime_t*)malloc(sizeof(bigtime_t) * fCPUSCount * 2);
+		bzero(fCPUTime, sizeof(bigtime_t) * fCPUSCount * 2);
+	}
 
 #if 1
 	// TEST
@@ -57,8 +71,11 @@ TMainPageView::TMainPageView(const char *name)
 	// TODO
 }
 
+
 TMainPageView::~TMainPageView()
 {
+	if(fCPUTime != NULL)
+		free(fCPUTime);
 }
 
 
@@ -161,11 +178,15 @@ TMainPageView::Pulse()
 
 		Invalidate(r);
 	}
+	else if(fTabIndex == -2) // CPU Info
+	{
+		Invalidate(Bounds());
+	}
 }
 
 
 void
-TMainPageView::DrawClock(BRect rect)
+TMainPageView::DrawDateAndTime(BRect rect)
 {
 	uint16 w;
 
@@ -217,7 +238,8 @@ TMainPageView::DrawClock(BRect rect)
 	{
 		SetFontSize(12);
 		w = StringWidth(fWeek.String());
-		DrawString(fWeek.String(), BPoint(r.Center().x - w / 2.f, r.top + 1));
+		DrawString(fWeek.String(),
+			   r.Center() - BPoint(w / 2.f, 11 / 2.f));
 	}
 }
 
@@ -225,10 +247,24 @@ TMainPageView::DrawClock(BRect rect)
 void
 TMainPageView::DrawBoardInfo(BRect rect)
 {
+	BString str;
+	uint16 w;
 	BFile f;
 	char buffer[128];
 
-	BRect r = Bounds();
+	// Title
+	BRect r = LBView::Bounds();
+	r.top = Bounds().bottom + 1;
+	if(r.Intersects(rect))
+	{
+		str.SetTo("机器信息");
+
+		w = StringWidth(str.String());
+		DrawString(str.String(),
+			   r.Center() - BPoint(w / 2.f, 11 / 2.f));
+	}
+
+	r = Bounds();
 	r.bottom = r.top + r.Height() / 3.f - 1.f;
 
 	SetFontSize(12);
@@ -236,7 +272,7 @@ TMainPageView::DrawBoardInfo(BRect rect)
 	// hostname
 	if(r.Intersects(rect))
 	{
-		BString str("主机: ");
+		str.SetTo("主机: ");
 
 		bzero(buffer, sizeof(buffer));
 		gethostname(buffer, sizeof(buffer));
@@ -251,7 +287,7 @@ TMainPageView::DrawBoardInfo(BRect rect)
 	r.OffsetBy(0, r.Height() + 1);
 	if(r.Intersects(rect))
 	{
-		BString str("负载: ");
+		str.SetTo("负载: ");
 
 		if(f.SetTo("/proc/loadavg", B_READ_ONLY) == B_OK)
 		{
@@ -280,7 +316,7 @@ TMainPageView::DrawBoardInfo(BRect rect)
 	r.OffsetBy(0, r.Height() + 1);
 	if(r.Intersects(rect))
 	{
-		BString str("内存: ");
+		str.SetTo("内存: ");
 
 		BRect r1 = r.InsetByCopy(2, 2);
 		DrawString(str.String(),
@@ -340,17 +376,206 @@ TMainPageView::DrawBoardInfo(BRect rect)
 void
 TMainPageView::DrawCPUInfo(BRect rect)
 {
-	// TODO
+	BString str;
+	uint16 w;
+	BFile f;
+	char buffer[4096];
 
-#if 1
-	BString aStr("CPU Info");
+	SetFontSize(12);
 
-	SetFontSize(16);
+	// Title
+	BRect r = LBView::Bounds();
+	r.top = Bounds().bottom + 1;
+	if(r.Intersects(rect))
+	{
+		str.SetTo("CPU 信息");
 
-	uint16 w = StringWidth(aStr.String());
-	DrawString(aStr.String(),
-		   LBView::Bounds().Center() - BPoint(w / 2.f, 15 / 2.f));
-#endif
+		w = StringWidth(str.String());
+		DrawString(str.String(),
+			   r.Center() - BPoint(w / 2.f, 11 / 2.f));
+	}
+
+	if(fCPUSCount <= 0)
+	{
+		str.SetTo("无法获取 CPU 信息!");
+
+		w = StringWidth(str.String());
+		DrawString(str.String(),
+			   Bounds().Center() - BPoint(w / 2.f, 11 / 2.f));
+
+		return;
+	}
+
+	r = Bounds();
+	r.right = r.left + r.Width() / (fCPUSCount + 1) - 1.f;
+
+	// CPU Temperature
+	if(r.Intersects(rect))
+	{
+		int trip_points[4];
+		int trip_points_count = 0;
+		int trip_point_max = 0;
+
+		for(size_t k = 0; k < sizeof(trip_points) / sizeof(trip_points[0]); k++)
+		{
+			BString p(BOARD_CPU_THERMAL_ZONE);
+			p << "/trip_point_" << k << "_temp";
+			if(f.SetTo(p.String(), B_READ_ONLY) != B_OK) break;
+
+			bzero(buffer, sizeof(buffer));
+			f.Read(buffer, sizeof(buffer));
+			f.Unset();
+
+			if(buffer[0] == 0) break;
+			trip_points[trip_points_count] = atoi(buffer) / 1000;
+			if(trip_points[trip_points_count] > trip_point_max)
+				trip_point_max = trip_points[trip_points_count];
+
+			trip_points_count++;
+		}
+		if(trip_points_count == 0 || trip_point_max <= 0) // error
+		{
+			trip_points_count = 1;
+			trip_point_max = trip_points[0] = 100;
+		}
+
+		int cur_temp = 0;
+		if(f.SetTo(BOARD_CPU_THERMAL_ZONE "/temp", B_READ_ONLY) == B_OK)
+		{
+			bzero(buffer, sizeof(buffer));
+			f.Read(buffer, sizeof(buffer));
+			f.Unset();
+
+			if(buffer[0] != 0)
+				cur_temp = atoi(buffer) / 1000;
+		}
+
+		// bar
+		BRect r1 = r.InsetByCopy((r.Width() - 5) / 2.f, 1);
+		r1.bottom -= 11;
+		StrokeRect(r1);
+		for(int k = 0; k < trip_points_count; k++)
+		{
+			if(trip_points[k] <= 0 || trip_points[k] == trip_point_max) continue;
+
+			float offset = (float)(trip_point_max - trip_points[k]) / (float)trip_point_max;
+			offset *= r1.Height();
+
+			FillRect(BRect(r1.LeftTop() + BPoint(0, offset), r1.RightTop() + BPoint(0, offset)));
+		}
+		r1.InsetBy(1, 1);
+		if(cur_temp < trip_point_max)
+			r1.top += r1.Height() * (float)(trip_point_max - max_c(cur_temp, 10)) / (float)trip_point_max;
+		InvertRect(r1);
+
+		// text
+		r1 = r;
+		r1.top = r1.bottom - 11;
+		str.Truncate(0);
+		str << cur_temp << "°C";
+		if((w = StringWidth(str.String())) > r.Width())
+		{
+			str.Truncate(0);
+			str << cur_temp << "C";
+			if((w = StringWidth(str.String())) > r.Width())
+			{
+				str.Truncate(0);
+				str << cur_temp;
+				w = StringWidth(str.String());
+			}
+		}
+
+		DrawString(str.String(),
+			   r1.Center() - BPoint(w / 2.f, 11 / 2.f));
+	}
+
+
+	if(f.SetTo("/proc/stat", B_READ_ONLY) == B_OK)
+	{
+		bzero(buffer, sizeof(buffer));
+		f.Read(buffer, sizeof(buffer));
+		f.Unset();
+
+		if(buffer[0] == 0)
+		{
+			str.SetTo("错误!");
+
+			r.left += r.Width() + 1;
+			r.right = Bounds().right;
+			w = StringWidth(str.String());
+			DrawString(str.String(),
+				   r.Center() - BPoint(w / 2.f, 11 / 2.f));
+
+			return;
+		}
+	}
+
+	BString strStat(buffer);
+	for(int32 k = 0; k < fCPUSCount; k++)
+	{
+		r.OffsetBy(r.Width() + 1, 0);
+		if(r.Intersects(rect) == false) continue;
+
+		str.SetTo("cpu");
+		str << k << " ";
+
+		int32 offset = strStat.FindFirst(str.String());
+		if(offset < 0) break;
+		offset += str.Length();
+
+		int32 found = strStat.FindFirst('\n', offset);
+		if(found < 0) break;
+
+		str.SetTo(strStat.String() + offset, found - offset);
+		offset = 0;
+
+		int percent = 0;
+		bigtime_t idle = 0, total = 0;
+		for(int m = 0; m < 7; m++)
+		{
+			found = str.FindFirst(' ', offset);
+			if(found <= offset) break;
+
+			BString tStr(str.String() + offset, found - offset);
+			offset = found + 1;
+
+			bigtime_t t = (bigtime_t)atoll(tStr.String());
+			total += t;
+			if(m == 3) idle = t;
+		}
+		if(fCPUTime[k * 2] < total && fCPUTime[k * 2 + 1] < idle)
+			percent = 100 - (int)((bigtime_t)100 * (idle - fCPUTime[k * 2 + 1]) / (total - fCPUTime[k * 2]));
+		fCPUTime[k * 2] = total;
+		fCPUTime[k * 2 + 1] = idle;
+
+		// bar
+		BRect r1 = r.InsetByCopy((r.Width() - 5) / 2.f, 1);
+		r1.bottom -= 11;
+		StrokeRect(r1);
+		r1.InsetBy(1, 1);
+		r1.top += r1.Height() * (float)(100 - percent) / 100.f;
+		FillRect(r1);
+
+		// text
+		r1 = r;
+		r1.top = r1.bottom - 11;
+		str.SetTo("核");
+		str << k + 1;
+		if((w = StringWidth(str.String())) > r.Width())
+		{
+			str.SetTo("U");
+			str << k + 1;
+			if((w = StringWidth(str.String())) > r.Width())
+			{
+				str.Truncate(0);
+				str << k + 1;
+				w = StringWidth(str.String());
+			}
+		}
+
+		DrawString(str.String(),
+			   r1.Center() - BPoint(w / 2.f, 11 / 2.f));
+	}
 }
 
 
@@ -376,27 +601,22 @@ TMainPageView::Draw(BRect updateRect)
 {
 	LBPageView::Draw(updateRect);
 
-	if(fTabIndex == 0)
+	switch(fTabIndex)
 	{
-		DrawClock(updateRect);
-	}
-	else
-	{
-		updateRect &= Bounds();
+		case -2:
+			DrawCPUInfo(updateRect);
+			break;
 
-		switch(fTabIndex)
-		{
-			case -2:
-				DrawCPUInfo(updateRect);
-				break;
+		case -1:
+			DrawBoardInfo(updateRect);
+			break;
 
-			case -1:
-				DrawBoardInfo(updateRect);
-				break;
+		case 0:
+			DrawDateAndTime(updateRect);
+			break;
 
-			default:
-				DrawInterfaceInfo(updateRect, fTabIndex - 1);
-		}
+		default:
+			DrawInterfaceInfo(updateRect, fTabIndex - 1);
 	}
 }
 
@@ -478,7 +698,7 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 	if(saveIndex != fTabIndex)
 	{
 		if(fTabIndex <= 0)
-			cast_as(Looper(), LBApplication)->SetPulseRate(500000);
+			cast_as(Looper(), LBApplication)->SetPulseRate(fTabIndex == 0 ? 500000 : 1000000);
 		else
 			cast_as(Looper(), LBApplication)->SetPulseRate(0);
 
@@ -528,7 +748,7 @@ TMainPageView::Activated(bool state)
 	if(state == false || fTabIndex > 0)
 		cast_as(Looper(), LBApplication)->SetPulseRate(0);
 	else
-		cast_as(Looper(), LBApplication)->SetPulseRate(500000);
+		cast_as(Looper(), LBApplication)->SetPulseRate(fTabIndex == 0 ? 500000 : 1000000);
 }
 
 
