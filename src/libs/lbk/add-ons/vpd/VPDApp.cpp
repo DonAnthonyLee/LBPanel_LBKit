@@ -158,6 +158,7 @@ VPDWindow::MessageReceived(BMessage *msg)
 		case VPD_MSG_POWER_STATE:
 		case VPD_MSG_ENABLE_UPDATE:
 		case VPD_MSG_FILL_RECT:
+		case VPD_MSG_INVERT_RECT:
 		case VPD_MSG_DRAW_STRING:
 		case VPD_MSG_STRING_WIDTH:
 			if((view = FindView("screen")) == NULL) break;
@@ -190,13 +191,11 @@ VPDButton::ValueChanged()
 {
 	BMessage msg(VPD_MSG_KEY);
 	msg.AddInt8("id", (int8)fID);
-	msg.AddInt64("when", real_time_clock_usecs());
 	msg.AddBool("state", Value() == B_CONTROL_ON);
 
 	if(Value() == B_CONTROL_ON && fKeyMsgRunner == NULL)
 	{
 		BMessenger msgr(Looper(), Looper());
-		msg.RemoveInt64("when");
 		fKeyMsgRunner = new BMessageRunner(msgr, &msg, 200000);
 	}
 	else if(Value() == B_CONTROL_OFF && fKeyMsgRunner != NULL)
@@ -204,6 +203,7 @@ VPDButton::ValueChanged()
 		delete fKeyMsgRunner;
 		fKeyMsgRunner = NULL;
 
+		msg.AddInt64("when", real_time_clock_usecs());
 		Looper()->PostMessage(&msg);
 	}
 }
