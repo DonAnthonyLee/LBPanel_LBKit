@@ -77,6 +77,13 @@ LBPanelBuffer::FreeBitsData(void *data, size_t len)
 }
 
 
+void
+LBPanelBuffer::CopyBitsData(void *dest, const void *src, size_t len)
+{
+	memcpy(dest, src, len);
+}
+
+
 bool
 LBPanelBuffer::ResizeTo(uint16 w, uint16 h, lbk_color_space cspace)
 {
@@ -133,6 +140,18 @@ size_t
 LBPanelBuffer::BitsLength() const
 {
 	return fBitsLength;
+}
+
+
+void
+LBPanelBuffer::SetBits(const void *data, size_t offset, size_t length)
+{
+	if(data == NULL || fBits == NULL || offset >= fBitsLength) return;
+
+	if(length > fBitsLength - offset)
+		length = fBitsLength - offset;
+
+	CopyBitsData((void*)((uint8*)fBits + offset), data, length);
 }
 
 
@@ -342,7 +361,8 @@ LBPanelBuffer::FillRect(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool 
 			if(m > h)
 				mask &= ~(0xff << (8 - (m - h)));
 
-			for(k = 0; k < w; k++)
+			uint8 *data = (uint8*)fBits + (uint32)x + (uint32)fWidth * (uint32)(cy >> 3);
+			for(k = 0; k < w; k++, data++)
 			{
 				pat = patterns[k & 0x07];
 				if(offset > 0)
@@ -352,9 +372,60 @@ LBPanelBuffer::FillRect(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool 
 						pat |= (patterns[k & 0x07] >> (8 - offset));
 				}
 
-				uint8 *data = (uint8*)fBits + (uint32)(x + k) + (uint32)fWidth * (uint32)(cy >> 3);
 				*data &= ~mask;
 				*data |= (pat & mask);
+			}
+		}
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+
+void
+LBPanelBuffer::InvertRect(uint16 x, uint16 y, uint16 w, uint16 h)
+{
+	if(fBits == NULL || x >= fWidth || y >= fHeight || w == 0 || h == 0) return;
+
+	if(w > fWidth - x)
+		w = fWidth - x;
+	if(h > fHeight - y)
+		h = fHeight - y;
+
+	if(fColorSpace == LBK_CS_MONO_Y)
+	{
+		uint16 k, m;
+
+		uint8 offset = (y & 0x07);
+		uint8 mask;
+		uint16 cy;
+
+		for(m = 0; m < h;)
+		{
+			cy = y + m;
+
+			mask = 0xff;
+			if(m == 0 && offset > 0)
+			{
+				mask <<= offset;
+				m += (8 - offset);
+			}
+			else
+			{
+				m += 8;
+			}
+
+			if(m > h)
+				mask &= ~(0xff << (8 - (m - h)));
+
+			uint8 *data = (uint8*)fBits + (uint32)x + (uint32)fWidth * (uint32)(cy >> 3);
+			for(k = 0; k < w; k++, data++)
+			{
+				uint8 v = *data & mask;
+				*data &= ~mask;
+				*data |= ~v;
 			}
 		}
 	}
