@@ -61,12 +61,14 @@ private:
 	BString fDate;
 	BString fTime;
 	BString fWeek;
+	int32 fInterfacesCount;
 
 	void GetTime(BString*, BString*, BString*) const;
 
 	void DrawBoardInfo(BRect r);
 	void DrawClock(BRect r);
-	void DrawClientsInfo(BRect r);
+	void DrawCPUInfo(BRect r);
+	void DrawInterfaceInfo(BRect r, int32 id);
 };
 
 #endif /* __cplusplus */

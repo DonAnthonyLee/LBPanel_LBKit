@@ -34,6 +34,12 @@
 #define MSG_TURN_OFF_SCREEN	'mtos'
 #define MSG_REBOOT		'mreb'
 #define MSG_POWER_OFF		'mpwr'
+#define MSG_ABOUT		'mabo'
+#define MSG_EXIT		'mext'
+
+#define MSG_POWER_CONFIRM_MSG	'mpwc'
+#define MSG_REBOOT_GO		'mrGO'
+#define MSG_POWER_OFF_GO	'mpOF'
 
 
 TMenuPageView::TMenuPageView(const char *name)
@@ -42,18 +48,21 @@ TMenuPageView::TMenuPageView(const char *name)
 	AddItem(new LBMenuItem("关闭屏幕", new BMessage(MSG_TURN_OFF_SCREEN), LBK_ICON_SCREEN));
 	AddItem(new LBMenuItem("重新启动", new BMessage(MSG_REBOOT), LBK_ICON_REBOOT));
 	AddItem(new LBMenuItem("关闭机器", new BMessage(MSG_POWER_OFF), LBK_ICON_POWER_OFF));
+	AddItem(new LBMenuItem("简介", new BMessage(MSG_ABOUT), LBK_ICON_ABOUT));
+	AddItem(new LBMenuItem("退出", new BMessage(MSG_EXIT), LBK_ICON_EXIT));
 }
 
 
 TMenuPageView::~TMenuPageView()
 {
-	// TODO
 }
 
 
 void
 TMenuPageView::KeyUp(uint8 key, uint8 clicks)
 {
+	LBMenuView::KeyUp(key, clicks);
+
 	if(clicks > 1 && clicks != 0xff)
 	{
 		if(key == 0) // Left
@@ -62,14 +71,17 @@ TMenuPageView::KeyUp(uint8 key, uint8 clicks)
 			SwitchToNextPage();
 		return;
 	}
-
-	LBMenuView::KeyUp(key, clicks);
 }
 
 
 void
 TMenuPageView::MessageReceived(BMessage *msg)
 {
+	int32 which = -1;
+	uint8 clicks = 0;
+	LBAlertView *view;
+	bool isPowerOff;
+
 	switch(msg->what)
 	{
 		case MSG_TURN_OFF_SCREEN:
@@ -78,13 +90,63 @@ TMenuPageView::MessageReceived(BMessage *msg)
 			break;
 
 		case MSG_REBOOT:
-			// TODO
-			printf("[TMenuPageView]: Reboot requested.\n");
+		case MSG_POWER_OFF:
+			view = new LBAlertView((msg->what == MSG_REBOOT) ? "重新启动" : "关闭机器",
+					       (msg->what == MSG_REBOOT) ? "是否确定\n进行重启操作?" : "是否确定\n进行关机操作?",
+					       LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
+					       B_WARNING_ALERT);
+			view->SetInvoker(new BInvoker(new BMessage(MSG_POWER_CONFIRM_MSG), this));
+			view->SetName((msg->what == MSG_REBOOT) ? "RebootRequested" : "PowerOffRequested");
+			AddStickView(view);
+			view->StandIn();
+			printf("[TMainPageView]: %s requested.\n", (msg->what == MSG_REBOOT) ? "Reboot" : "Power off");
 			break;
 
-		case MSG_POWER_OFF:
-			printf("[TMenuPageView]: Power off requested.\n");
+		case MSG_POWER_CONFIRM_MSG:
+			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
+			if(msg->FindInt32("which", &which) != B_OK) break;
+			if(clicks > 1) break;
+
+			view = cast_as(StickViewAt(0), LBAlertView);
+			if(view != StandingInView()) break;
+			isPowerOff = (BString("PowerOffRequested") == view->Name());
+
+			view->StandBack();
+			RemoveStickView(view);
+			delete view;
+
+			if(which != 1) break;
+			view = new LBAlertView(isPowerOff ? "关闭机器" : "重新启动",
+					       isPowerOff ? "正在关机，请稍候..." : "正在重启，请稍候...",
+					       LBK_ICON_NONE, LBK_ICON_NONE, LBK_ICON_NONE,
+					       B_EMPTY_ALERT);
+			AddStickView(view);
+			view->StandIn();
+
+			Looper()->PostMessage(isPowerOff ? MSG_POWER_OFF_GO : MSG_REBOOT_GO, this);
+			break;
+
+		case MSG_REBOOT_GO:
+		case MSG_POWER_OFF_GO:
+			if(msg->HasBool("delay") == false) // in order to show the "Shutting down..."
+			{
+				msg->AddBool("delay", true);
+				Looper()->PostMessage(msg, this);
+				break;
+			}
+
+			printf("[TMainPageView]: Going to %s !\n", (msg->what == MSG_REBOOT_GO) ? "reboot" : "power off");
+			system((msg->what == MSG_REBOOT_GO) ? "reboot" : "poweroff");
+			break;
+
+		case MSG_ABOUT:
 			// TODO
+			printf("[TMenuPageView]: About requested.\n");
+			break;
+
+		case MSG_EXIT:
+			printf("[TMenuPageView]: Exiting...\n");
+			Looper()->PostMessage(LBK_QUIT_REQUESTED);
 			break;
 
 		default:
