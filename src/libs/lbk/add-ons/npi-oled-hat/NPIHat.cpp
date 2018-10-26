@@ -243,6 +243,28 @@ NPIHat::MeasureStringWidth(const char *str,
 
 
 status_t
+NPIHat::InvertRect(BRect r,
+		   bigtime_t &ts)
+{
+	_oled_ssd1306_invert_t data;
+
+	if(r.IsValid() == false) return B_BAD_VALUE;
+	if(r.left < 0 || r.top < 0 || r.Width() >= OLED_SCREEN_WIDTH || r.Height() >= OLED_SCREEN_HEIGHT) return B_BAD_VALUE;
+
+	bzero(&data, sizeof(data));
+
+	data.x = (uint8_t)r.left;
+	data.y = (uint8_t)r.top;
+	data.w = (uint8_t)(r.Width() + 1);
+	data.h = (uint8_t)(r.Height() + 1);
+
+	if(ioctl(fOLEDFD, OLED_SSD1306_IOC_INVERT, &data) != 0) return B_ERROR;
+	ts = data.ts;
+	return B_OK;
+}
+
+
+status_t
 NPIHat::GetPowerState(bool &state)
 {
 	_oled_ssd1306_power_t data;
