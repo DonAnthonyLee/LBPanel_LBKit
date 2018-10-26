@@ -57,6 +57,8 @@ public:
 	void*			Bits() const;
 	size_t			BitsLength() const;
 
+	void			SetBits(const void *data, size_t offset, size_t length);
+
 	uint16			Width() const;
 	uint16			Height() const;
 	BRect			Bounds() const;
@@ -78,6 +80,8 @@ public:
 	void			FillRect(uint16 x, uint16 y,
 					 uint16 w, uint16 h,
 					 pattern p, bool patternVertical = false);
+	void			InvertRect(uint16 x, uint16 y,
+					   uint16 w, uint16 h);
 
 private:
 	uint16 fWidth;
@@ -89,6 +93,7 @@ private:
 
 	virtual void*		AllocBitsData(size_t len);
 	virtual void		FreeBitsData(void *data, size_t len);
+	virtual void		CopyBitsData(void *dest, const void *src, size_t len);
 };
 
 #endif /* __cplusplus */
