@@ -335,7 +335,7 @@ LBPanelBuffer::FillRect(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool 
 		{
 			if(p.data[k] == 0x00 || p.data[k] == 0xff)
 				patterns[k] = p.data[k];
-			else for(m = 0; m < 8; m++)
+			else for(m = 0, patterns[k] = 0; m < 8; m++)
 				patterns[k] |= ((p.data[m] >> (7 - k + m)) & (0x01 << m));
 		}
 
