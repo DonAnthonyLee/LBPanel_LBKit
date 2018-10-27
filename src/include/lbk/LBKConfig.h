@@ -39,7 +39,9 @@
 
 #define LBK_KEY_TYPICAL_NUMBER		3
 #define LBK_KEY_ID_MAX			7
-#define LBK_KEY_INTERVAL		130000	/* 130ms */
+
+// TODO: Specified by config file
+#define LBK_KEY_INTERVAL		125000	/* 125ms */
 
 
 #ifndef ETK_MAJOR_VERSION // for BeOS
