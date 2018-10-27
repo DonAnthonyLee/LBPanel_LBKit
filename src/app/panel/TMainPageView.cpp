@@ -56,8 +56,8 @@ TMainPageView::TMainPageView(const char *name)
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
 	SetNavButtonIcon(2, LBK_ICON_RIGHT);
 
-	BDirectory dir("/sys/bus/cpu");
-	if((fCPUSCount = dir.CountEntries() - 1) > 0)
+	BDirectory dir("/sys/bus/cpu/devices");
+	if((fCPUSCount = dir.CountEntries()) > 0)
 	{
 		fCPUTime = (bigtime_t*)malloc(sizeof(bigtime_t) * fCPUSCount * 2);
 		bzero(fCPUTime, sizeof(bigtime_t) * fCPUSCount * 2);
@@ -510,6 +510,7 @@ TMainPageView::DrawCPUInfo(BRect rect)
 		}
 	}
 
+	// CPU load
 	BString strStat(buffer);
 	for(int32 k = 0; k < fCPUSCount; k++)
 	{
@@ -544,7 +545,7 @@ TMainPageView::DrawCPUInfo(BRect rect)
 			if(m == 3) idle = t;
 		}
 		if(fCPUTime[k * 2] < total && fCPUTime[k * 2 + 1] < idle)
-			percent = 100 - (int)((bigtime_t)100 * (idle - fCPUTime[k * 2 + 1]) / (total - fCPUTime[k * 2]));
+			percent = (int)((bigtime_t)100 * (idle - fCPUTime[k * 2 + 1]) / (total - fCPUTime[k * 2]));
 		fCPUTime[k * 2] = total;
 		fCPUTime[k * 2 + 1] = idle;
 
@@ -553,7 +554,8 @@ TMainPageView::DrawCPUInfo(BRect rect)
 		r1.bottom -= 11;
 		StrokeRect(r1);
 		r1.InsetBy(1, 1);
-		r1.top += r1.Height() * (float)(100 - percent) / 100.f;
+		if(percent > 0)
+			r1.top += r1.Height() * (float)percent / 100.f;
 		FillRect(r1);
 
 		// text
@@ -724,7 +726,7 @@ TMainPageView::Set24Hours(bool state)
 	if(f24Hours != state)
 	{
 		f24Hours = state;
-		Invalidate();
+		if(fTabIndex == 0) Invalidate();
 	}
 }
 
@@ -735,7 +737,7 @@ TMainPageView::ShowSeconds(bool state)
 	if(fShowSeconds != state)
 	{
 		fShowSeconds = state;
-		Invalidate();
+		if(fTabIndex == 0) Invalidate();
 	}
 }
 
