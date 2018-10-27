@@ -33,6 +33,14 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <linux/if.h>
+#include <linux/sockios.h>
+
 #include "TMainPageView.h"
 
 #ifdef ETK_MAJOR_VERSION
@@ -63,12 +71,8 @@ TMainPageView::TMainPageView(const char *name)
 		bzero(fCPUTime, sizeof(bigtime_t) * fCPUSCount * 2);
 	}
 
-#if 1
-	// TEST
-	fInterfacesCount = 1;
-#endif
-
-	// TODO
+	// TODO: monitor the count
+	fInterfacesCount = GetInterfacesCount();
 }
 
 
@@ -252,6 +256,8 @@ TMainPageView::DrawBoardInfo(BRect rect)
 	BFile f;
 	char buffer[128];
 
+	SetFontSize(12);
+
 	// Title
 	BRect r = LBView::Bounds();
 	r.top = Bounds().bottom + 1;
@@ -266,8 +272,6 @@ TMainPageView::DrawBoardInfo(BRect rect)
 
 	r = Bounds();
 	r.bottom = r.top + r.Height() / 3.f - 1.f;
-
-	SetFontSize(12);
 
 	// hostname
 	if(r.Intersects(rect))
@@ -584,17 +588,88 @@ TMainPageView::DrawCPUInfo(BRect rect)
 void
 TMainPageView::DrawInterfaceInfo(BRect rect, int32 id)
 {
-	// TODO
+	BString str;
+	uint16 w;
 
-#if 1
-	BString aStr("Interface");
+	BString ifname;
+	GetInterfaceName(ifname, id);
 
-	SetFontSize(16);
+	SetFontSize(12);
 
-	uint16 w = StringWidth(aStr.String());
-	DrawString(aStr.String(),
-		   LBView::Bounds().Center() - BPoint(w / 2.f, 15 / 2.f));
-#endif
+	// Title
+	BRect r = LBView::Bounds();
+	r.top = Bounds().bottom + 1;
+	if(r.Intersects(rect))
+	{
+		if(ifname.Length() > 0)
+			str.Append(ifname);
+		else
+			str << "接口" << id + 1;
+
+		w = StringWidth(str.String());
+		DrawString(str.String(),
+			   r.Center() - BPoint(w / 2.f, 11 / 2.f));
+	}
+
+	if(ifname.Length() == 0)
+	{
+		str.SetTo("无法获取接口信息!");
+
+		w = StringWidth(str.String());
+		DrawString(str.String(),
+			   Bounds().Center() - BPoint(w / 2.f, 11 / 2.f));
+
+		return;
+	}
+
+	// TODO: FontHeight = 8, show more info
+
+	r = Bounds();
+	r.bottom = r.top + r.Height() / 3.f - 1.f;
+
+	// MAC
+	if(r.Intersects(rect))
+	{
+		str.SetTo("MAC: ");
+
+		BString hwaddr;
+		GetInterfaceHWAddr(hwaddr, ifname.String());
+		str.Append(hwaddr.Length() == 0 ? "[无]" : hwaddr.String());
+
+		BRect r1 = r.InsetByCopy(2, 2);
+		DrawString(str.String(),
+			   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
+	}
+
+	// IPv4
+	r.OffsetBy(0, r.Height() + 1);
+	if(r.Intersects(rect))
+	{
+		str.SetTo("IPv4: ");
+
+		BString ipaddr;
+		GetInterfaceIPv4(ipaddr, ifname.String());
+		str.Append(ipaddr.Length() == 0 ? "[无]" : ipaddr.String());
+
+		BRect r1 = r.InsetByCopy(2, 2);
+		DrawString(str.String(),
+			   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
+	}
+
+	// IPv6
+	r.OffsetBy(0, r.Height() + 1);
+	if(r.Intersects(rect))
+	{
+		str.SetTo("IPv6: ");
+
+		BString ipaddr;
+		GetInterfaceIPv6(ipaddr, ifname.String());
+		str.Append(ipaddr.Length() == 0 ? "[无]" : ipaddr.String());
+
+		BRect r1 = r.InsetByCopy(2, 2);
+		DrawString(str.String(),
+			   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
+	}
 }
 
 
@@ -652,8 +727,6 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 		ShowNavButton(2);
 	else
 		HideNavButton(2);
-
-	// TODO
 }
 
 
@@ -802,4 +875,196 @@ TMainPageView::MessageReceived(BMessage *msg)
 	}
 }
 
+
+int32
+TMainPageView::GetInterfacesCount() const
+{
+	BString str;
+	BFile f;
+
+	if(f.SetTo("/proc/net/dev", B_READ_ONLY) == B_OK)
+	{
+		char buffer[4096];
+		bzero(buffer, sizeof(buffer));
+		f.Read(buffer, sizeof(buffer));
+		f.Unset();
+
+		str.SetTo(buffer);
+	}
+
+	int32 lines = 0, offset = 0, found;
+	while((found = str.FindFirst('\n', offset)) > offset)
+	{
+		offset = found + 1;
+		lines++;
+	}
+	if(offset < str.Length()) lines++;
+	if(str.FindFirst(" lo: ") > 0) lines--; // ignore "local"
+
+	return(lines - 2);
+}
+
+
+bool
+TMainPageView::GetInterfaceName(BString &ifname, int32 id) const
+{
+	BString str;
+	BFile f;
+
+	if(id < 0) return false;
+
+	if(f.SetTo("/proc/net/dev", B_READ_ONLY) == B_OK)
+	{
+		char buffer[4096];
+		bzero(buffer, sizeof(buffer));
+		f.Read(buffer, sizeof(buffer));
+		f.Unset();
+
+		str.SetTo(buffer);
+	}
+
+	int32 lines = 0, offset = 0, found;
+	while((found = str.FindFirst('\n', offset)) > offset)
+	{
+		offset = found + 1;
+		lines++;
+
+		if(lines < 2 + id) continue;
+		found = str.FindFirst(": ", offset);
+		if(found <= offset) break;
+
+		str.Remove(0, offset);
+		str.Truncate(found - offset);
+		str.RemoveAll(" ");
+		if(str.Length() == 0) break;
+		if(str == "lo") // ignore "local"
+		{
+			id++;
+			continue;
+		}
+
+		ifname = str;
+		return true;
+	}
+
+	return false;
+}
+
+
+bool
+TMainPageView::GetInterfaceHWAddr(BString &hwaddr, const char *ifname) const
+{
+	if(ifname == NULL || *ifname == 0) return false;
+	if(strcmp("lo", ifname) == 0) return false;
+
+	struct ifreq data;
+	bzero(&data, sizeof(data));
+	strcpy(data.ifr_name, ifname);
+
+	int fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if(fd < 0) return false;
+
+	int err = ioctl(fd, SIOCGIFHWADDR, &data);
+	close(fd);
+	if(err != 0) return false;
+
+	char buf[18];
+	const uint8 *sa = (const uint8*)data.ifr_hwaddr.sa_data;
+	snprintf(buf, sizeof(buf),
+		 "%02x:%02x:%02x:%02x:%02x:%02x",
+		 sa[0], sa[1], sa[2], sa[3], sa[4], sa[5]);
+
+	hwaddr.SetTo(buf);
+	return true;
+}
+
+
+bool
+TMainPageView::GetInterfaceIPv4(BString &ipaddr, const char *ifname) const
+{
+	if(ifname == NULL || *ifname == 0) return false;
+
+	struct ifreq data;
+	bzero(&data, sizeof(data));
+	strcpy(data.ifr_name, ifname);
+
+	int fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if(fd < 0) return false;
+
+	int err = ioctl(fd, SIOCGIFADDR, &data);
+	close(fd);
+	if(err != 0) return false;
+
+	char buf[18];
+	const struct sockaddr_in *addr = (const struct sockaddr_in*)&data.ifr_addr;
+	uint32 ip = ntohl(addr->sin_addr.s_addr);
+	snprintf(buf, sizeof(buf),
+		 "%u.%u.%u.%u",
+		 ip >> 24, (ip >> 16) & 0xff, (ip >> 8) & 0xff, ip & 0xff);
+
+	ipaddr.SetTo(buf);
+	return true;
+}
+
+
+bool
+TMainPageView::GetInterfaceIPv6(BString &ipaddr, const char *ifname) const
+{
+	if(ifname == NULL || *ifname == 0) return false;
+
+	BString str, line;
+	BFile f;
+
+	if(f.SetTo("/proc/net/if_inet6", B_READ_ONLY) == B_OK)
+	{
+		char buffer[4096];
+		bzero(buffer, sizeof(buffer));
+		f.Read(buffer, sizeof(buffer));
+		f.Unset();
+
+		str.SetTo(buffer);
+	}
+
+	int32 offset = 0, found = 0;
+	while(offset < str.Length())
+	{
+		found = str.FindFirst('\n', offset);
+
+		line.SetTo(str.String() + offset);
+		if(found >= offset)
+			line.Truncate(found - offset);
+
+		while(line.FindLast("  ") > 0)
+			line.ReplaceAll("  ", " ");
+
+		if(line.Length() > 46) do
+		{
+			if(strcmp(line.String() + 45, ifname) != 0) break;
+			if(strncmp(line.String() + 38, " 20 ", 4) != 0) break; // not Link
+
+			ipaddr.Truncate(0);
+			for(int k = 0; k < 8; k++)
+			{
+				ipaddr.Append(line.String() + k * 4, 4);
+				if(k != 7) ipaddr << ":";
+			}
+
+			ipaddr.RemoveAll("0000");
+			if((found = ipaddr.FindFirst(":::")) >= 0)
+			{
+				offset = found + 3;
+				while(!(offset >= ipaddr.Length() || ipaddr[offset] != ':'))
+					ipaddr.Remove(offset, 1);
+				ipaddr.Remove(found, 1);
+			}
+
+			return true;
+		} while(false);
+
+		if(found < offset) break;
+		offset = found + 1;
+	}
+
+	return false;
+}
 

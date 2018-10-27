@@ -71,6 +71,12 @@ private:
 	void DrawDateAndTime(BRect r);
 	void DrawCPUInfo(BRect r);
 	void DrawInterfaceInfo(BRect r, int32 id);
+
+	int32 GetInterfacesCount() const;
+	bool GetInterfaceName(BString &ifname, int32 id) const;
+	bool GetInterfaceHWAddr(BString &hwaddr, const char *ifname) const;
+	bool GetInterfaceIPv4(BString &ipaddr, const char *ifname) const;
+	bool GetInterfaceIPv6(BString &ipaddr, const char *ifname) const;
 };
 
 #endif /* __cplusplus */
