@@ -72,6 +72,9 @@ private:
 	BRect fBufferUpdateRect;
 
 	BRect			DrawingArea(uint16 x, uint16 y, uint16 w, uint16 h) const;
+	uint16			StringWidth_h8(uint16 c) const;
+	uint16			StringWidth_h8(const char *str) const;
+	BRect			DrawStringOnBuffer_h8(const char *str, uint16 x, uint16 y, bool erase_mode);
 };
 
 #endif /* __cplusplus */

@@ -30,6 +30,7 @@
 
 #include "VPDApp.h"
 #include "VPDView.h"
+#include "font8.h"
 
 #ifdef ETK_MAJOR_VERSION
 	#ifdef ETK_BIG_ENDIAN
@@ -89,6 +90,7 @@ bool
 VPDView::SetFontHeight(uint8 h)
 {
 	if(h < 8 || h > 48) return false;
+	if(h == 8) return true;
 
 	BFont font;
 	font_height fontHeight;
@@ -447,7 +449,9 @@ VPDView::MessageReceived(BMessage *msg)
 				if(BRect(0, 0, fBuffer.Width() - 1, fBuffer.Height() - 1).Contains(pt) == false) break;
 				if(SetFontHeight(fontHeight) == false) break;
 
-				BRect r = DrawStringOnBuffer(str.String(), pt.x, pt.y, erase);
+				BRect r = (fontHeight == 8) ?
+						DrawStringOnBuffer_h8(str.String(), pt.x, pt.y, erase) :
+						DrawStringOnBuffer(str.String(), pt.x, pt.y, erase);
 				if(r.IsValid() == false) break;
 
 				if(fBufferUpdateEnabled)
@@ -471,14 +475,21 @@ VPDView::MessageReceived(BMessage *msg)
 
 				if(str.Length() > 0)
 				{
-					PushState();
-					if(SetFontHeight(fontHeight))
+					if(fontHeight == 8)
 					{
-						BFont font;
-						GetFont(&font);
-						w = (uint16)font.StringWidth(str.String());
+						w = StringWidth_h8(str.String());
 					}
-					PopState();
+					else
+					{
+						PushState();
+						if(SetFontHeight(fontHeight))
+						{
+							BFont font;
+							GetFont(&font);
+							w = (uint16)font.StringWidth(str.String());
+						}
+						PopState();
+					}
 				}
 
 				BMessage aMsg(B_REPLY);
@@ -490,5 +501,140 @@ VPDView::MessageReceived(BMessage *msg)
 		default:
 			BView::MessageReceived(msg);
 	}
+}
+
+
+uint16
+VPDView::StringWidth_h8(uint16 c) const
+{
+	uint16 w = 0;
+
+	if(c == 0x65e0 || (c >= 0x0021 && c <= 0x007e))
+		w = *((const uint8*)fontdata_h8 + (uint32)(((c >= 0x21 && c <= 0x7e) ? c : 0x7f) - 0x21) * 6);
+	else if(c == 0x0020) // space
+		w = 2;
+
+	return w;
+}
+
+
+uint16
+VPDView::StringWidth_h8(const char *str) const
+{
+	BString aStr(str);
+	int32 count = aStr.CountChars();
+	uint16 *ustr = NULL;
+	uint16 w = 0;
+
+	if(count > 0)
+		ustr = (uint16*)malloc((count + 1) * 2);
+
+	if(ustr != NULL)
+	{
+		bzero(ustr, (count + 1) * 2);
+
+#ifdef ETK_MAJOR_VERSION
+		aStr.CopyInto((eunichar *)ustr, (count + 1) * 2, 0, -1);
+#else
+		int32 state = 0;
+		if(convert_from_utf8(B_UNICODE_CONVERSION,
+				     aStr.String(), aStr.Length(),
+				     (char*)ustr, count * 2,
+				     &state) != B_OK)
+			count = 0;
+#endif
+
+		for(int32 k = 0; k < count; k++)
+		{
+			uint16 c = *(ustr + k);
+			if(k > 0) w++;
+			w += StringWidth_h8(c);
+		}
+
+		free(ustr);
+	}
+
+	return w;
+}
+
+
+BRect
+VPDView::DrawStringOnBuffer_h8(const char *str, uint16 x, uint16 y, bool erase_mode)
+{
+	BString aStr(str);
+	int32 count = aStr.CountChars();
+	uint16 *ustr = NULL;
+
+	if(fBuffer.Bits() == NULL ||
+	   count == 0 ||
+	   x >= fBuffer.Width() || y >= fBuffer.Height())
+		return BRect();
+
+	if(count > 0)
+		ustr = (uint16*)malloc((count + 1) * 2);
+	if(ustr == NULL)
+		return BRect();
+
+	bzero(ustr, (count + 1) * 2);
+
+#ifdef ETK_MAJOR_VERSION
+	aStr.CopyInto((eunichar *)ustr, (count + 1) * 2, 0, -1);
+#else
+	int32 state = 0;
+	if(convert_from_utf8(B_UNICODE_CONVERSION,
+			     aStr.String(), aStr.Length(),
+			     (char*)ustr, count * 2,
+			     &state) != B_OK)
+	{
+		free(ustr);
+		return BRect();
+	}
+#endif
+
+	uint16 w = 0;
+	for(int32 k = 0; k < count; k++)
+	{
+		uint16 c = *(ustr + k);
+		uint16 w1 = StringWidth_h8(c);
+
+		if(c == 0x65e0 || (c >= 0x21 && c <= 0x7e))
+		{
+			for(uint16 yy = 0; yy < 8 && (y + yy) < fBuffer.Height(); yy++)
+			{
+				const uint8 *bits = (const uint8*)fontdata_h8 + (uint32)(((c >= 0x21 && c <= 0x7e) ? c : 0x7f) - 0x21) * 6 + 1;
+
+				for(uint16 xx = 0; xx < w1 && (x + w + xx) < fBuffer.Width(); xx++)
+				{
+					uint8 v = *bits++;
+					v = ((v >> yy) & 0x01);
+
+					switch(fBuffer.Depth())
+					{
+						case 1:
+							if(v == 0) break;
+							fBuffer.FillRect(x + w + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
+							break;
+
+						default:
+							// TODO
+							break;
+					}
+				}
+			}
+		}
+
+		w += w1;
+		if(k != count - 1) w++;
+	}
+
+	free(ustr);
+
+	uint16 h = 8;
+	if(w > fBuffer.Width() - x)
+		w = fBuffer.Width() - x;
+	if(h > fBuffer.Height() - y)
+		h = fBuffer.Height() - y;
+
+	return DrawingArea(x, y, w, h);
 }
 
