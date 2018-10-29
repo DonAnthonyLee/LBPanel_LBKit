@@ -80,7 +80,11 @@ int main(int argc, char **argv)
 	{
 		fprintf(stderr, "Unable to open config file (%s), use default settings !\n", path_conf.Path());
 
+#if 1
 		cfg.AddItem(new BString("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so"));
+#else
+		cfg.AddItem(new BString("PanelDeviceAddon=/usr/lib/add-ons/lbk/vpd.so,point_size=2,width=128,height=64"));
+#endif
 		cfg.AddItem(new BString("IPC=LBPanel"));
 
 		// TODO: more
@@ -121,7 +125,7 @@ int main(int argc, char **argv)
 	LBApplication *app = new LBApplication(&cfg);
 	for(int32 k = 0; k < cfg.CountItems(); k++) delete ((BString*)cfg.ItemAt(k));
 
-	// TODO: a lot
+	// TODO: Screen timeout, tools, custom commands, etc. IT'S A LOT ...
 	app->AddPageView(new TMainPageView(), false);
 	app->AddPageView(new TMenuPageView(), false);
 
