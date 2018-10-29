@@ -212,7 +212,10 @@ VPDView::Draw(BRect updateRect)
 				else switch(fBuffer.Depth())
 				{
 					case 1:
-						c.red = c.green = c.blue = (fPowerState ? ((fPointSize == 1) ? 50 : 0) : 200);
+						if(c == fBuffer.LowColor())
+							c = ViewColor();
+						else
+							c.red = c.green = c.blue = (fPowerState ? ((fPointSize == 1) ? 50 : 0) : 200);
 						break;
 
 					default:
