@@ -218,7 +218,7 @@ LBPanelBuffer::ColorSpace() const
 rgb_color
 LBPanelBuffer::GetPixel(uint16 x, uint16 y) const
 {
-	rgb_color c = {0, 0, 0, 0};
+	rgb_color c = LowColor();
 	uint32 offset;
 
 	if(x < fWidth && y < fHeight && fBits != NULL)
@@ -228,7 +228,7 @@ LBPanelBuffer::GetPixel(uint16 x, uint16 y) const
 			case LBK_CS_MONO_Y:
 				offset = (uint32)x + (uint32)fWidth * (uint32)(y >> 3);
 				if((*(((uint8*)fBits) + offset) & (0x01 << (y & 0x07))) != 0)
-					c.red = c.green = c.blue = c.alpha = 255;
+					c = HighColor();
 				break;
 
 			default:
