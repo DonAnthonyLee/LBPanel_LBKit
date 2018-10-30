@@ -1,0 +1,64 @@
+#!/bin/sh /etc/rc.common
+
+START=90
+
+start(){
+	USB_OTG_ENABLED=`uci get usb_otg.@usb_otg[0].enabled`
+	if [ "x${USB_OTG_ENABLED}" != "x1" ]; then
+		echo "usb_otg disabled."
+	else
+		USB_OTG_FUNCTION=`uci get usb_otg.@usb_otg[0].type`
+		/sbin/rmmod g_ether > /dev/null 2>&1
+		/sbin/rmmod g_mass_storage > /dev/null 2>&1
+		if [ "x${USB_OTG_FUNCTION}" = "x0" ]; then
+			MOD_NAME="g_ether"
+			MOD_ARGS=`uci get usb_otg.@usb_otg[0].g_ether_args`
+		else
+			MOD_NAME="g_mass_storage"
+			MOD_ARGS=`uci get usb_otg.@usb_otg[0].g_mass_storage_args`
+		fi
+
+		if [ -e "/lib/modules/`uname -r`/kernel/drivers/usb/gadget/legacy/${MOD_NAME}.ko" ]; then
+			insmod /lib/modules/`uname -r`/kernel/drivers/usb/gadget/legacy/${MOD_NAME}.ko ${MOD_ARGS} > /dev/null
+		elif [ -e "/lib/modules/`uname -r`/${MOD_NAME}.ko" ]; then
+			insmod /lib/modules/`uname -r`/${MOD_NAME}.ko ${MOD_ARGS} > /dev/null
+		else
+			modprobe ${MOD_NAME} ${MOD_ARGS} > /dev/null
+		fi
+
+		if [ "x$?" = "x0" ]; then
+			echo "usb_otg started."
+		else
+			echo "usb_otg failed to start."
+		fi
+	fi
+}
+
+stop(){
+	MOD_FOUND=`lsmod | grep g_ether`
+	if [ "x${MOD_FOUND}" != "x" ]; then
+		/sbin/rmmod g_ether > /dev/null
+	fi
+	MOD_FOUND=`lsmod | grep g_mass_storage`
+	if [ "x${MOD_FOUND}" != "x" ]; then
+		/sbin/rmmod g_mass_storage > /dev/null
+	fi
+	echo "usb_otg stopped."
+}
+
+restart(){
+	stop
+	sleep 2
+	start
+	echo "usb_otg restarted."
+}
+
+reload(){
+	USB_OTG_ENABLED=`uci get usb_otg.@usb_otg[0].enabled`
+	if [ "x${USB_OTG_ENABLED}" = "x1" ]; then
+		restart
+	else
+		stop
+	fi
+}
+
