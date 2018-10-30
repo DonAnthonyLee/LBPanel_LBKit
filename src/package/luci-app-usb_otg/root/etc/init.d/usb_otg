@@ -8,8 +8,8 @@ start(){
 		echo "usb_otg disabled."
 	else
 		USB_OTG_FUNCTION=`uci get usb_otg.@usb_otg[0].type`
-		/sbin/rmmod g_ether > /dev/null 2>&1
-		/sbin/rmmod g_mass_storage > /dev/null 2>&1
+		rmmod g_ether > /dev/null 2>&1
+		rmmod g_mass_storage > /dev/null 2>&1
 		if [ "x${USB_OTG_FUNCTION}" = "x0" ]; then
 			MOD_NAME="g_ether"
 			MOD_ARGS=`uci get usb_otg.@usb_otg[0].g_ether_args`
@@ -27,6 +27,10 @@ start(){
 		fi
 
 		if [ "x$?" = "x0" ]; then
+			if [ "x${MOD_NAME}" = "xg_ether" ]; then
+				uci set network.usb_otg.auto=1
+				/etc/init.d/network reload
+			fi
 			echo "usb_otg started."
 		else
 			echo "usb_otg failed to start."
@@ -37,11 +41,13 @@ start(){
 stop(){
 	MOD_FOUND=`lsmod | grep g_ether`
 	if [ "x${MOD_FOUND}" != "x" ]; then
-		/sbin/rmmod g_ether > /dev/null
+		uci set network.usb_otg.auto=0
+		/etc/init.d/network reload
+		rmmod g_ether > /dev/null
 	fi
 	MOD_FOUND=`lsmod | grep g_mass_storage`
 	if [ "x${MOD_FOUND}" != "x" ]; then
-		/sbin/rmmod g_mass_storage > /dev/null
+		rmmod g_mass_storage > /dev/null
 	fi
 	echo "usb_otg stopped."
 }
