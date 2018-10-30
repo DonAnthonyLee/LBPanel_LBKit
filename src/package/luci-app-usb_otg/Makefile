@@ -13,7 +13,7 @@ include $(TOPDIR)/feeds/luci/luci.mk
 
 define Package/luci-app-usb_otg/postinst
 #!/bin/sh
-[ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/usb_otg disable || true
+[ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/usb_otg enable || true
 endef
 
 # call BuildPackage - OpenWrt buildroot signature
