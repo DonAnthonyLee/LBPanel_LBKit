@@ -1,0 +1,35 @@
+msgid ""
+msgstr ""
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "USB OTG"
+msgstr "USB OTG"
+
+msgid "Specify the function of USB OTG."
+msgstr "指定 USB OTG 功能。"
+
+msgid "Settings"
+msgstr "配置"
+
+msgid "Enable USB OTG"
+msgstr "启用 USB OTG"
+
+msgid "Function"
+msgstr "功能"
+
+msgid "Ethernet"
+msgstr "网卡"
+
+msgid "Mass Storage"
+msgstr "存储"
+
+msgid "Arguments for g_ether"
+msgstr "网卡模块参数"
+
+msgid "Arguments for g_mass_storage"
+msgstr "存储模块参数"
+
