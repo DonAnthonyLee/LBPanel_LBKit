@@ -622,9 +622,9 @@ TMainPageView::DrawInterfaceInfo(BRect rect, int32 id)
 		return;
 	}
 
-	// TODO: FontHeight = 8, show more info
-
 	r = Bounds();
+
+	SetFontSize(12);
 	r.bottom = r.top + r.Height() / 3.f - 1.f;
 
 	// MAC
@@ -664,11 +664,69 @@ TMainPageView::DrawInterfaceInfo(BRect rect, int32 id)
 
 		BString ipaddr;
 		GetInterfaceIPv6(ipaddr, ifname.String());
-		str.Append(ipaddr.Length() == 0 ? "[无]" : ipaddr.String());
 
-		BRect r1 = r.InsetByCopy(2, 2);
-		DrawString(str.String(),
-			   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
+		if(ipaddr.Length() == 0)
+		{
+			str << "[无]";
+
+			BRect r1 = r.InsetByCopy(2, 2);
+			DrawString(str.String(),
+				   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
+		}
+		else
+		{
+			BRect r1 = r.InsetByCopy(2, 2);
+			w = StringWidth(str.String());
+
+			DrawString(str.String(),
+				   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
+			r1.left += w + 1.f;
+
+			BString line1, line2;
+			while(ipaddr.Length() > 0)
+			{
+				int32 found = ipaddr.FindFirst(":");
+				if(found < 0) found = ipaddr.Length();
+
+				switch(found)
+				{
+					case 0:
+						break;
+
+					case 3:
+						line1.Append("0");
+					case 4:
+						line1.Append(ipaddr.String(), found - 2);
+						line2.Append(ipaddr.String() + (found - 2), 2);
+						break;
+
+					case 1:
+						line2.Append("0");
+					case 2:
+						line1.Append("00");
+						line2.Append(ipaddr.String(), found);
+						break;
+
+					default: // should never happen
+						break;
+				}
+
+				if(found < ipaddr.Length())
+				{
+					line1.Append(".");
+					line2.Append("'");
+				}
+
+				ipaddr.Remove(0, min_c(found + 1, ipaddr.Length()));
+			}
+
+			SetFontSize(8);
+			DrawString(line1.String(),
+				   BPoint(r1.left, r1.top + (r1.Height() - 17.f) / 2.f));
+			r1.top += (r1.Height() - 17.f) / 2.f + 9.f;
+			DrawString(line2.String(),
+				   BPoint(r1.left, r1.top + (r1.Height() - 7.f) / 2.f));
+		}
 	}
 }
 
@@ -1034,12 +1092,12 @@ TMainPageView::GetInterfaceIPv6(BString &ipaddr, const char *ifname) const
 		if(found >= offset)
 			line.Truncate(found - offset);
 
-		while(line.FindLast("  ") > 0)
-			line.ReplaceAll("  ", " ");
-
 		if(line.Length() > 46) do
 		{
-			if(strcmp(line.String() + 45, ifname) != 0) break;
+			int32 pos = line.FindLast(' ');
+
+			if(pos < 45) break;
+			if(strcmp(line.String() + pos + 1, ifname) != 0) break;
 			if(strncmp(line.String() + 38, " 20 ", 4) != 0) break; // not Link
 
 			ipaddr.Truncate(0);
