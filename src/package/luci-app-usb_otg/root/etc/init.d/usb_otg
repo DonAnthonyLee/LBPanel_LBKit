@@ -29,7 +29,7 @@ start(){
 		if [ "x$?" = "x0" ]; then
 			if [ "x${MOD_NAME}" = "xg_ether" ]; then
 				uci set network.usb_otg.auto=1
-				/etc/init.d/network reload
+				/etc/init.d/network restart > /dev/null 2>&1 &
 			fi
 			echo "usb_otg started."
 		else
@@ -42,7 +42,7 @@ stop(){
 	MOD_FOUND=`lsmod | grep g_ether`
 	if [ "x${MOD_FOUND}" != "x" ]; then
 		uci set network.usb_otg.auto=0
-		/etc/init.d/network reload
+		/etc/init.d/network reload > /dev/null 2>&1
 		rmmod g_ether > /dev/null
 	fi
 	MOD_FOUND=`lsmod | grep g_mass_storage`
