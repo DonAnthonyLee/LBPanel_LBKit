@@ -3,5 +3,5 @@ config usb_otg
 	option enabled '0'
 	option type '0'
 	option g_ether_args 'dev_addr=26:00:0a:0b:0c:0d host_addr=26:00:0a:0b:0c:0e'
-	option g_mass_storage_args 'file=/dev/mmcblkp1'
+	option g_mass_storage_args 'file=/dev/mmcblk0p1'
 

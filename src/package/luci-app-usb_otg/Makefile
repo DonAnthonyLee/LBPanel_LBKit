@@ -7,6 +7,7 @@ LUCI_PKGARCH:=all
 PKG_NAME:=luci-app-usb_otg
 PKG_VERSION:=0.1
 PKG_RELEASE:=1
+PKG_MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
