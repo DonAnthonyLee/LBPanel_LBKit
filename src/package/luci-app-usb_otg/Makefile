@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=LuCI support for USB OTG
-LUCI_DEPENDS:=+kmod-usb-gadget +kmod-usb-gadget-eth +kmod-usb-gadget-mass-storage
+LUCI_DEPENDS:=+USB_GADGET_SUPPORT:kmod-usb-gadget +USB_GADGET_SUPPORT:kmod-usb-gadget-eth +USB_GADGET_SUPPORT:kmod-usb-gadget-mass-storage
 LUCI_PKGARCH:=all
 
 PKG_NAME:=luci-app-usb_otg
