@@ -2,6 +2,33 @@
 
 START=90
 
+init_config(){
+	uci get network.usb_otg.ifname > /dev/null 2>&1
+	if [ "x$?" != "x0" ]; then
+		DEV_ADDR=`cat /sys/module/g_ether/parameters/dev_addr`
+		if [ "x$?" = "x0" -a "x${DEV_ADDR}" != "x" ]; then
+			IFNAME_FOUND=`ifconfig -a | grep -i 'HWaddr ${DEV_ADDR}' | awk -F ' ' '{printf $1}'`
+		fi
+		if [ "x${IFNAME_FOUND}" = "x" ]; then
+			IFNAME_FOUND="usb0"
+		fi
+
+		uci set network.usb_otg=interface
+		uci set network.usb_otg.proto=static
+		uci set network.usb_otg.ifname="${IFNAME_FOUND}"
+		uci set network.usb_otg.ipaddr="10.0.0.1"
+		uci set network.usb_otg.netmask="255.255.255.0"
+		uci commit network
+
+		uci set dhcp.usb_otg=dhcp
+		uci set dhcp.usb_otg.interface="${IFNAME_FOUND}"
+		uci set dhcp.usb_otg.start=100
+		uci set dhcp.usb_otg.limit=150
+		uci set dhcp.usb_otg.leasetime="12h"
+		uci commit dhcp
+	fi
+}
+
 start(){
 	USB_OTG_ENABLED=`uci get usb_otg.@usb_otg[0].enabled`
 	if [ "x${USB_OTG_ENABLED}" != "x1" ]; then
@@ -28,6 +55,7 @@ start(){
 
 		if [ "x$?" = "x0" ]; then
 			if [ "x${MOD_NAME}" = "xg_ether" ]; then
+				init_config
 				uci set network.usb_otg.auto=1
 				/etc/init.d/network restart > /dev/null 2>&1 &
 			fi
