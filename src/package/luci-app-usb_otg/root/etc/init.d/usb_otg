@@ -45,13 +45,10 @@ start(){
 			MOD_ARGS=`uci get usb_otg.@usb_otg[0].g_mass_storage_args`
 		fi
 
-		if [ -e "/lib/modules/`uname -r`/kernel/drivers/usb/gadget/legacy/${MOD_NAME}.ko" ]; then
-			insmod /lib/modules/`uname -r`/kernel/drivers/usb/gadget/legacy/${MOD_NAME}.ko ${MOD_ARGS} > /dev/null
-		elif [ -e "/lib/modules/`uname -r`/${MOD_NAME}.ko" ]; then
-			insmod /lib/modules/`uname -r`/${MOD_NAME}.ko ${MOD_ARGS} > /dev/null
-		else
-			modprobe ${MOD_NAME} ${MOD_ARGS} > /dev/null
+		if [ "x${MOD_NAME}" = "xg_ether" ]; then
+			modprobe usb_f_rndis > /dev/null 2>&1
 		fi
+		insmod /lib/modules/`uname -r`/${MOD_NAME}.ko ${MOD_ARGS} > /dev/null
 
 		if [ "x$?" = "x0" ]; then
 			if [ "x${MOD_NAME}" = "xg_ether" ]; then
