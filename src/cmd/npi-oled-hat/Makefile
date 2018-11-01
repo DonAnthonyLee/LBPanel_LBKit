@@ -1,15 +1,21 @@
 DEBUG_OPTIONS = -g -Wall
 OPTIMIZE = -O3
 
-SINGLE_C_FILE_PROGRAMS = oled_clear oled_show oled_update oled_power
+SINGLE_C_FILE_PROGRAMS =
 SINGLE_CXX_FILE_PROGRAMS =
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
 
-TARGET_1 =
+TARGET_1 = npi_hat_cmd
 TARGET_2 =
 TARGET_3 =
 
-OBJECTS_1 =
+OBJECTS_1 = \
+	npi_hat_cmd.o \
+	oled_clear.o \
+	oled_show.o \
+	oled_update.o \
+	oled_power.o
+
 OBJECTS_2 =
 OBJECTS_3 =
 
@@ -19,8 +25,8 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../../include -I../../libs/include
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../../include -I../../libs/include
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
 LDFLAGS =
 
 all: targets $(TARGET)
