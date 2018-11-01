@@ -53,15 +53,19 @@ typedef unsigned char	bool;
 
 #define DEFAULT_DEVICE		"/dev/oled-003c"
 
-void show_usage(void)
+static void show_usage(void)
 {
-	printf("oled_clear - clear OLED\n\n");
-	printf("usage: oled_clear [-D device] x y width height [erase_mode]\n\
+	printf("oled_clear - Clear OLED\n\n");
+	printf("Usage: oled_clear [-D device] x y width height [erase_mode]\n\
     device                     path of device, default value is: %s\n\
     erase_mode = 0,1           default value is: 1\n", DEFAULT_DEVICE);
 }
 
+#ifdef CMD_ALL_IN_ONE
+int cmd_clear(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	int n, f, err = 0;
 	const char *dev_name = DEFAULT_DEVICE;

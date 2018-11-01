@@ -53,15 +53,19 @@ typedef unsigned char	bool;
 
 #define DEFAULT_DEVICE		"/dev/oled-003c"
 
-void show_usage(void)
+static void show_usage(void)
 {
-	printf("oled_update - whether to update when OLED drawing\n\n");
-	printf("usage: oled_update [-D device] [state]\n\
+	printf("oled_update - Whether to update OLED when drawing\n\n");
+	printf("Usage: oled_update [-D device] [state]\n\
     device                path of device, default value is: %s\n\
     state = 0,1           default value is: 1\n", DEFAULT_DEVICE);
 }
 
+#ifdef CMD_ALL_IN_ONE
+int cmd_update(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	int n, f, err = 0;
 	const char *dev_name = DEFAULT_DEVICE;
