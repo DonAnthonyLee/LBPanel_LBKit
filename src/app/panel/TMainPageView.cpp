@@ -623,8 +623,6 @@ TMainPageView::DrawInterfaceInfo(BRect rect, int32 id)
 	}
 
 	r = Bounds();
-
-	SetFontSize(12);
 	r.bottom = r.top + r.Height() / 3.f - 1.f;
 
 	// MAC
@@ -882,6 +880,9 @@ TMainPageView::Activated(bool state)
 		cast_as(Looper(), LBApplication)->SetPulseRate(0);
 	else
 		cast_as(Looper(), LBApplication)->SetPulseRate(fTabIndex == 0 ? 500000 : 1000000);
+
+	if(state)
+		SetPowerState(true);
 }
 
 
