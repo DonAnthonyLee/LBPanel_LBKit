@@ -146,6 +146,7 @@ TMenuPageView::MessageReceived(BMessage *msg)
 
 		case MSG_EXIT:
 			printf("[TMenuPageView]: Exiting...\n");
+			SetPowerState(false); // power off the screen
 			Looper()->PostMessage(LBK_QUIT_REQUESTED);
 			break;
 
