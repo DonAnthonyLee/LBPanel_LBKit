@@ -65,6 +65,7 @@ int main(int argc, char **argv)
 	strncpy(cmd, (str == NULL ? argv[0] : str + 1), sizeof(cmd) - 1);
 
 	if (strcmp(cmd, org_cmd) == 0 && argc > 1) {
+		strncpy(cmd, "oled_", 5);
 		strncpy(&cmd[5], argv[1], sizeof(cmd) - 6);
 		offset = 1;
 	}
