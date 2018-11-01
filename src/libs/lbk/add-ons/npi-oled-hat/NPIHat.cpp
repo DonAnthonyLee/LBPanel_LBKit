@@ -191,8 +191,8 @@ NPIHat::FillRect(BRect r,
 bool
 NPIHat::IsFontHeightSupported(uint8 size)
 {
-	if(!(size == 12 || size == 14 || size == 16 || size == 24 || size == 32)) return false;
-	return true;
+	if(size == 8 || size == 12 || size == 14 || size == 16 || size == 24 || size == 32) return true;
+	return false;
 }
 
 
