@@ -510,6 +510,7 @@ LBVPD::MapBuffer(void **buf)
 	memcpy(fBuffer, data, nBytes);
 	fBufferLen = (size_t)nBytes;
 
+	*buf = fBuffer;
 	return B_OK;
 }
 
