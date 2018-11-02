@@ -29,6 +29,7 @@
  * --------------------------------------------------------------------------*/
 
 #include <lbk/LBKConfig.h>
+#include <lbk/LBApplication.h> // for "LBK_VIEW_STOOD_BACK"
 #include <lbk/LBView.h>
 
 
@@ -736,6 +737,14 @@ LBView::StandBack()
 	fMasterView->fStandingInView = NULL;
 	fMasterView->Invalidate();
 	fStandInTimestamp = (bigtime_t)-1;
+
+	if(Looper() != NULL)
+	{
+		BMessage msg(LBK_VIEW_STOOD_BACK);
+		msg.AddPointer("view", reinterpret_cast<void*>(this));
+
+		Looper()->PostMessage(&msg, fMasterView);
+	}
 }
 
 
