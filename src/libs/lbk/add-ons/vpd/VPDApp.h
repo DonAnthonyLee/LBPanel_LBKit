@@ -53,6 +53,9 @@ public:
 #define VPD_MSG_INVERT_RECT	'vmgi'
 #define VPD_MSG_DRAW_STRING	'vmgs'
 #define VPD_MSG_STRING_WIDTH	'vmgw'
+#define VPD_MSG_GET_BUFFER	'vmgg'
+#define VPD_MSG_SET_BUFFER	'vmgb'
+#define VPD_MSG_SYNC		'vmgy'
 
 
 class VPDWindow : public BWindow {

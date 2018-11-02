@@ -104,6 +104,7 @@ private:
 	bigtime_t fTimestamp;
 	BMessenger fMsgr;
 	void *fBuffer;
+	size_t fBufferLen;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	uint8 fDepth;
 	color_space fColorSpace;

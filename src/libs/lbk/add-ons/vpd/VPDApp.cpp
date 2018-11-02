@@ -161,7 +161,15 @@ VPDWindow::MessageReceived(BMessage *msg)
 		case VPD_MSG_INVERT_RECT:
 		case VPD_MSG_DRAW_STRING:
 		case VPD_MSG_STRING_WIDTH:
-			if((view = FindView("screen")) == NULL) break;
+		case VPD_MSG_GET_BUFFER:
+		case VPD_MSG_SET_BUFFER:
+		case VPD_MSG_SYNC:
+			if((view = FindView("screen")) == NULL)
+			{
+				if(msg->IsSourceWaiting())
+					msg->SendReply(B_NO_REPLY);
+				break;
+			}
 			view->MessageReceived(msg);
 			break;
 

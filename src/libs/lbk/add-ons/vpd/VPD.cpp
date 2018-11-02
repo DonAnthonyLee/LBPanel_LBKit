@@ -54,7 +54,8 @@ LBVPD::LBVPD()
 	  fKeysCount(3),
 	  fState(true),
 	  fTimestamp(0),
-	  fBuffer(NULL)
+	  fBuffer(NULL),
+	  fBufferLen(0)
 {
 #ifdef LBK_ENABLE_MORE_FEATURES
 	fDepth = 1;
@@ -474,14 +475,47 @@ LBVPD::EnableUpdate()
 }
 
 
+#ifdef ETK_MAJOR_VERSION
+	#define FindData		BFindData
+	#define B_POINTER_TYPE		E_POINTER_TYPE
+#endif
+
 status_t
 LBVPD::MapBuffer(void **buf)
 {
 	if(fBuffer != NULL) return B_ERROR;
 
-	// TODO
-	return B_ERROR;
+	BMessage replyMsg;
+	BMessage msg(VPD_MSG_GET_BUFFER);
+
+	status_t st = fMsgr.SendMessage(&msg, &replyMsg);
+	if(st != B_OK) return st;
+
+	const void *data = NULL;
+	ssize_t nBytes = 0;
+
+	if(replyMsg.what != B_REPLY ||
+	   replyMsg.FindData("buffer", B_POINTER_TYPE, &data, &nBytes) != B_OK ||
+#ifdef LBK_ENABLE_MORE_FEATURES
+	   nBytes < (ssize_t)(((uint32)fWidth * (uint32)fHeight * (uint32)fDepth) >> 3) ||
+#else
+	   nBytes < (ssize_t)(((uint32)fWidth * (uint32)fHeight) >> 3) ||
+#endif
+	   data == NULL)
+		return B_ERROR;
+
+	if((fBuffer = malloc(nBytes)) == NULL)
+		return B_ERROR;
+
+	memcpy(fBuffer, data, nBytes);
+	fBufferLen = (size_t)nBytes;
+
+	return B_OK;
 }
+
+#ifdef ETK_MAJOR_VERSION
+	#undef FindData
+#endif
 
 
 status_t
@@ -501,15 +535,24 @@ LBVPD::Flush(bigtime_t &ts)
 {
 	if(fBuffer == NULL) return B_ERROR;
 
-	// TODO
-	return B_ERROR;
+	BMessage replyMsg;
+	BMessage msg(VPD_MSG_SET_BUFFER);
+	msg.AddData("buffer", B_POINTER_TYPE, fBuffer, fBufferLen, true);
+
+	status_t st = fMsgr.SendMessage(&msg, &replyMsg);
+	if(st != B_OK) return st;
+
+	return(replyMsg.what != B_REPLY ? B_ERROR : B_OK);
 }
 
 
 void
 LBVPD::Sync()
 {
-	// TODO
+	BMessage replyMsg;
+	BMessage msg(VPD_MSG_SYNC);
+
+	fMsgr.SendMessage(&msg, &replyMsg);
 }
 
 
