@@ -506,6 +506,13 @@ LBVPD::Flush(bigtime_t &ts)
 }
 
 
+void
+LBVPD::Sync()
+{
+	// TODO
+}
+
+
 status_t
 LBVPD::GetCountOfKeys(uint8 &count)
 {

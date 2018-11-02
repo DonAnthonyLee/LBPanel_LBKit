@@ -76,6 +76,7 @@ public:
 	virtual status_t	MapBuffer(void **buf);
 	virtual status_t	UnmapBuffer();
 	virtual status_t	Flush(bigtime_t &ts);
+	virtual void		Sync();
 
 	/* keys */
 	virtual status_t	GetCountOfKeys(uint8 &count);
