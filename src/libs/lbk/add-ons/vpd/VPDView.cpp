@@ -372,6 +372,11 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 }
 
 
+#ifdef ETK_MAJOR_VERSION
+	#define FindData		BFindData
+	#define B_POINTER_TYPE		E_POINTER_TYPE
+#endif
+
 void
 VPDView::MessageReceived(BMessage *msg)
 {
@@ -501,10 +506,48 @@ VPDView::MessageReceived(BMessage *msg)
 			}
 			break;
 
+		case VPD_MSG_GET_BUFFER:
+			{
+				if(msg->IsSourceWaiting() == false) break;
+				if(Buffer() == NULL)
+				{
+					msg->SendReply(B_NO_REPLY);
+					break;
+				}
+
+				BMessage aMsg(B_REPLY);
+				aMsg.AddData("buffer", B_POINTER_TYPE, fBuffer.Bits(), fBuffer.BitsLength(), true);
+				msg->SendReply(&aMsg);
+			}
+			break;
+
+		case VPD_MSG_SET_BUFFER:
+			{
+				const void *data = NULL;
+				ssize_t nBytes = 0;
+
+				if(msg->FindData("buffer", B_POINTER_TYPE, &data, &nBytes) != B_OK) break;
+				if(data == NULL || nBytes != (ssize_t)fBuffer.BitsLength()) break;
+				if(msg->IsSourceWaiting() == false) break;
+
+				fBuffer.SetBits(data, 0, nBytes);
+				msg->SendReply(B_REPLY);
+			}
+			break;
+
+		case VPD_MSG_SYNC:
+			if(msg->IsSourceWaiting())
+				msg->SendReply(B_REPLY);
+			break;
+
 		default:
 			BView::MessageReceived(msg);
 	}
 }
+
+#ifdef ETK_MAJOR_VERSION
+	#undef FindData
+#endif
 
 
 uint16
