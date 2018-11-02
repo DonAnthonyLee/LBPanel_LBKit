@@ -1,0 +1,11 @@
+#!/bin/sh
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@usb_gadget[-1]
+	add ucitrack usb_gadget
+	set ucitrack.@usb_gadget[-1].init=usb_gadget
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache
+exit 0
+
