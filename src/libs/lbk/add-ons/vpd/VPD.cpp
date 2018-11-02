@@ -483,7 +483,12 @@ LBVPD::EnableUpdate()
 status_t
 LBVPD::MapBuffer(void **buf)
 {
-	if(fBuffer != NULL) return B_ERROR;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBVPD>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fBuffer != NULL) return B_ERROR;
 
 	BMessage replyMsg;
 	BMessage msg(VPD_MSG_GET_BUFFER);
@@ -522,7 +527,12 @@ LBVPD::MapBuffer(void **buf)
 status_t
 LBVPD::UnmapBuffer()
 {
-	if(fBuffer == NULL) return B_ERROR;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBVPD>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fBuffer == NULL) return B_ERROR;
 
 	free(fBuffer);
 	fBuffer = NULL;
@@ -534,7 +544,12 @@ LBVPD::UnmapBuffer()
 status_t
 LBVPD::Flush(bigtime_t &ts)
 {
-	if(fBuffer == NULL) return B_ERROR;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBVPD>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fBuffer == NULL) return B_ERROR;
 
 	BMessage replyMsg;
 	BMessage msg(VPD_MSG_SET_BUFFER);
