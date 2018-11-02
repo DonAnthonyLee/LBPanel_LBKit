@@ -4,24 +4,24 @@ local sys = require "luci.sys"
 -- -------------------------------------------------------------------------------------------------
 
 -- BEGIN Map
-m = Map("usb_otg", translate("USB OTG"), translate("Specify the function of USB OTG."))
+m = Map("usb_gadget", translate("USB Gadget"), translate("Specify the function of USB gadget."))
 function m.on_commit(self)
-    sys.exec("/etc/init.d/usb_otg reload")
+    sys.exec("/etc/init.d/usb_gadget reload")
 end
 -- END Map
 
 -- BEGIN Settings Section
-settings_section = m:section(TypedSection, "usb_otg", translate("Settings"))
+settings_section = m:section(TypedSection, "usb_gadget", translate("Settings"))
 settings_section.optional = false
 settings_section.rmempty = false
 settings_section.anonymous = true
 -- END Section
 
--- BEGIN USB OTG Enable Checkbox
-usb_otg_enable = settings_section:option(Flag, "enabled", translate("Enable USB OTG"), "")
-usb_otg_enable.optional = false
-usb_otg_enable.rmempty = false
--- END USB OTG Enable Checkbox
+-- BEGIN USB Gadget Enable Checkbox
+usb_gadget_enable = settings_section:option(Flag, "enabled", translate("Enable USB gadget"), "")
+usb_gadget_enable.optional = false
+usb_gadget_enable.rmempty = false
+-- END USB Gadget Enable Checkbox
 
 -- BEGIN Type List
 c = settings_section:option(ListValue, "type", translate("Function"))
