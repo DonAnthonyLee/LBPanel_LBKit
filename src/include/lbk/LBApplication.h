@@ -37,6 +37,7 @@
 
 #define LBK_QUIT_REQUESTED		'lBKq'
 #define LBK_APP_SETTINGS_UPDATED	'lBKs'
+#define LBK_VIEW_STOOD_BACK		'lBKb'
 
 class LBPanelDevice;
 
