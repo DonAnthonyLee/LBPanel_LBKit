@@ -1,5 +1,5 @@
 
-config usb_otg
+config usb_gadget
 	option enabled '0'
 	option type '0'
 	option g_ether_args 'dev_addr=26:00:0a:0b:0c:0d host_addr=26:00:0a:0b:0c:0e'

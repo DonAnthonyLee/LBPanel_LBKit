@@ -6,17 +6,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "USB OTG"
-msgstr "USB OTG"
+msgid "USB Gadget"
+msgstr "OTG 设备"
 
-msgid "Specify the function of USB OTG."
-msgstr "指定 USB OTG 功能。"
+msgid "Specify the function of USB gadget."
+msgstr "指定 USB OTG 设备。"
 
 msgid "Settings"
 msgstr "配置"
 
-msgid "Enable USB OTG"
-msgstr "启用 USB OTG"
+msgid "Enable USB gadget"
+msgstr "启用 USB OTG 设备"
 
 msgid "Function"
 msgstr "功能"
