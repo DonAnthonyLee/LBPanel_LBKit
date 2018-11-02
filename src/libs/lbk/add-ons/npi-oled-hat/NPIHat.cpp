@@ -427,6 +427,13 @@ NPIHat::Flush(bigtime_t &ts)
 }
 
 
+void
+NPIHat::Sync()
+{
+	// Because it's not client/server mode, we don't need to sync
+}
+
+
 #ifdef LBK_ENABLE_MORE_FEATURES
 status_t
 NPIHat::GetOrientationOfKeys(orientation &o)
