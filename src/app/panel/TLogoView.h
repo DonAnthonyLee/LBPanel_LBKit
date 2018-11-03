@@ -23,66 +23,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: TMainPageView.h
+ * File: TLogoView.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __T_MAIN_PAGE_VIEW_H__
-#define __T_MAIN_PAGE_VIEW_H__
+#ifndef __T_LOGO_VIEW_H__
+#define __T_LOGO_VIEW_H__
 
 #include <lbk/LBKit.h>
 
-#define LBPANEL_MAJOR_VERSION		0
-#define LBPANEL_MINOR_VERSION		1
-
 #ifdef __cplusplus /* Just for C++ */
 
-class TMainPageView : public LBPageView {
+class TLogoView : public LBView {
 public:
-	TMainPageView(const char *name = NULL);
-	virtual ~TMainPageView();
+	TLogoView(const char *name);
+	virtual ~TLogoView();
 
 	virtual void	Draw(BRect updateRect);
-	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	Pulse();
-	virtual void	Activated(bool state);
-
-	void		Set24Hours(bool state = true);
-	void		ShowSeconds(bool state = true);
-
-	// TODO
-	virtual void	MessageReceived(BMessage *msg);
+	virtual void	StandIn();
 
 private:
-	int32 fTabIndex;
-	bool f24Hours;
-	bool fShowSeconds;
-	bigtime_t fShowTimestamp;
-
-	BString fDate;
-	BString fTime;
-	BString fWeek;
-	int32 fInterfacesCount;
-	int32 fCPUSCount;
-	bigtime_t *fCPUTime;
-
-	void GetTime(BString*, BString*, BString*) const;
-
-	void DrawBoardInfo(BRect r);
-	void DrawDateAndTime(BRect r);
-	void DrawCPUInfo(BRect r);
-	void DrawInterfaceInfo(BRect r, int32 id);
-
-	int32 GetInterfacesCount() const;
-	bool GetInterfaceName(BString &ifname, int32 id) const;
-	bool GetInterfaceHWAddr(BString &hwaddr, const char *ifname) const;
-	bool GetInterfaceIPv4(BString &ipaddr, const char *ifname) const;
-	bool GetInterfaceIPv6(BString &ipaddr, const char *ifname) const;
+	uint16 fTicks;
 };
 
 #endif /* __cplusplus */
 
-#endif /* __T_MAIN_PAGE_VIEW_H__ */
+#endif /* __T_LOGO_VIEW_H__ */
 

@@ -23,66 +23,98 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: TMainPageView.h
+ * File: TLogoView.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __T_MAIN_PAGE_VIEW_H__
-#define __T_MAIN_PAGE_VIEW_H__
+#include "TLogoView.h"
+#include "TMainPageView.h" // for "LBPANEL_xxxx_VERSION"
 
-#include <lbk/LBKit.h>
 
-#define LBPANEL_MAJOR_VERSION		0
-#define LBPANEL_MINOR_VERSION		1
+TLogoView::TLogoView(const char *name)
+	: LBView(name), fTicks(0)
+{
+}
 
-#ifdef __cplusplus /* Just for C++ */
 
-class TMainPageView : public LBPageView {
-public:
-	TMainPageView(const char *name = NULL);
-	virtual ~TMainPageView();
+TLogoView::~TLogoView()
+{
+}
 
-	virtual void	Draw(BRect updateRect);
-	virtual void	KeyDown(uint8 key, uint8 clicks);
-	virtual void	KeyUp(uint8 key, uint8 clicks);
-	virtual void	Pulse();
-	virtual void	Activated(bool state);
 
-	void		Set24Hours(bool state = true);
-	void		ShowSeconds(bool state = true);
+void
+TLogoView::KeyUp(uint8 key, uint8 clicks)
+{
+	StandBack();
+}
 
-	// TODO
-	virtual void	MessageReceived(BMessage *msg);
 
-private:
-	int32 fTabIndex;
-	bool f24Hours;
-	bool fShowSeconds;
-	bigtime_t fShowTimestamp;
+void
+TLogoView::StandIn()
+{
+	LBView *master = MasterView();
+	if(master == NULL) return;
 
-	BString fDate;
-	BString fTime;
-	BString fWeek;
-	int32 fInterfacesCount;
-	int32 fCPUSCount;
-	bigtime_t *fCPUTime;
+	LBView *old = master->StandingInView();
+	if(old == this) return;
 
-	void GetTime(BString*, BString*, BString*) const;
+	LBView::StandIn();
+	if(master->StandingInView() != this) return;
 
-	void DrawBoardInfo(BRect r);
-	void DrawDateAndTime(BRect r);
-	void DrawCPUInfo(BRect r);
-	void DrawInterfaceInfo(BRect r, int32 id);
+	fTicks = 0;
+}
 
-	int32 GetInterfacesCount() const;
-	bool GetInterfaceName(BString &ifname, int32 id) const;
-	bool GetInterfaceHWAddr(BString &hwaddr, const char *ifname) const;
-	bool GetInterfaceIPv4(BString &ipaddr, const char *ifname) const;
-	bool GetInterfaceIPv6(BString &ipaddr, const char *ifname) const;
-};
 
-#endif /* __cplusplus */
+void
+TLogoView::Draw(BRect updateRect)
+{
+	BString str("LBPanel");
+	BRect r;
+	BPoint pt;
+	uint16 w;
 
-#endif /* __T_MAIN_PAGE_VIEW_H__ */
+	r = Bounds();
+	if(fTicks == 0)
+		FillRect(r, B_SOLID_LOW);
+	r.top = r.Center().y - 18;
+	r.bottom = r.top + 36;
+	if(fTicks > 0)
+		FillRect(r, B_SOLID_LOW);
+
+	SetFontSize(32);
+	w = StringWidth(str.String());
+	pt = r.Center() - BPoint(w / 2.f, 31 / 2.f);
+	DrawString(str.String(), pt);
+
+	r.top = r.bottom - r.Height() / 2.f + 1;
+	InvertRect(r);
+
+	if(fTicks == 0)
+	{
+		SetFontSize(12);
+		str.Truncate(0);
+		str << "版本 " << LBPANEL_MAJOR_VERSION << "." << LBPANEL_MINOR_VERSION;
+		w = StringWidth(str.String());
+		pt = r.RightBottom() - BPoint(w + 1, -2);
+		DrawString(str.String(), pt);
+	}
+
+	r.OffsetBy(0, -(r.Height() + 1));
+	r.right = r.left + 8 * fTicks;
+	InvertRect(r);
+}
+
+
+void
+TLogoView::Pulse()
+{
+	fTicks++;
+	EnableUpdate(false);
+	Draw(Bounds());
+	EnableUpdate(true);
+
+	if(fTicks < (Bounds().Width() / 8) + 5) return;
+	StandBack();
+}
 

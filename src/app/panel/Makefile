@@ -9,7 +9,7 @@ TARGET_1 = LBPanel
 TARGET_2 =
 TARGET_3 =
 
-OBJECTS_1 = TMainPageView.o TMenuPageView.o main.o
+OBJECTS_1 = TLogoView.o TMainPageView.o TMenuPageView.o main.o
 OBJECTS_2 =
 OBJECTS_3 =
 
