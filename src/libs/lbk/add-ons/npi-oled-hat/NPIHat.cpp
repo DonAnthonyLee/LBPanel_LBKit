@@ -383,6 +383,9 @@ NPIHat::SetLowColor(rgb_color c)
 status_t
 NPIHat::MapBuffer(void **buf)
 {
+	EAutolock <NPIHat>autolock(this);
+	if(autolock.IsLocked() == false) return B_ERROR;
+
 	if(buf == NULL) return B_BAD_VALUE;
 	if(fBuffer != NULL) return B_ERROR;
 
@@ -406,6 +409,9 @@ NPIHat::MapBuffer(void **buf)
 status_t
 NPIHat::UnmapBuffer()
 {
+	EAutolock <NPIHat>autolock(this);
+	if(autolock.IsLocked() == false) return B_ERROR;
+
 	if(fBuffer == NULL) return B_BAD_VALUE;
 	if(munmap(fBuffer, OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3)) != 0) return B_ERROR;
 	fBuffer = NULL;
