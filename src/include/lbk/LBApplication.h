@@ -31,6 +31,7 @@
 #ifndef __LBK_APPLICATION_H__
 #define __LBK_APPLICATION_H__
 
+#include <lbk/LBAppSettings.h>
 #include <lbk/LBView.h>
 
 #ifdef __cplusplus /* Just for C++ */
@@ -43,7 +44,7 @@ class LBPanelDevice;
 
 class _EXPORT LBApplication : public BLooper {
 public:
-	LBApplication(const BList *cfg);
+	LBApplication(const LBAppSettings *settings);
 	virtual ~LBApplication();
 
 	bool		AddPageView(LBView *view, bool left_side = true, int32 panel_index = 0);

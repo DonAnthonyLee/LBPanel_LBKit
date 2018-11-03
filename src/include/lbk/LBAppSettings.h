@@ -23,27 +23,40 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBKit.h
+ * File: LBAppSettings.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __LBK_KIT_H__
-#define __LBK_KIT_H__
+#ifndef __LBK_APPLICATION_SETTINGS_H__
+#define __LBK_APPLICATION_SETTINGS_H__
 
 #include <lbk/LBKConfig.h>
 
-#include <lbk/LBIconDefs.h>
-#include <lbk/LBView.h>
-#include <lbk/LBPageView.h>
-#include <lbk/LBAppSettings.h>
-#include <lbk/LBApplication.h>
+#ifdef __cplusplus /* Just for C++ */
 
-#include <lbk/LBAlertView.h>
-#include <lbk/LBListItem.h>
-#include <lbk/LBListView.h>
-#include <lbk/LBMenuItem.h>
-#include <lbk/LBMenuView.h>
+class _EXPORT LBAppSettings {
+public:
+	LBAppSettings();
+	~LBAppSettings();
 
-#endif /* __LBK_KIT_H__ */
+	bool			AddItem(const char *item, int32 index = -1);
+	bool			AddItems(BFile *f, int32 index = -1);
+	bool			AddItems(const LBAppSettings &settings, int32 index = -1);
+	void			MakeEmpty();
+
+	LBAppSettings&		operator+=(const LBAppSettings &settings);
+	LBAppSettings&		operator=(const LBAppSettings &settings);
+
+	const char*		operator[](int index) const;
+	const char*		ItemAt(int32 index) const;
+	int32			CountItems() const;
+
+private:
+	BList fSettings;
+};
+
+#endif /* __cplusplus */
+
+#endif /* __LBK_APPLICATION_SETTINGS_H__ */
 

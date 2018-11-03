@@ -18,6 +18,7 @@ OBJECTS_1 = \
 	add-ons/LBPanelBuffer.o \
 	LBView.o \
 	LBPageView.o \
+	LBAppSettings.o \
 	LBApplication.o \
 	LBIconData.o \
 	LBScopeItem.o \
@@ -59,7 +60,7 @@ targets:
 
 addons:
 	for f in $(ADD_ONS_DIRS) .none; do \
-		(test $$f = .none || CC=$(CC) $(MAKE) $(MAKEFLAGS) -C add-ons/$$f) \
+		(test $$f = .none || $(MAKE) $(MAKEFLAGS) -C add-ons/$$f) \
 	done
 
 $(TARGET_1): $(OBJECTS_1)
