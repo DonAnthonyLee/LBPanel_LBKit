@@ -501,7 +501,7 @@ LBVPD::EnableUpdate()
 #endif
 
 status_t
-LBVPD::MapBuffer(void **buf)
+LBVPD::MapBuffer(void **buf, size_t *len)
 {
 #ifdef ETK_MAJOR_VERSION
 	EAutolock <LBVPD>autolock(this);
@@ -536,6 +536,7 @@ LBVPD::MapBuffer(void **buf)
 	fBufferLen = (size_t)nBytes;
 
 	*buf = fBuffer;
+	*len = fBufferLen;
 	return B_OK;
 }
 

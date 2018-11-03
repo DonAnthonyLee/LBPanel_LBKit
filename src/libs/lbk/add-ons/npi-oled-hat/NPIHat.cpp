@@ -381,7 +381,7 @@ NPIHat::SetLowColor(rgb_color c)
 
 
 status_t
-NPIHat::MapBuffer(void **buf)
+NPIHat::MapBuffer(void **buf, size_t *len)
 {
 	EAutolock <NPIHat>autolock(this);
 	if(autolock.IsLocked() == false) return B_ERROR;
@@ -402,6 +402,7 @@ NPIHat::MapBuffer(void **buf)
 	}
 
 	*buf = fBuffer;
+	*len = OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3);
 	return B_OK;
 }
 
