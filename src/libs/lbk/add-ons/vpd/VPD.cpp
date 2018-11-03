@@ -322,7 +322,11 @@ LBVPD::FillRect(BRect rect,
 
 	status_t st = fMsgr.SendMessage(&msg);
 	if(st == B_OK)
+	{
+		Lock();
 		ts = fTimestamp = real_time_clock_usecs();
+		Unlock();
+	}
 
 	return st;
 }
@@ -365,7 +369,11 @@ LBVPD::DrawString(const char *str,
 
 	status_t st = fMsgr.SendMessage(&msg);
 	if(st == B_OK)
+	{
+		Lock();
 		ts = fTimestamp = real_time_clock_usecs();
+		Unlock();
+	}
 
 	return st;
 }
@@ -401,7 +409,11 @@ LBVPD::InvertRect(BRect rect,
 
 	status_t st = fMsgr.SendMessage(&msg);
 	if(st == B_OK)
+	{
+		Lock();
 		ts = fTimestamp = real_time_clock_usecs();
+		Unlock();
+	}
 
 	return st;
 }
@@ -420,6 +432,12 @@ status_t
 LBVPD::SetPowerState(bool state,
 		     bigtime_t &ts)
 {
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBVPD>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+
 	if(state != fState)
 	{
 		BMessage msg(VPD_MSG_POWER_STATE);
@@ -449,7 +467,9 @@ LBVPD::GetTimestamp(bigtime_t &ts)
 status_t
 LBVPD::SetTimestampNow(bigtime_t &tsRet)
 {
+	Lock();
 	tsRet = fTimestamp = real_time_clock_usecs();
+	Unlock();
 
 	return B_OK;
 }
