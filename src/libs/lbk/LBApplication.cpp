@@ -183,7 +183,7 @@ static LBPanelDeviceAddOnData* lbk_app_get_panel_device_data(const BList &addOns
 }
 
 
-LBApplication::LBApplication(const BList *cfg)
+LBApplication::LBApplication(const LBAppSettings *cfg)
 	: BLooper(NULL, B_URGENT_DISPLAY_PRIORITY),
 	  fQuitLooper(false),
 	  fPulseRate(0),
@@ -196,18 +196,18 @@ LBApplication::LBApplication(const BList *cfg)
 	{
 		for(int32 k = 0; k < cfg->CountItems(); k++)
 		{
-			BString *item = (BString*)cfg->ItemAt(k);
-			if(item == NULL || item->Length() == 0) continue;
-			if(item->ByteAt(0) == '#' || item->FindFirst("//") == 0) continue;
-			item->RemoveAll("\r");
-			item->RemoveAll("\n");
-			item->RemoveAll(" ");
+			BString item(cfg->ItemAt(k));
+			if(item.Length() == 0) continue;
+			if(item.ByteAt(0) == '#' || item.FindFirst("//") == 0) continue;
+			item.RemoveAll("\r");
+			item.RemoveAll("\n");
+			item.RemoveAll(" ");
 
-			int32 found = item->FindFirst("=");
-			if(found <= 0 || found == item->Length() - 1) continue;
+			int32 found = item.FindFirst("=");
+			if(found <= 0 || found == item.Length() - 1) continue;
 
-			BString name(item->String(), found);
-			BString value(item->String() + found + 1);
+			BString name(item.String(), found);
+			BString value(item.String() + found + 1);
 			BString options;
 
 			found = value.FindFirst(",");

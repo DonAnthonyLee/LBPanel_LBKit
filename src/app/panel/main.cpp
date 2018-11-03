@@ -38,16 +38,6 @@
 #include "TMainPageView.h"
 #include "TMenuPageView.h"
 
-#ifdef ETK_MAJOR_VERSION
-	#undef SEEK_END
-	#undef SEEK_CUR
-	#undef SEEK_SET
-
-	#define SEEK_SET	E_SEEK_SET
-	#define SEEK_CUR	E_SEEK_CUR
-	#define SEEK_END	E_SEEK_END
-#endif
-
 
 void show_usage(const char *cmd)
 {
@@ -75,55 +65,25 @@ int main(int argc, char **argv)
 		}
 	}
 
-	BList cfg;
-	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK)
+	LBAppSettings cfg;
+	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK || cfg.AddItems(&f) == false)
 	{
 		fprintf(stderr, "Unable to open config file (%s), use default settings !\n", path_conf.Path());
 
 #if 1
-		cfg.AddItem(new BString("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so"));
+		cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so");
 #else
-		cfg.AddItem(new BString("PanelDeviceAddon=/usr/lib/add-ons/lbk/vpd.so,point_size=2,width=128,height=64"));
+		cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/vpd.so,point_size=2,width=128,height=64");
 #endif
-		cfg.AddItem(new BString("IPC=LBPanel"));
 
 		// TODO: more
 	}
-	else
-	{
-		char *buf = NULL;
-		off_t fsize = (off_t)f.Seek(0, SEEK_END);
-		f.Seek(0, SEEK_SET);
-
-		if(fsize == (off_t)-1 || fsize > 65535 ||
-		   (buf = (char*)malloc((size_t)fsize)) == NULL ||
-		   f.Read(buf, fsize) != (ssize_t)fsize)
-		{
-			if(buf != NULL) free(buf);
-			fprintf(stderr, "Unable to read config file (%s) !\n", path_conf.Path());
-			exit(-1);
-		}
-
-		BString str(buf);
-		free(buf);
-
-		int32 offset = 0, found;
-		while((found = str.FindFirst("\n", offset)) > 0)
-		{
-			if(found > offset && str[offset] != '#')
-			{
-				BString *item = new BString(str.String() + offset, found - offset);
-				cfg.AddItem(item);
-			}
-			offset = found + 1;
-		}
-
-		cfg.AddItem(new BString("IPC=LBPanel"), 0);
-	}
 	f.Unset();
 
+	cfg.AddItem("IPC=LBPanel", 0);
+
 	LBApplication *app = new LBApplication(&cfg);
-	for(int32 k = 0; k < cfg.CountItems(); k++) delete ((BString*)cfg.ItemAt(k));
+	cfg.MakeEmpty();
 
 	// TODO: Screen timeout, tools, custom commands, etc. IT'S A LOT ...
 	app->AddPageView(new TMainPageView(), false);
