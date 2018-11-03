@@ -370,7 +370,7 @@ TMainPageView::DrawBoardInfo(BRect rect)
 		{
 			StrokeRect(r1);
 			r1.InsetBy(1, 1);
-			r1.right -= r.Width() * (float)free_mem / (float)total_mem;
+			r1.right -= r1.Width() * (float)free_mem / (float)total_mem;
 		}
 		InvertRect(r1);
 	}
