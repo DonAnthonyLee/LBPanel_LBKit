@@ -49,6 +49,11 @@ public:
 
 	virtual status_t	InitCheck(const char *options) = 0;
 
+	/*
+	 * NOTE:
+	 *	All virtual functions below are MT-Safe.
+	 */
+
 	/* screen */
 	virtual uint16		ScreenWidth() = 0;
 	virtual uint16		ScreenHeight() = 0;
