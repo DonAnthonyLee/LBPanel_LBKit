@@ -42,6 +42,7 @@
 #include <linux/sockios.h>
 
 #include "TMainPageView.h"
+#include "TLogoView.h"
 
 #ifdef ETK_MAJOR_VERSION
 	#define BDirectory		EDirectory
@@ -63,6 +64,10 @@ TMainPageView::TMainPageView(const char *name)
 {
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
 	SetNavButtonIcon(2, LBK_ICON_RIGHT);
+
+	TLogoView *view = new TLogoView("logo");
+	AddStickView(view);
+	view->StandIn();
 
 	BDirectory dir("/sys/bus/cpu/devices");
 	if((fCPUSCount = dir.CountEntries()) > 0)
@@ -876,10 +881,17 @@ TMainPageView::Activated(bool state)
 {
 	LBPageView::Activated(state);
 
-	if(state == false || fTabIndex > 0)
-		cast_as(Looper(), LBApplication)->SetPulseRate(0);
-	else
-		cast_as(Looper(), LBApplication)->SetPulseRate(fTabIndex == 0 ? 500000 : 1000000);
+	if(IsStoodIn() == false)
+	{
+		if(state == false || fTabIndex > 0)
+			cast_as(Looper(), LBApplication)->SetPulseRate(0);
+		else
+			cast_as(Looper(), LBApplication)->SetPulseRate(fTabIndex == 0 ? 500000 : 1000000);
+	}
+	else if(strcmp(StandingInView()->Name(), "logo") == 0) // showing logo
+	{
+		cast_as(Looper(), LBApplication)->SetPulseRate(50000);
+	}
 
 	if(state)
 		SetPowerState(true);
@@ -927,6 +939,10 @@ TMainPageView::MessageReceived(BMessage *msg)
 
 			printf("[TMainPageView]: Going to power off !\n");
 			system("poweroff");
+			break;
+
+		case LBK_VIEW_STOOD_BACK:
+			Activated(IsActivated()); // update pulse rate
 			break;
 
 		default:
