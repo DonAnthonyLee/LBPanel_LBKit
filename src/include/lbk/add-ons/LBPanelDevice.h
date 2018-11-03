@@ -85,7 +85,7 @@ public:
 	virtual status_t	SetTimestampNow(bigtime_t &tsRet) = 0;
 	virtual status_t	DisableUpdate() = 0;
 	virtual status_t	EnableUpdate() = 0;
-	virtual status_t	MapBuffer(void **buf) = 0;
+	virtual status_t	MapBuffer(void **buf, size_t *len) = 0;
 	virtual status_t	UnmapBuffer() = 0;
 	virtual status_t	Flush(bigtime_t &ts) = 0;
 	virtual void		Sync() = 0;

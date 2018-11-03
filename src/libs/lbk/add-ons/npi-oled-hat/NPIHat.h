@@ -73,7 +73,7 @@ public:
 	virtual status_t	SetTimestampNow(bigtime_t &tsRet);
 	virtual status_t	DisableUpdate();
 	virtual status_t	EnableUpdate();
-	virtual status_t	MapBuffer(void **buf);
+	virtual status_t	MapBuffer(void **buf, size_t *len);
 	virtual status_t	UnmapBuffer();
 	virtual status_t	Flush(bigtime_t &ts);
 	virtual void		Sync();
