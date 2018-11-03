@@ -2,13 +2,25 @@
 
 <br>
 
++ etkxx-lite-dev
+
+依赖项：uclibcxx
+
+说明：
+
+ETK++ 开发库裁剪版，该安装包提供的运行时库（.so）所包含接口为目前 LBKit 库最小所需。
+
+授权协议：MIT
+
+<br>
+
 + etkxx-dev
 
 依赖项：libstdcpp
 
 说明：
 
-ETK++ 开发库，目前提供的运行时库（.so）包含所有接口，届时根据实际需求另行裁剪。
+ETK++ 开发库，该安装包提供的运行时库（.so）包含所有接口（无图形接口硬件实现）。
 
 授权协议：MIT
 
@@ -16,7 +28,7 @@ ETK++ 开发库，目前提供的运行时库（.so）包含所有接口，届�
 
 + lite-beapi-dev
 
-依赖项：etkxx-dev
+依赖项：无（仅考虑安装，但其依赖于 etkxx-dev 或者 etkxx-lite-dev）
 
 说明：
 
