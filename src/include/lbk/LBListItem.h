@@ -34,6 +34,13 @@
 #include <lbk/LBIconDefs.h>
 #include <lbk/LBScopeItem.h>
 
+#if defined(ETK_MAJOR_VERSION) && defined(ETK_LITE_BUILD)
+enum {
+	B_CONTROL_OFF = 0,
+	B_CONTROL_ON = 1
+};
+#endif
+
 #ifdef __cplusplus /* Just for C++ */
 
 class LBListView;

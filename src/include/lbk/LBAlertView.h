@@ -33,6 +33,16 @@
 
 #include <lbk/LBView.h>
 
+#if defined(ETK_MAJOR_VERSION) && defined(ETK_LITE_BUILD)
+enum alert_type {
+	B_EMPTY_ALERT = 0,
+	B_INFO_ALERT,
+	B_IDEA_ALERT,
+	B_WARNING_ALERT,
+	B_STOP_ALERT
+};
+#endif
+
 #ifdef __cplusplus /* Just for C++ */
 
 class _EXPORT LBAlertView : public LBView {
