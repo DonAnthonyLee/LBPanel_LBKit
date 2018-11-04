@@ -1,0 +1,14 @@
+--- a/g++-uc	2018-11-04 14:29:26.845798763 +0800
++++ b/g++-uc	2018-11-04 14:28:59.689602630 +0800
+@@ -9,7 +9,10 @@
+ WRAPPER_INCLIB="Y"
+ while [ -n "$1" ]
+ do
+-	WRAPPER_OPTIONS="$WRAPPER_OPTIONS $1"
++	ARG="$1"
++	if [ "${ARG}" = "${ARG/-DPACKAGE/a}" ]; then
++		WRAPPER_OPTIONS="$WRAPPER_OPTIONS $1"
++	fi
+ 	if [ "$1" = "-c" -o "$1" = "-E" -o "$1" = "-S" -o "$1" = "-MF" ]
+ 	then
+ 		WRAPPER_INCLIB="N"
