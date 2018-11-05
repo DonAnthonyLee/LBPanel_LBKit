@@ -77,7 +77,7 @@ LBView::FillRect(BRect r, pattern p)
 		return;
 	}
 
-	r &= LBView::Bounds();
+	r = r & LBView::Bounds();
 	if(fDev == NULL || fActivated == false || r.IsValid() == false) return;
 
 	// avoid apart-drawing
@@ -156,7 +156,7 @@ LBView::InvertRect(BRect r)
 		return;
 	}
 
-	r &= LBView::Bounds();
+	r = r & LBView::Bounds();
 	if(fDev == NULL || fActivated == false || r.IsValid() == false) return;
 
 	// avoid apart-drawing
@@ -479,7 +479,7 @@ LBView::MessageReceived(BMessage *msg)
 			if(IsNeededToRegen())
 				fUpdateRect = LBView::Bounds();
 			else
-				fUpdateRect &= LBView::Bounds();
+				fUpdateRect = fUpdateRect & LBView::Bounds();
 
 			if(fUpdateRect.IsValid())
 			{
@@ -565,7 +565,7 @@ LBView::Invalidate(BRect r)
 	if(r.IsValid() == false) return;
 
 	if(fUpdateRect.IsValid())
-		fUpdateRect |= r;
+		fUpdateRect = fUpdateRect | r;
 	else
 		fUpdateRect = r;
 	Looper()->PostMessage('_UPN', this); // like _UPDATE_IF_NEEDED_ in BeOS API

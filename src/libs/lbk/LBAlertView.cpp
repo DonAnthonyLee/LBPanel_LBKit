@@ -201,7 +201,7 @@ LBAlertView::Draw(BRect rect)
 	{
 		SetFontSize(12);
 		w = StringWidth(fTitle);
-		DrawString(fTitle.String(), BPoint(r.Center().x - w / 2.f, 1));
+		DrawString(fTitle.String(), BPoint(r.left + r.Width() / 2.f - w / 2.f, 1));
 	}
 
 	// message area
@@ -269,7 +269,7 @@ LBAlertView::Draw(BRect rect)
 		{
 			if(ICON_IS_16x16(fIcons[idBtn]) && r.Intersects(rect))
 			{
-				BPoint pt = r.Center() - BPoint(7, 7);
+				BPoint pt = r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(7, 7);
 				uint8 pressed = 0;
 
 				KeyState(&pressed);

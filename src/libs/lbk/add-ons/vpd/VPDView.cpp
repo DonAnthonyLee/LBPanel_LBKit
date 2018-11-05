@@ -421,7 +421,7 @@ VPDView::MessageReceived(BMessage *msg)
 					if(msg->FindBool("vpattern", &vpat) != B_OK) break;
 				}
 
-				r &= BRect(0, 0, fBuffer.Width() - 1, fBuffer.Height() - 1);
+				r = r & BRect(0, 0, fBuffer.Width() - 1, fBuffer.Height() - 1);
 				if(r.IsValid() == false) break;
 
 				if(msg->what == VPD_MSG_FILL_RECT)
@@ -435,7 +435,7 @@ VPDView::MessageReceived(BMessage *msg)
 				if(fBufferUpdateEnabled)
 					Invalidate(r);
 				else if(fBufferUpdateRect.IsValid())
-					fBufferUpdateRect |= r;
+					fBufferUpdateRect = fBufferUpdateRect | r;
 				else
 					fBufferUpdateRect = r;
 			}
@@ -465,7 +465,7 @@ VPDView::MessageReceived(BMessage *msg)
 				if(fBufferUpdateEnabled)
 					Invalidate(r);
 				else if(fBufferUpdateRect.IsValid())
-					fBufferUpdateRect |= r;
+					fBufferUpdateRect = fBufferUpdateRect | r;
 				else
 					fBufferUpdateRect = r;
 			}
@@ -583,9 +583,11 @@ VPDView::StringWidth_h8(const char *str) const
 		aStr.CopyInto((eunichar *)ustr, (count + 1) * 2, 0, -1);
 #else
 		int32 state = 0;
+		int32 srcLen = aStr.Length();
+		int32 dstLen = count * 2;
 		if(convert_from_utf8(B_UNICODE_CONVERSION,
-				     aStr.String(), aStr.Length(),
-				     (char*)ustr, count * 2,
+				     aStr.String(), &srcLen,
+				     (char*)ustr, &dstLen,
 				     &state) != B_OK)
 			count = 0;
 #endif
@@ -627,9 +629,11 @@ VPDView::DrawStringOnBuffer_h8(const char *str, uint16 x, uint16 y, bool erase_m
 	aStr.CopyInto((eunichar *)ustr, (count + 1) * 2, 0, -1);
 #else
 	int32 state = 0;
+	int32 srcLen = aStr.Length();
+	int32 dstLen = count * 2;
 	if(convert_from_utf8(B_UNICODE_CONVERSION,
-			     aStr.String(), aStr.Length(),
-			     (char*)ustr, count * 2,
+			     aStr.String(), &srcLen,
+			     (char*)ustr, &dstLen,
 			     &state) != B_OK)
 	{
 		free(ustr);

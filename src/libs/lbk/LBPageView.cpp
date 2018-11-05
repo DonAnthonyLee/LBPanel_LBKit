@@ -155,7 +155,7 @@ LBPageView::Draw(BRect rect)
 	{
 		if(IsNavButtonHidden(k) == false && r.Intersects(rect))
 		{
-			BPoint pt = r.Center() - BPoint(7, 7);
+			BPoint pt = r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(7, 7);
 			uint8 pressed = 0;
 
 			KeyState(&pressed);

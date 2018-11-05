@@ -210,6 +210,10 @@ LBApplication::LBApplication(const LBAppSettings *cfg)
 			BString value(item.String() + found + 1);
 			BString options;
 
+#if 0
+			fprintf(stdout, "[LBApplication]: name = %s, value = %s\n", name.String(), value.String());
+#endif
+
 			found = value.FindFirst(",");
 			if(found > 0)
 			{
@@ -445,7 +449,11 @@ LBApplication::QuitRequested()
 void
 LBApplication::Go()
 {
+#ifdef ETK_MAJOR_VERSION
 	if(IsRunning())
+#else
+	if(Thread() > 0)
+#endif
 	{
 		fprintf(stderr, "[LBApplication]: It's forbidden to run Go() more than ONE time !\n");
 		return;
@@ -485,7 +493,11 @@ LBApplication::Go()
 	bigtime_t pulse_rate = 0;
 
 	timeout.tv_sec = 0;
+#ifdef ETK_MAJOR_VERSION
 	while(IsRunning() && fQuitLooper == false)
+#else
+	while(Thread() > 0 && fQuitLooper == false)
+#endif
 	{
 		timeout.tv_usec = (pulse_rate > 0 && pulse_rate < (bigtime_t)500000) ? pulse_rate : 500000;
 		if(count > 0 && timeout.tv_usec > LBK_KEY_INTERVAL / 3)

@@ -104,7 +104,7 @@ LBMenuView::Draw(BRect rect)
 	{
 		SetFontSize(12);
 		w = StringWidth(curItem->Label());
-		DrawString(curItem->Label(), BPoint(r.Center().x - w / 2.f, 1));
+		DrawString(curItem->Label(), BPoint(r.left + r.Width() / 2.f - w / 2.f, 1));
 	}
 
 	// item icons
@@ -134,12 +134,12 @@ LBMenuView::Draw(BRect rect)
 					icon_inverse.type = icon->type;
 					for(size_t k = 0; k < sizeof(icon_inverse.data); k++)
 						icon_inverse.data[k] = ~(icon->data[k]);
-					DrawIcon(&icon_inverse, r.Center() - BPoint(15, 15));
+					DrawIcon(&icon_inverse, r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15));
 				}
 			}
 			else if(aItem->Icon() != LBK_ICON_NONE)
 			{
-				DrawIcon(aItem->Icon(), r.Center() - BPoint(15, 15));
+				DrawIcon(aItem->Icon(), r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15));
 			}
 		}
 
