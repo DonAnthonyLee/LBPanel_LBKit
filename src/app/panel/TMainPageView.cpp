@@ -33,6 +33,9 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <lbk/LBKConfig.h>
+
+#ifdef ETK_OS_LINUX
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -40,6 +43,7 @@
 #include <arpa/inet.h>
 #include <linux/if.h>
 #include <linux/sockios.h>
+#endif
 
 #include "TMainPageView.h"
 #include "TLogoView.h"
@@ -208,7 +212,7 @@ TMainPageView::DrawDateAndTime(BRect rect)
 	{
 		SetFontSize(12);
 		w = StringWidth(fDate.String());
-		DrawString(fDate.String(), BPoint(r.Center().x - w / 2.f, 1));
+		DrawString(fDate.String(), BPoint(r.left + r.Width() / 2.f - w / 2.f, 1));
 	}
 
 	r.OffsetBy(0, r.Height() + 1);
@@ -228,7 +232,7 @@ TMainPageView::DrawDateAndTime(BRect rect)
 			SetFontSize(24);
 			w = w1 + 2 + StringWidth(fTime.String() + 6);
 
-			BPoint pt = r.Center() - BPoint(w / 2.f, 23 / 2.f);
+			BPoint pt = r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, 23 / 2.f);
 			DrawString(fTime.String() + 6, pt + BPoint(w1 + 2, 0), true);
 			SetFontSize(12);
 			DrawString(str.String(), pt + BPoint(0, 10), true);
@@ -237,7 +241,7 @@ TMainPageView::DrawDateAndTime(BRect rect)
 		{
 			SetFontSize(fShowSeconds ? 24 : 32);
 			w = StringWidth(fTime.String());
-			DrawString(fTime.String(), r.Center() - BPoint(w / 2.f, (fShowSeconds ? 23 : 31) / 2.f), true);
+			DrawString(fTime.String(), r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, (fShowSeconds ? 23 : 31) / 2.f), true);
 		}
 	}
 
@@ -248,7 +252,7 @@ TMainPageView::DrawDateAndTime(BRect rect)
 		SetFontSize(12);
 		w = StringWidth(fWeek.String());
 		DrawString(fWeek.String(),
-			   r.Center() - BPoint(w / 2.f, 11 / 2.f));
+			   r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, 11 / 2.f));
 	}
 }
 
@@ -272,7 +276,7 @@ TMainPageView::DrawBoardInfo(BRect rect)
 
 		w = StringWidth(str.String());
 		DrawString(str.String(),
-			   r.Center() - BPoint(w / 2.f, 11 / 2.f));
+			   r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, 11 / 2.f));
 	}
 
 	r = Bounds();
@@ -292,6 +296,7 @@ TMainPageView::DrawBoardInfo(BRect rect)
 			   BPoint(r1.left, r1.top + (r1.Height() - 11.f) / 2.f));
 	}
 
+#ifdef ETK_OS_LINUX
 	// loadavg
 	r.OffsetBy(0, r.Height() + 1);
 	if(r.Intersects(rect))
@@ -379,12 +384,16 @@ TMainPageView::DrawBoardInfo(BRect rect)
 		}
 		InvertRect(r1);
 	}
+#else
+	// TODO
+#endif
 }
 
 
 void
 TMainPageView::DrawCPUInfo(BRect rect)
 {
+#ifdef ETK_OS_LINUX
 	BString str;
 	uint16 w;
 	BFile f;
@@ -587,6 +596,9 @@ TMainPageView::DrawCPUInfo(BRect rect)
 		DrawString(str.String(),
 			   r1.Center() - BPoint(w / 2.f, 11 / 2.f));
 	}
+#else
+	// TODO
+#endif
 }
 
 
@@ -613,7 +625,7 @@ TMainPageView::DrawInterfaceInfo(BRect rect, int32 id)
 
 		w = StringWidth(str.String());
 		DrawString(str.String(),
-			   r.Center() - BPoint(w / 2.f, 11 / 2.f));
+			   r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, 11 / 2.f));
 	}
 
 	if(ifname.Length() == 0)
@@ -621,8 +633,10 @@ TMainPageView::DrawInterfaceInfo(BRect rect, int32 id)
 		str.SetTo("无法获取接口信息!");
 
 		w = StringWidth(str.String());
+
+		BRect r1 = Bounds();
 		DrawString(str.String(),
-			   Bounds().Center() - BPoint(w / 2.f, 11 / 2.f));
+			   r1.LeftTop() + BPoint(r1.Width() / 2.f, r1.Height() / 2.f) - BPoint(w / 2.f, 11 / 2.f));
 
 		return;
 	}
@@ -954,6 +968,7 @@ TMainPageView::MessageReceived(BMessage *msg)
 int32
 TMainPageView::GetInterfacesCount() const
 {
+#ifdef ETK_OS_LINUX
 	BString str;
 	BFile f;
 
@@ -977,12 +992,17 @@ TMainPageView::GetInterfacesCount() const
 	if(str.FindFirst(" lo: ") > 0) lines--; // ignore "local"
 
 	return(lines - 2);
+#else
+	// TODO
+	return 0;
+#endif
 }
 
 
 bool
 TMainPageView::GetInterfaceName(BString &ifname, int32 id) const
 {
+#ifdef ETK_OS_LINUX
 	BString str;
 	BFile f;
 
@@ -1021,6 +1041,9 @@ TMainPageView::GetInterfaceName(BString &ifname, int32 id) const
 		ifname = str;
 		return true;
 	}
+#else
+	// TODO
+#endif
 
 	return false;
 }
@@ -1029,6 +1052,7 @@ TMainPageView::GetInterfaceName(BString &ifname, int32 id) const
 bool
 TMainPageView::GetInterfaceHWAddr(BString &hwaddr, const char *ifname) const
 {
+#ifdef ETK_OS_LINUX
 	if(ifname == NULL || *ifname == 0) return false;
 	if(strcmp("lo", ifname) == 0) return false;
 
@@ -1051,12 +1075,17 @@ TMainPageView::GetInterfaceHWAddr(BString &hwaddr, const char *ifname) const
 
 	hwaddr.SetTo(buf);
 	return true;
+#else
+	// TODO
+	return false;
+#endif
 }
 
 
 bool
 TMainPageView::GetInterfaceIPv4(BString &ipaddr, const char *ifname) const
 {
+#ifdef ETK_OS_LINUX
 	if(ifname == NULL || *ifname == 0) return false;
 
 	struct ifreq data;
@@ -1079,12 +1108,17 @@ TMainPageView::GetInterfaceIPv4(BString &ipaddr, const char *ifname) const
 
 	ipaddr.SetTo(buf);
 	return true;
+#else
+	// TODO
+	return false;
+#endif
 }
 
 
 bool
 TMainPageView::GetInterfaceIPv6(BString &ipaddr, const char *ifname) const
 {
+#ifdef ETK_OS_LINUX
 	if(ifname == NULL || *ifname == 0) return false;
 
 	BString str, line;
@@ -1139,6 +1173,9 @@ TMainPageView::GetInterfaceIPv6(BString &ipaddr, const char *ifname) const
 		if(found < offset) break;
 		offset = found + 1;
 	}
+#else
+	// TODO
+#endif
 
 	return false;
 }

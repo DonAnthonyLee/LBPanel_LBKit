@@ -62,8 +62,11 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 	}
 
 	BMessage aMsg(*msg);
-	while(aMsg.HasInt32("panel_id"))
-		aMsg.RemoveInt32("panel_id", 0);
+#ifdef ETK_MAJOR_VERSION
+	aMsg.RemoveData("panel_id");
+#else
+	aMsg.RemoveName("panel_id");
+#endif
 	aMsg.AddInt32("panel_id", fID);
 	fMsgr.SendMessage(&aMsg);
 }
