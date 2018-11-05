@@ -425,8 +425,7 @@ LBApplication::GetActivatedPageView(int32 panel_index) const
 	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, panel_index);
 
 	if(dev == NULL) return NULL;
-	// ignore NULL to make it compatible with old BeOS API
-	return(dev->preferHandler ? cast_as(dev->preferHandler, LBView) : NULL);
+	return e_cast_as(dev->preferHandler, LBView);
 }
 
 

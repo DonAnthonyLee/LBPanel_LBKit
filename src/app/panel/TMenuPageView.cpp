@@ -107,7 +107,7 @@ TMenuPageView::MessageReceived(BMessage *msg)
 			if(msg->FindInt32("which", &which) != B_OK) break;
 			if(clicks > 1) break;
 
-			view = cast_as(StickViewAt(0), LBAlertView);
+			view = e_cast_as(StickViewAt(0), LBAlertView);
 			if(view != StandingInView()) break;
 			isPowerOff = (BString("PowerOffRequested") == view->Name());
 

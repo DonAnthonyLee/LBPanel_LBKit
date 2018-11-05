@@ -199,7 +199,7 @@ LBPageView::KeyUp(uint8 key, uint8 clicks)
 void
 LBPageView::SwitchToNextPage()
 {
-	LBApplication *app = (Looper() ? cast_as(Looper(), LBApplication) : NULL);
+	LBApplication *app = e_cast_as(Looper(), LBApplication);
 	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarRightPage()) return;
@@ -231,7 +231,7 @@ LBPageView::SwitchToNextPage()
 void
 LBPageView::SwitchToPrevPage()
 {
-	LBApplication *app = (Looper() ? cast_as(Looper(), LBApplication) : NULL);
+	LBApplication *app = e_cast_as(Looper(), LBApplication);
 	if(app == NULL || MasterView() != NULL || IsActivated() == false) return;
 
 	if(IsFarLeftPage()) return;
@@ -265,11 +265,11 @@ LBPageView::IsFarLeftPage() const
 {
 	if(MasterView() != NULL)
 	{
-		LBPageView *view = cast_as(TopView(), LBPageView);
+		LBPageView *view = e_cast_as(TopView(), LBPageView);
 		return(view == NULL ? false : view->IsFarLeftPage());
 	}
 
-	LBApplication *app = (Looper() ? cast_as(Looper(), LBApplication) : NULL);
+	LBApplication *app = e_cast_as(Looper(), LBApplication);
 	if(app == NULL) return false;
 
 	int32 count = app->CountPageViews(true);
@@ -285,11 +285,11 @@ LBPageView::IsFarRightPage() const
 {
 	if(MasterView() != NULL)
 	{
-		LBPageView *view = cast_as(TopView(), LBPageView);
+		LBPageView *view = e_cast_as(TopView(), LBPageView);
 		return(view == NULL ? false : view->IsFarRightPage());
 	}
 
-	LBApplication *app = (Looper() ? cast_as(Looper(), LBApplication) : NULL);
+	LBApplication *app = e_cast_as(Looper(), LBApplication);
 	if(app == NULL) return false;
 
 	int32 count = app->CountPageViews(false);
