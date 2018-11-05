@@ -81,6 +81,16 @@ AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(LDFLAGS)
 
+openwrt_build=no
+AC_MSG_CHECKING(for OpenWrt)
+case $target in
+  *-openwrt-*)
+    openwrt_build=yes
+    ;;
+esac
+AC_MSG_RESULT($openwrt_build)
+AM_CONDITIONAL(OPENWRT_BUILD, [test "$openwrt_build" = "yes"])
+
 AC_CONFIG_FILES([
 Makefile
 include/Makefile
@@ -89,6 +99,7 @@ libs/Makefile
 libs/lbk/Makefile
 libs/lbk/add-ons/Makefile
 libs/lbk/add-ons/npi-oled-hat/Makefile
+libs/lbk/add-ons/vpd/Makefile
 cmd/Makefile
 cmd/npi-oled-hat/Makefile
 cmd/lbk/Makefile
