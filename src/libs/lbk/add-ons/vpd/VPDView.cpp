@@ -299,8 +299,8 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 	retVal = DrawingArea(x, y, w, h);
 	if(retVal.IsValid() == false) return retVal;
 
-	BBitmap *bitmap = new BBitmap(BRect(0, 0, w - 1, h - 1), B_RGB32);
-	BView *view = new BView(bitmap->Bounds(), NULL, B_FOLLOW_ALL, 0);
+	BBitmap *bitmap = new BBitmap(BRect(0, 0, w - 1, h - 1), B_RGB32, true);
+	BView *view = new BView(bitmap->Bounds(), NULL, B_FOLLOW_NONE, B_WILL_DRAW);
 
 	view->SetFont(&font, B_FONT_ALL);
 	if(fBuffer.Depth() == 1)
@@ -317,15 +317,17 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 	view->Sync();
 	bitmap->Unlock();
 
-	uint32 *data;
+	const uint32 *data;
 #ifdef ETK_MAJOR_VERSION
 	EPixmap *pixmap = new EPixmap(bitmap->Bounds(), E_RGB32);
 	bitmap->Lock();
 	bitmap->GetPixmap(pixmap, bitmap->Bounds());
 	bitmap->Unlock();
-	data = (uint32*)pixmap->Bits();
+	data = (const uint32*)pixmap->Bits();
 #else
-	data = (uint32*)bitmap->Bits();
+	// NOTE: on HaikuOS, seemed "view->Sync()" didn't work at all.
+	bitmap->LockBits();
+	data = (const uint32*)bitmap->Bits();
 #endif
 
 	if(data != NULL)
@@ -365,6 +367,8 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 
 #ifdef ETK_MAJOR_VERSION
 	delete pixmap;
+#else
+	bitmap->UnlockBits();
 #endif
 	delete bitmap;
 
