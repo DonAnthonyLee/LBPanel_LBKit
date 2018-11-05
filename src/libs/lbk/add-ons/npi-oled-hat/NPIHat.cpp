@@ -41,8 +41,6 @@
 #include <stdint.h>
 #include <oled_ssd1306_ioctl.h>
 
-#include <lbk/LBApplication.h> // for "LBK_QUIT_REQUESTED"
-
 #include "Config.h"
 #include "NPIHat.h"
 

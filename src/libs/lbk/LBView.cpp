@@ -29,7 +29,6 @@
  * --------------------------------------------------------------------------*/
 
 #include <lbk/LBKConfig.h>
-#include <lbk/LBApplication.h> // for "LBK_VIEW_STOOD_BACK"
 #include <lbk/LBView.h>
 
 

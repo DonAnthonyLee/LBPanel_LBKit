@@ -30,8 +30,6 @@
 
 #include <stdio.h>
 
-#include <lbk/LBApplication.h> // for "LBK_QUIT_REQUESTED"
-
 #include "VPDApp.h"
 #include "VPD.h"
 

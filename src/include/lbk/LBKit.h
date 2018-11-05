@@ -33,7 +33,9 @@
 
 #include <lbk/LBKConfig.h>
 
+#include <lbk/LBAppDefs.h>
 #include <lbk/LBIconDefs.h>
+
 #include <lbk/LBView.h>
 #include <lbk/LBPageView.h>
 #include <lbk/LBAppSettings.h>

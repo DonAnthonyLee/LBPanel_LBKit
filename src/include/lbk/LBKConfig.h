@@ -31,7 +31,7 @@
 #ifndef __LBK_BUILD_CONFIG_H__
 #define __LBK_BUILD_CONFIG_H__
 
-#include <be/Be.h>
+#include <lbk/LBAppDefs.h>
 
 //#define LBK_ENABLE_MORE_FEATURES
 
@@ -42,13 +42,6 @@
 
 // TODO: Specified by config file
 #define LBK_KEY_INTERVAL		125000	/* 125ms */
-
-
-#ifndef ETK_MAJOR_VERSION // for BeOS
-	#ifndef _EXPORT
-	#define _EXPORT		__declspec(dllexport)
-	#endif
-#endif
 
 #endif /* __LBK_BUILD_CONFIG_H__ */
 
