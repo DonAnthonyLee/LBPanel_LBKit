@@ -8,6 +8,7 @@ LBK_HEADERS_ADDONS =			\
 LBK_HEADERS_MAIN =		\
 	LBKConfig.h		\
 	LBKit.h			\
+	LBAppDefs.h		\
 	LBIconDefs.h		\
 	LBAlertView.h		\
 	LBApplication.h		\
