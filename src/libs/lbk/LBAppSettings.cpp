@@ -92,14 +92,19 @@ LBAppSettings::AddItems(BFile *f, int32 index)
 		if(buf != NULL) free(buf);
 		return false;
 	}
+	*(buf + fsize) = 0;
 
 	BList cfg;
 	BString str(buf);
 	free(buf);
 
 	int32 offset = 0, found;
-	while((found = str.FindFirst("\n", offset)) > 0)
+	while(offset < str.Length())
 	{
+		found = str.FindFirst("\n", offset);
+		if(found <= offset)
+			found = str.Length();
+
 		if(found > offset && str[offset] != '#')
 		{
 			char *data = strndup(str.String() + offset, found - offset);
