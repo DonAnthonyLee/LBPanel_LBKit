@@ -69,7 +69,7 @@ LBMenuItem::SetLabel(const char *label)
 
 	if(IsVisible() == false) return;
 
-	LBMenuView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBMenuView));
+	LBMenuView *view = e_cast_as(ScopeHandler(), LBMenuView);
 	if(view == NULL || view->IsActivated() == false || view->CurrentSelection() != this) return;
 
 	BRect r = view->ItemLabelBounds();
@@ -92,7 +92,7 @@ LBMenuItem::SetIcon(lbk_icon_id idIcon)
 
 	if(IsVisible() == false) return;
 
-	LBMenuView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBMenuView));
+	LBMenuView *view = e_cast_as(ScopeHandler(), LBMenuView);
 	if(view == NULL || view->IsActivated() == false) return;
 
 	BRect r = view->ItemIconBounds();
