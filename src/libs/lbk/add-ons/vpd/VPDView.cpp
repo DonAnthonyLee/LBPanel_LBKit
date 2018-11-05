@@ -325,7 +325,6 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 	bitmap->Unlock();
 	data = (const uint32*)pixmap->Bits();
 #else
-	// NOTE: on HaikuOS, seemed "view->Sync()" didn't work at all.
 	bitmap->LockBits();
 	data = (const uint32*)bitmap->Bits();
 #endif
