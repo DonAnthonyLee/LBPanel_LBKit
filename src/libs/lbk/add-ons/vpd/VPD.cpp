@@ -82,7 +82,8 @@ LBVPD::LBVPD()
 		ETK_WARNING("[VPD]: Unable to create thread !\n");
 	}
 #else
-	thread_id tid = spawn_thread(this->RunBeApp, "lbk_vpd_app", B_URGENT_DISPLAY_PRIORITY, NULL);
+
+	thread_id tid = spawn_thread(this->RunBeApp, "lbk_vpd_app", B_NORMAL_PRIORITY, NULL);
 	if(tid < 0 || resume_thread(tid) != B_OK)
 	{
 		fprintf(stderr, "[VPD]: Unable to spawn thread !\n");
@@ -145,8 +146,14 @@ LBVPD::~LBVPD()
 status_t
 LBVPD::InitCheck(const char *options)
 {
+	snooze(200000); // wait for be_app
+
 	if(be_app == NULL || fMsgr.IsValid()) return B_ERROR;
+#ifdef ETK_MAJOR_VERSIN
 	while(be_app->IsRunning() == false) snooze(100000);
+#else
+	while(be_app->Thread() < 0) snooze(100000);
+#endif
 
 	BString opt(options);
 	BPoint pt(100, 100);
@@ -645,7 +652,10 @@ LBVPD::RunBeApp(void *arg)
 	VPDApplication *app = new VPDApplication();
 
 	app->Run();
-	delete app;
+
+	// NOTE: "delete app" crash on HaikuOS
+	app->Lock();
+	app->Quit();
 
 	return 0;
 }

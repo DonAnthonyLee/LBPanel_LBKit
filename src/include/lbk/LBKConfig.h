@@ -45,7 +45,9 @@
 
 
 #ifndef ETK_MAJOR_VERSION // for BeOS
-#define _EXPORT		__declspec(dllexport)
+	#ifndef _EXPORT
+	#define _EXPORT		__declspec(dllexport)
+	#endif
 #endif
 
 #endif /* __LBK_BUILD_CONFIG_H__ */

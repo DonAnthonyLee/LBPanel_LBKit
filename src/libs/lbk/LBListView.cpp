@@ -346,13 +346,13 @@ LBListView::SetSelectionMessage(BMessage *message)
 status_t
 LBListView::Invoke(const BMessage *msg)
 {
-	const EMessage *message = (msg ? msg : Message());
+	const BMessage *message = (msg ? msg : Message());
 	if(message == NULL) return B_BAD_VALUE;
 
 	BMessage aMsg(*message);
 	aMsg.AddInt32("index", Position());
 
-	status_t st = EInvoker::Invoke(&aMsg);
+	status_t st = BInvoker::Invoke(&aMsg);
 	if(st == B_OK) StandBack();
 	return st;
 }
@@ -445,10 +445,10 @@ LBListView::DrawSelection(BRect rect, int32 n)
 {
 	BRect r = rect;
 	r.right = r.left + r.Height();
-	DrawIcon(LBK_ICON_SMALL_RIGHT, r.Center() - BPoint(4, 4));
+	DrawIcon(LBK_ICON_SMALL_RIGHT, r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(4, 4));
 
 	r = rect;
 	r.left = r.right - r.Height();
-	if(r.IsValid()) DrawIcon(LBK_ICON_SMALL_LEFT, r.Center() - BPoint(4, 4));
+	if(r.IsValid()) DrawIcon(LBK_ICON_SMALL_LEFT, r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(4, 4));
 }
 

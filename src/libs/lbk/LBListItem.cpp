@@ -84,19 +84,19 @@ LBListItem::DrawString(const char *str, BRect r, int32 n)
 	{
 		case B_ALIGN_LEFT:
 			owner->DrawString(str,
-					  BPoint(r.left + 2, r.Center().y - fontsize / 2.f),
+					  BPoint(r.left + 2, r.top + r.Height() / 2.f - fontsize / 2.f),
 					  erase_mode);
 			break;
 
 		case B_ALIGN_CENTER:
 			owner->DrawString(str,
-					  r.Center() - BPoint(w / 2.f, fontsize / 2.f),
+					  r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, fontsize / 2.f),
 					  erase_mode);
 			break;
 
 		default: // B_ALIGN_RIGHT
 			owner->DrawString(str,
-					  BPoint(r.right - w - 2.f, r.Center().y - fontsize / 2.f),
+					  BPoint(r.right - w - 2.f, r.top + r.Height() / 2.f - fontsize / 2.f),
 					  erase_mode);
 			break;
 	}
@@ -187,11 +187,11 @@ LBListStringItem::Draw(BRect r, int32 n)
 				icon_inverse.type = LBK_ICON_8x8;
 				for(size_t k = 0; k < 8; k++)
 					icon_inverse.data[k] = ~(icon->data[k]);
-				owner->DrawIcon(&icon_inverse, tRect.Center() - BPoint(4, 4));
+				owner->DrawIcon(&icon_inverse, tRect.LeftTop() + BPoint(tRect.Width() / 2.f, tRect.Height() / 2.f) - BPoint(4, 4));
 			}
 			else
 			{
-				owner->DrawIcon(icon, tRect.Center() - BPoint(4, 4));
+				owner->DrawIcon(icon, tRect.LeftTop() + BPoint(tRect.Width() / 2.f, tRect.Height() / 2.f) - BPoint(4, 4));
 			}
 		}
 

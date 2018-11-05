@@ -77,14 +77,14 @@ TLogoView::Draw(BRect updateRect)
 	r = Bounds();
 	if(fTicks == 0)
 		FillRect(r, B_SOLID_LOW);
-	r.top = r.Center().y - 18;
-	r.bottom = r.top + 36;
+	r.top = r.top + r.Height() / 2.f - 15;
+	r.bottom = r.top + 30;
 	if(fTicks > 0)
 		FillRect(r, B_SOLID_LOW);
 
-	SetFontSize(32);
+	SetFontSize(24);
 	w = StringWidth(str.String());
-	pt = r.Center() - BPoint(w / 2.f, 31 / 2.f);
+	pt = r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, 23 / 2.f);
 	DrawString(str.String(), pt);
 
 	r.top = r.bottom - r.Height() / 2.f + 1;
