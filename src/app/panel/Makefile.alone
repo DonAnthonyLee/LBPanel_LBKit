@@ -16,12 +16,37 @@ OBJECTS_3 =
 TARGET = $(TARGET_1) $(TARGET_2) $(TARGET_3)
 OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 
+IS_BEOS_PLATFORM = 0
+ifeq ($(shell uname),Haiku)
+IS_BEOS_PLATFORM = 1
+else
+ifeq ($(shell uname),BeOS)
+IS_BEOS_PLATFORM = 1
+endif
+endif
+
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../../libs/include
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../../libs/include
-LDFLAGS =  $(shell lite-beapi-config --libs) -L../../libs/lbk -llbk
+
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+LDFLAGS =
+
+ifeq ($(IS_BEOS_PLATFORM),0)
+	CFLAGS += $(shell lite-beapi-config --cflags)
+	CXXFLAGS += $(shell lite-beapi-config --cflags)
+	LDFLAGS += $(shell lite-beapi-config --libs)
+else
+	# BeOS/HaikuOS
+	CXXFLAGS += -Wno-multichar
+	LDFLAGS += -lbe -lroot
+	SO_LDFLAGS += -Xlinker --soname=$(SO_NAME)
+endif
+
+CFLAGS += -I../../include -I../../libs/include
+CXXFLAGS += -I../../include -I../../libs/include
+LDFLAGS += -L../../libs/lbk -llbk
 
 all: targets $(TARGET)
 

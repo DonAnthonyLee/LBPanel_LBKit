@@ -1,3 +1,5 @@
 #!/bin/sh
 
-LD_LIBRARY_PATH=:../../libs/lbk ./LBPanel $*
+LIBRARY_PATH=${LIBRARY_PATH}:../../libs/lbk
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:../../libs/lbk
+exec ./LBPanel $*

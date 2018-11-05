@@ -9,9 +9,22 @@ TARGET_1 = liblbk.so
 TARGET_2 =
 TARGET_3 =
 
+IS_BEOS_PLATFORM = 0
+ifeq ($(shell uname),Haiku)
+IS_BEOS_PLATFORM = 1
+else
+ifeq ($(shell uname),BeOS)
+IS_BEOS_PLATFORM = 1
+endif
+endif
+
 ADD_ONS_DIRS = \
-	npi-oled-hat \
 	vpd
+
+ifeq ($(shell uname),Linux)
+ADD_ONS_DIRS += \
+	npi-oled-hat
+endif
 
 OBJECTS_1 = \
 	add-ons/LBPanelDevice.o \
@@ -38,9 +51,28 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../include
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../include
-LDFLAGS =  $(shell lite-beapi-config --libs)
+
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+LDFLAGS =
+
+SO_CFLAGS = -fPIC
+SO_LDFLAGS = -shared
+SO_NAME = liblbk.so
+
+ifeq ($(IS_BEOS_PLATFORM),0)
+	CFLAGS += $(shell lite-beapi-config --cflags)
+	CXXFLAGS += $(shell lite-beapi-config --cflags)
+	LDFLAGS += $(shell lite-beapi-config --libs)
+else
+	# BeOS/HaikuOS
+	CXXFLAGS += -Wno-multichar
+	LDFLAGS += -lbe -lroot
+	SO_LDFLAGS += -Xlinker --soname=$(SO_NAME)
+endif
+
+CFLAGS += $(SO_CFLAGS) -I../../include -I../include
+CXXFLAGS += $(SO_CFLAGS) -I../../include -I../include
 
 all: targets addons $(TARGET)
 
@@ -64,7 +96,7 @@ addons:
 	done
 
 $(TARGET_1): $(OBJECTS_1)
-	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) -shared $^ -o $@ $(LDFLAGS)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $(SO_LDFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(TARGET_2): $(OBJECTS_2)
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
