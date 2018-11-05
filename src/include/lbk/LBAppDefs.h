@@ -43,5 +43,17 @@
 #define LBK_APP_SETTINGS_UPDATED	'lBKs'
 #define LBK_VIEW_STOOD_BACK		'lBKb'
 
+
+#ifndef ETK_MAJOR_VERSION
+
+// e_cast_as(): like cast_as(), but NULL accepted, implemented by ETK++
+template<class C, typename B> inline C* etk_cast_as(B *ptr)
+{
+	return (ptr ? dynamic_cast<C*>(ptr) : (C*)0);
+}
+#define e_cast_as(ptr, class)		etk_cast_as<class>(ptr)
+
+#endif
+
 #endif /* __LBK_APP_DEFS_H__ */
 

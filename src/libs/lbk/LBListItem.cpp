@@ -58,7 +58,7 @@ LBListItem::Invalidate()
 {
 	if(IsVisible() == false) return;
 
-	LBListView *view = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBListView));
+	LBListView *view = e_cast_as(ScopeHandler(), LBListView);
 	if(view == NULL || view->IsActivated() == false) return;
 
 	view->InvalidateItem(view->IndexOf(this));
@@ -161,7 +161,7 @@ LBListStringItem::RemoveIcon()
 void
 LBListStringItem::Draw(BRect r, int32 n)
 {
-	LBListView *owner = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBListView));
+	LBListView *owner = e_cast_as(ScopeHandler(), LBListView);
 	if(owner == NULL || owner->IsActivated() == false || fText == NULL) return;
 
 	if(owner->IsSelectable())
@@ -252,7 +252,7 @@ LBListControlItem::SetValue(int32 value)
 void
 LBListControlItem::Draw(BRect rect, int32 n)
 {
-	LBListView *owner = (ScopeHandler() == NULL ? NULL : cast_as(ScopeHandler(), LBListView));
+	LBListView *owner = e_cast_as(ScopeHandler(), LBListView);
 	if(owner == NULL || owner->IsActivated() == false) return;
 
 	bool erase_mode = false;
