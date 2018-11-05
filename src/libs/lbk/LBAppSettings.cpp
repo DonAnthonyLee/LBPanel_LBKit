@@ -96,13 +96,14 @@ LBAppSettings::AddItems(BFile *f, int32 index)
 
 	BList cfg;
 	BString str(buf);
+	str.RemoveAll("\r");
 	free(buf);
 
 	int32 offset = 0, found;
 	while(offset < str.Length())
 	{
 		found = str.FindFirst("\n", offset);
-		if(found <= offset)
+		if(found < offset)
 			found = str.Length();
 
 		if(found > offset && str[offset] != '#')
