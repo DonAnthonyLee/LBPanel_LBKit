@@ -23,58 +23,25 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBApplication.h
+ * File: LBAppDefs.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __LBK_APPLICATION_H__
-#define __LBK_APPLICATION_H__
+#ifndef __LBK_APP_DEFS_H__
+#define __LBK_APP_DEFS_H__
 
-#include <lbk/LBAppSettings.h>
-#include <lbk/LBView.h>
+#include <be/Be.h>
 
-#ifdef __cplusplus /* Just for C++ */
+#ifndef ETK_MAJOR_VERSION
+	#ifndef _EXPORT
+	#define _EXPORT		__declspec(dllexport)
+	#endif
+#endif
 
-class LBPanelDevice;
+#define LBK_QUIT_REQUESTED		'lBKq'
+#define LBK_APP_SETTINGS_UPDATED	'lBKs'
+#define LBK_VIEW_STOOD_BACK		'lBKb'
 
-class _EXPORT LBApplication : public BLooper {
-public:
-	LBApplication(const LBAppSettings *settings);
-	virtual ~LBApplication();
-
-	bool		AddPageView(LBView *view, bool left_side = true, int32 panel_index = 0);
-	bool		RemovePageView(LBView *view);
-	LBView*		RemovePageView(int32 index, bool left_side = true, int32 panel_index = 0);
-	LBView*		PageViewAt(int32 index, bool left_side = true, int32 panel_index = 0) const;
-	int32		CountPageViews(bool left_side = true, int32 panel_index = 0) const;
-
-	void		ActivatePageView(int32 index, bool left_side = true, int32 panel_index = 0);
-	LBView*		GetActivatedPageView(int32 panel_index = 0) const;
-
-	void		Go();
-
-	bigtime_t	PulseRate() const;
-	void		SetPulseRate(bigtime_t rate);
-
-	virtual bool	QuitRequested();
-	virtual void	MessageReceived(BMessage *msg);
-
-protected:
-	int32		CountPanels() const;
-	LBPanelDevice*	PanelAt(int32 index) const;
-	uint8		CountPanelKeys(int32 index) const;
-
-private:
-	bool fQuitLooper;
-	BList fAddOnsList;
-	int fPipes[2];
-	bigtime_t fPulseRate;
-	int32 fPanelsCount;
-	void *fIPC;
-};
-
-#endif /* __cplusplus */
-
-#endif /* __LBK_APPLICATION_H__ */
+#endif /* __LBK_APP_DEFS_H__ */
 
