@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Commands using Little Board Application Kit
+ * Panel application for little board
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,74 +23,64 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: lbk-notify.c
+ * File: lbk-cmd.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
 #include <stdio.h>
-#include <lbk/LBKit.h>
+#include <string.h>
 
-#ifdef LBK_APP_IPC_BY_FIFO
-	#include <sys/stat.h>
-	#include <sys/types.h>
-	#include <fcntl.h>
-	#include <unistd.h>
-#else
-	#error "No implementation for this command yet!"
-#endif // !LBK_APP_IPC_BY_FIFO
+extern int cmd_notify(int argc, char **argv);
+extern int cmd_uci2msg(int argc, char **argv);
+extern int cmd_menu(int argc, char **argv);
 
-static void show_usage(void)
+static char org_cmd[] = "lbk-cmd";
+
+static int show_usage(int argc, char **argv)
 {
-	printf("lbk-notify - Notify the application using LBKit.\n\n");
-	printf("Usage: lbk-notify ipc_name message_type\n\
-    ipc_name                   Name of IPC.\n\
-    mesage_type                Type of message\n\
-        Valid value:\n\
-            SETTINGS_UPDATED   Notify the applicaiton that the settings have been updated.\n");
+	printf("%s - Utilities of LBKit\n\n", org_cmd);
+	printf("Usage: %s [commad] cmd_options\n\
+    Valid commands:\n\
+        notify                  Notify the application using LBKit\n\
+        uci2msg                 Convert uci config to *Message flattened data\n\
+        message                 Display message on specified panel device\n\
+        menu                    Display menu on specified panel device\n", org_cmd);
 }
 
-#ifdef CMD_ALL_IN_ONE
-int cmd_notify(int argc, char **argv)
-#else
 int main(int argc, char **argv)
-#endif
 {
-	int fd;
-	char buf[1024];
-	unsigned char cmd;
+	int (*func)(int, char**) = NULL;
+	int offset = 0;
 
-	if (argc != 3) {
-		show_usage();
-		exit(1);
+	char cmd[128];
+	char *str;
+
+	memset(cmd, 0, sizeof(cmd));
+
+	str = strrchr(argv[0], '/');
+	strncpy(cmd, (str == NULL ? argv[0] : str + 1), sizeof(cmd) - 1);
+
+	if (strcmp(cmd, org_cmd) == 0 && argc > 1) {
+		strncpy(cmd, "lbk-", 4);
+		strncpy(&cmd[4], argv[1], sizeof(cmd) - 5);
+		offset = 1;
 	}
 
-#ifdef LBK_APP_IPC_BY_FIFO
-	if (strcmp(argv[2], "SETTINGS_UPDATED") == 0) {
-		cmd = 0xfe;
-	} else {
-		show_usage();
-		exit(1);
+	if (strncmp(cmd, "lbk-", 4) == 0) {
+		if (strcmp(&cmd[4], "notify") == 0)
+			func = cmd_notify;
+		else if (strcmp(&cmd[4], "uci2msg") == 0)
+			func = cmd_uci2msg;
+		else if (strcmp(&cmd[4], "menu") == 0)
+			func = cmd_menu;
+
+		// TODO
 	}
 
-	snprintf(buf, sizeof(buf), "/tmp/lbk_ipc_%u/%s", getuid(), argv[1]);
+	if (func == NULL)
+		func = show_usage;
 
-	if ((fd = open(buf, O_NONBLOCK | O_WRONLY)) < 0) {
-		perror("Open");
-		exit(1);
-	}
-
-	if (write(fd, &cmd, 1) != 1) {
-		close(fd);
-		perror("Write");
-		exit(1);
-	}
-
-	close(fd);
-#else
-	// TODO: other way
-#endif
-
-	return 0;
+	return (*func)(argc - offset, argv + offset);
 }
 

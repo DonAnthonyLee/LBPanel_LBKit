@@ -35,7 +35,7 @@
 static void show_usage(void)
 {
 	printf("lbk-uci2msg - Convert uci config to *Message flattened data.\n\n");
-	printf("usage: lbk-uci2msg [-d] uci_config_file msg_data\n\
+	printf("Usage: lbk-uci2msg [-d] uci_config_file msg_data\n\
     -d                         Output the content of *Message.\n\
     uci_config_file            Path of uci config file to read.\n\
     msg_data                   Path of *Message flattened data to write.\n");
@@ -176,8 +176,13 @@ static status_t uci_cvt_msg(BFile &fIn, BMessage *msg)
 	return(count > 0 ? B_OK : B_ERROR);
 }
 
+extern "C" {
 
+#ifdef CMD_ALL_IN_ONE
+int cmd_uci2msg(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	BFile fIn, fOut;
 	BMessage msg;
@@ -231,4 +236,6 @@ int main(int argc, char **argv)
 
 	return 0;
 }
+
+}; // extern "C"
 
