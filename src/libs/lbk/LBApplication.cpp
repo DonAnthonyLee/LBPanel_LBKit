@@ -183,7 +183,7 @@ static LBPanelDeviceAddOnData* lbk_app_get_panel_device_data(const BList &addOns
 }
 
 
-LBApplication::LBApplication(const LBAppSettings *cfg)
+LBApplication::LBApplication(const LBAppSettings *settings)
 	: BLooper(NULL, B_URGENT_DISPLAY_PRIORITY),
 	  fQuitLooper(false),
 	  fPulseRate(0),
@@ -192,96 +192,110 @@ LBApplication::LBApplication(const LBAppSettings *cfg)
 {
 	fPipes[0] = -1;
 
-	if(cfg != NULL)
+	LBAppSettings cfg;
+
+	BFile f("/etc/LBK.conf", B_READ_ONLY);
+	if(f.InitCheck() != B_OK || cfg.AddItems(&f) == false)
 	{
-		for(int32 k = 0; k < cfg->CountItems(); k++)
-		{
-			BString item(cfg->ItemAt(k));
-			if(item.Length() == 0) continue;
-			if(item.ByteAt(0) == '#' || item.FindFirst("//") == 0) continue;
-			item.RemoveAll("\r");
-			item.RemoveAll("\n");
-			item.RemoveAll(" ");
+		fprintf(stderr, "[LBApplication]: use default settings.\n");
+#if 1
+		cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so");
+#else
+		cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/vpd.so,point_size=2,width=128,height=64");
+#endif
+	}
+	f.Unset();
 
-			int32 found = item.FindFirst("=");
-			if(found <= 0 || found == item.Length() - 1) continue;
+	if(settings != NULL)
+		cfg.AddItems(*settings);
 
-			BString name(item.String(), found);
-			BString value(item.String() + found + 1);
-			BString options;
+	for(int32 k = 0; k < cfg.CountItems(); k++)
+	{
+		BString item(cfg.ItemAt(k));
+		if(item.Length() == 0) continue;
+		if(item.ByteAt(0) == '#' || item.FindFirst("//") == 0) continue;
+		item.RemoveAll("\r");
+		item.RemoveAll("\n");
+		item.RemoveAll(" ");
+
+		int32 found = item.FindFirst("=");
+		if(found <= 0 || found == item.Length() - 1) continue;
+
+		BString name(item.String(), found);
+		BString value(item.String() + found + 1);
+		BString options;
 
 #if 0
-			fprintf(stdout, "[LBApplication]: name = %s, value = %s\n", name.String(), value.String());
+		fprintf(stdout, "[LBApplication]: name = %s, value = %s\n", name.String(), value.String());
 #endif
 
-			found = value.FindFirst(",");
-			if(found > 0)
-			{
-				if(found < value.Length() - 1)
-					options.SetTo(value.String() + found + 1);
-				value.Truncate(found);
-			}
-
-			if(name == "PanelDeviceAddon")
-			{
-				BPath pth(value.String(), NULL, true);
-				if(pth.Path() == NULL) continue;
-
-				LBAddOnData *data = lbk_app_load_panel_device_addon(pth, options.String());
-				if(data == NULL)
-				{
-					fprintf(stderr,
-						"[LBApplication]: %s --- Failed to load add-on (%s) !\n",
-						__func__, pth.Path());
-					continue;
-				}
-
-				fPanelsCount++;
-				fAddOnsList.AddItem(data);
-			}
-			else if(name == "IPC" && fIPC == NULL)
-			{
-#ifdef LBK_APP_IPC_BY_FIFO
-				int fd;
-				BPath pth;
-				BString str;
-				str << "/tmp/lbk_ipc_" << getuid();
-
-				BEntry entry(str.String());
-				entry.GetPath(&pth);
-				if(!(entry.Exists() && entry.IsDirectory()))
-				{
-					if(mkdir(pth.Path(), 0700) != 0)
-					{
-						fprintf(stderr, "[LBApplication]: %s --- Failed to initialize IPC !\n", __func__);
-						continue;
-					}
-				}
-
-				entry.SetTo(pth.Path(), value);
-				entry.GetPath(&pth);
-
-				unlink(pth.Path());
-				if(mkfifo(pth.Path(), 0600) == -1 ||
-				   chmod(pth.Path(), 0600) == -1 ||
-				   (fd = open(pth.Path(), O_NONBLOCK | O_RDONLY)) < 0) {
-					fprintf(stderr,
-						"[LBApplication]: %s --- Failed to create fifo (%s) !\n",
-						__func__, pth.Path());
-					continue;
-				}
-
-				LBKAppIPC *ipc = new LBKAppIPC;
-				ipc->path.SetTo(pth.Path());
-				ipc->fd = fd;
-				fIPC = (void*)ipc;
-#else
-				// TODO: other way
-#endif
-			}
-
-			// TODO: others
+		found = value.FindFirst(",");
+		if(found > 0)
+		{
+			if(found < value.Length() - 1)
+				options.SetTo(value.String() + found + 1);
+			value.Truncate(found);
 		}
+
+		if(name == "PanelDeviceAddon")
+		{
+			BPath pth(value.String(), NULL, true);
+			if(pth.Path() == NULL) continue;
+
+			LBAddOnData *data = lbk_app_load_panel_device_addon(pth, options.String());
+			if(data == NULL)
+			{
+				fprintf(stderr,
+					"[LBApplication]: %s --- Failed to load add-on (%s) !\n",
+					__func__, pth.Path());
+				continue;
+			}
+
+			fPanelsCount++;
+			fAddOnsList.AddItem(data);
+		}
+		else if(name == "IPC" && fIPC == NULL)
+		{
+#ifdef LBK_APP_IPC_BY_FIFO
+			int fd;
+			BPath pth;
+			BString str;
+			str << "/tmp/lbk_ipc_" << getuid();
+
+			BEntry entry(str.String());
+			entry.GetPath(&pth);
+			if(!(entry.Exists() && entry.IsDirectory()))
+			{
+				if(mkdir(pth.Path(), 0700) != 0)
+				{
+					fprintf(stderr, "[LBApplication]: %s --- Failed to initialize IPC !\n", __func__);
+					continue;
+				}
+			}
+
+			entry.SetTo(pth.Path(), value);
+			entry.GetPath(&pth);
+
+			unlink(pth.Path());
+			if(mkfifo(pth.Path(), 0600) == -1 ||
+			   chmod(pth.Path(), 0600) == -1 ||
+			   (fd = open(pth.Path(), O_NONBLOCK | O_RDONLY)) < 0) {
+				fprintf(stderr,
+					"[LBApplication]: %s --- Failed to create fifo (%s) !\n",
+					__func__, pth.Path());
+				continue;
+			}
+
+			LBKAppIPC *ipc = new LBKAppIPC;
+			ipc->path.SetTo(pth.Path());
+			ipc->fd = fd;
+			fIPC = (void*)ipc;
+#else
+			// TODO: other way
+#endif
+		}
+
+		// TODO: others
 	}
 }
 
