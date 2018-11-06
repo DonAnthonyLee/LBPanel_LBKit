@@ -85,7 +85,7 @@ LBView::FillRect(BRect r, pattern p)
 #else
 	r.left = floorf(r.left);
 	r.right = floorf(r.right);
-	r.top = floorf(r.right);
+	r.top = floorf(r.top);
 	r.bottom = floorf(r.bottom);
 #endif
 
@@ -118,7 +118,7 @@ LBView::StrokeRect(BRect rect, bool erase)
 #else
 	rect.left = floorf(rect.left);
 	rect.right = floorf(rect.right);
-	rect.top = floorf(rect.right);
+	rect.top = floorf(rect.top);
 	rect.bottom = floorf(rect.bottom);
 #endif
 
@@ -164,7 +164,7 @@ LBView::InvertRect(BRect r)
 #else
 	r.left = floorf(r.left);
 	r.right = floorf(r.right);
-	r.top = floorf(r.right);
+	r.top = floorf(r.top);
 	r.bottom = floorf(r.bottom);
 #endif
 
