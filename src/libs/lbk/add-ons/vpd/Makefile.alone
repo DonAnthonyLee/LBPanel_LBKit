@@ -35,22 +35,31 @@ CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
 LDFLAGS =
 
 SO_CFLAGS = -fPIC
-SO_LDFLAGS = -shared
+SO_LDFLAGS =
 SO_NAME = vpd.so
 
 ifeq ($(IS_BEOS_PLATFORM),0)
 	CFLAGS += $(shell lite-beapi-config --cflags)
 	CXXFLAGS += $(shell lite-beapi-config --cflags)
 	LDFLAGS += $(shell lite-beapi-config --libs)
+	SO_LDFLAGS += -shared
 else
 	# BeOS/HaikuOS
 	CXXFLAGS += -Wno-multichar
 	LDFLAGS += -lbe -lroot -ltextencoding
 	SO_LDFLAGS += -Xlinker --soname=$(SO_NAME)
+
+ifeq ($(shell uname),BeOS)
+	SO_LDFLAGS += -nostart
+else
+	SO_LDFLAGS += -shared
+endif
+
 endif
 
 CFLAGS += $(SO_CFLAGS) -I../../../../include -I../../../include
 CXXFLAGS += $(SO_CFLAGS) -I../../../../include -I../../../include
+LDFLAGS += -L../.. -llbk
 
 all: targets $(TARGET)
 
