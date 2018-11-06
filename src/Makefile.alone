@@ -1,0 +1,15 @@
+SUB_DIRS =		\
+	libs		\
+	cmd		\
+	app
+
+all:
+	for f in $(SUB_DIRS) .none; do \
+		(test $$f = .none || $(MAKE) -C $$f -f Makefile.alone) \
+	done
+
+clean:
+	for f in $(SUB_DIRS) .none; do \
+		(test $$f = .none || $(MAKE) clean -C $$f -f Makefile.alone) \
+	done
+

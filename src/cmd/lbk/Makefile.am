@@ -1,11 +1,10 @@
-AM_CFLAGS = -I../../include -I../../libs/include
-AM_CXXFLAGS = -I../../include -I../../libs/include
+AM_CFLAGS = -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
+AM_CXXFLAGS = -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
 AM_LDFLAGS = -L../../libs/lbk -llbk
 
-noinst_PROGRAMS = lbk-notify lbk-uci2msg
+noinst_PROGRAMS = lbk-cmd
 
-lbk_notify_SOURCES = lbk-notify.c
-lbk_uci2msg_SOURCES = lbk-uci2msg.cpp
+lbk_cmd_SOURCES = lbk-cmd.c lbk-notify.c lbk-uci2msg.cpp lbk-menu.cpp
 
 DISTCLEANFILES = Makefile.in
 
