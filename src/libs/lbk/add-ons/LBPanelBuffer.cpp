@@ -28,6 +28,7 @@
  *
  * --------------------------------------------------------------------------*/
 
+#include <lbk/LBAppDefs.h>
 #include <lbk/add-ons/LBPanelBuffer.h>
 
 
