@@ -225,7 +225,7 @@ TMainPageView::DrawDateAndTime(BRect rect)
 		if(fShowSeconds == false && f24Hours == false && fTime.Length() > 6)
 		{
 			uint16 w1;
-			BString str(fTime, 6);
+			BString str(fTime.String(), 6);
 
 			SetFontSize(12);
 			w1 = StringWidth(str.String());

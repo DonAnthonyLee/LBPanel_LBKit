@@ -200,7 +200,7 @@ LBAlertView::Draw(BRect rect)
 	if(fTitle.Length() > 0 && r.Intersects(rect))
 	{
 		SetFontSize(12);
-		w = StringWidth(fTitle);
+		w = StringWidth(fTitle.String());
 		DrawString(fTitle.String(), BPoint(r.left + r.Width() / 2.f - w / 2.f, 1));
 	}
 

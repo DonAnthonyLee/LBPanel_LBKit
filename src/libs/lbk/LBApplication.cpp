@@ -273,7 +273,7 @@ LBApplication::LBApplication(const LBAppSettings *settings)
 				}
 			}
 
-			entry.SetTo(pth.Path(), value);
+			entry.SetTo(pth.Path(), value.String());
 			entry.GetPath(&pth);
 
 			unlink(pth.Path());
@@ -307,8 +307,8 @@ LBApplication::~LBApplication()
 		LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, k);
 
 		LBView *view;
-		while((view = (LBView*)dev->leftPageViews->RemoveItem(0)) != NULL) delete view;
-		while((view = (LBView*)dev->rightPageViews->RemoveItem(0)) != NULL) delete view;
+		while((view = (LBView*)dev->leftPageViews->RemoveItem((int32)0)) != NULL) delete view;
+		while((view = (LBView*)dev->rightPageViews->RemoveItem((int32)0)) != NULL) delete view;
 	}
 
 	if(fPipes[0] >= 0)
@@ -619,8 +619,8 @@ LBApplication::MessageReceived(BMessage *msg)
 				if(dev == NULL || dev->valid == false) break;
 
 				LBView *view;
-				while((view = (LBView*)dev->leftPageViews->RemoveItem(0)) != NULL) delete view;
-				while((view = (LBView*)dev->rightPageViews->RemoveItem(0)) != NULL) delete view;
+				while((view = (LBView*)dev->leftPageViews->RemoveItem((int32)0)) != NULL) delete view;
+				while((view = (LBView*)dev->rightPageViews->RemoveItem((int32)0)) != NULL) delete view;
 
 				dev->preferHandler = NULL;
 				dev->valid = false;

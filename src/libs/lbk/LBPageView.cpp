@@ -272,11 +272,12 @@ LBPageView::IsFarLeftPage() const
 	LBApplication *app = e_cast_as(Looper(), LBApplication);
 	if(app == NULL) return false;
 
+	LBView *self = const_cast<LBPageView*>(this);
 	int32 count = app->CountPageViews(true);
 	if(count > 0)
-		return(app->PageViewAt(count - 1, true) == this);
+		return(app->PageViewAt(count - 1, true) == self);
 	else
-		return(app->PageViewAt(0, false) == this);
+		return(app->PageViewAt(0, false) == self);
 }
 
 
@@ -292,10 +293,11 @@ LBPageView::IsFarRightPage() const
 	LBApplication *app = e_cast_as(Looper(), LBApplication);
 	if(app == NULL) return false;
 
+	LBView *self = const_cast<LBPageView*>(this);
 	int32 count = app->CountPageViews(false);
 	if(count > 0)
-		return(app->PageViewAt(count - 1, false) == this);
+		return(app->PageViewAt(count - 1, false) == self);
 	else
-		return(app->PageViewAt(0, true) == this);
+		return(app->PageViewAt(0, true) == self);
 }
 
