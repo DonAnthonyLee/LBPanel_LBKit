@@ -168,7 +168,7 @@ LBVPD::InitCheck(const char *options)
 		int32 found = opt.FindFirst(' ');
 		if(found < 0) found = opt.Length();
 
-		BString item(opt, found);
+		BString item(opt.String(), found);
 		opt.Remove(0, found + 1);
 
 		if(item.Length() <= 0) continue;

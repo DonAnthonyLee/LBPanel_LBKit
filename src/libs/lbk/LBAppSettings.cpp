@@ -108,7 +108,17 @@ LBAppSettings::AddItems(BFile *f, int32 index)
 
 		if(found > offset && str[offset] != '#')
 		{
+#if 0
 			char *data = strndup(str.String() + offset, found - offset);
+#else
+			char *data = (char*)malloc(found - offset + 1);
+			if(data != NULL)
+			{
+				memcpy(data, str.String() + offset, found - offset);
+				*(data + found - offset) = 0;
+			}
+#endif
+
 			if(data == NULL || cfg.AddItem(data) == false)
 			{
 				if(data != NULL) free(data);
