@@ -28,6 +28,8 @@
  *
  * --------------------------------------------------------------------------*/
 
+#include <stdio.h>
+
 #include "VPDApp.h"
 #include "VPDView.h"
 
@@ -68,14 +70,38 @@ VPDWindow::VPDWindow(BRect frame, const char* title,
 		BMenuBar *menubar = new BMenuBar(r, NULL);
 
 		BMenu *menu = new BMenu("File", B_ITEMS_IN_COLUMN);
+		menu->AddItem(new BMenuItem("Capture screen ...", new BMessage(VPD_MSG_CAPTURE_SCRREN), 's', B_COMMAND_KEY));
+
+		BMenu *submenu = new BMenu("Options", B_ITEMS_IN_COLUMN);
+
+		BMenuItem *item = new BMenuItem("Use current point size", new BMessage(VPD_MSG_CAPTURE_OP_CPZ));
+		item->SetMarked(false);
+		submenu->AddItem(item);
+
+		item = new BMenuItem("Dump buffer directly", new BMessage(VPD_MSG_CAPTURE_OP_DUMP));
+		item->SetMarked(true);
+		submenu->AddItem(item);
+
+		menu->AddItem(submenu);
+
+		menu->AddSeparatorItem();
+
 		menu->AddItem(new BMenuItem("Quit", new BMessage(B_QUIT_REQUESTED), 'q', B_COMMAND_KEY));
+
 		menubar->AddItem(menu);
 
 		AddChild(menubar);
 		menubar->ResizeToPreferred();
 
-		BMenuItem *item;
-		for(int32 k = 0; (item = menu->ItemAt(k)) != NULL; k++) item->SetTarget(BMessenger(this));
+		for(int32 k = 0; (item = menu->ItemAt(k)) != NULL; k++)
+		{
+			item->SetTarget(BMessenger(this));
+			if((submenu = item->Submenu()) != NULL)
+			{
+				for(int32 m = 0; (item = submenu->ItemAt(m)) != NULL; m++)
+					item->SetTarget(BMessenger(this));
+			}
+		}
 
 		frame.top = menubar->Frame().bottom + 1;
 	}
@@ -136,7 +162,7 @@ VPDWindow::QuitRequested()
 void
 VPDWindow::MessageReceived(BMessage *msg)
 {
-	BView *view;
+	VPDView *view;
 	int8 keyID;
 	bigtime_t when;
 	bool keyState;
@@ -164,13 +190,60 @@ VPDWindow::MessageReceived(BMessage *msg)
 		case VPD_MSG_GET_BUFFER:
 		case VPD_MSG_SET_BUFFER:
 		case VPD_MSG_SYNC:
-			if((view = FindView("screen")) == NULL)
+			if((view = e_cast_as(FindView("screen"), VPDView)) == NULL)
 			{
 				if(msg->IsSourceWaiting())
 					msg->SendReply(B_NO_REPLY);
 				break;
 			}
 			view->MessageReceived(msg);
+			break;
+
+		case VPD_MSG_CAPTURE_SCRREN:
+			if((view = e_cast_as(FindView("screen"), VPDView)) != NULL)
+			{
+				BMenuItem *item = NULL;
+				if(msg->FindPointer("source", (void**)&item) != B_OK) break;
+				if(item == NULL || item->Menu() == NULL) break;
+
+				int32 index = item->Menu()->IndexOf(item);
+				if((item = item->Menu()->ItemAt(index + 1)) == NULL) break; // no next item
+				if(item->Submenu() == NULL) break; // not options menu
+
+				bool dumpBuffer = false;
+				bool useCurPointSize = false;
+
+				BMenu *submenu = item->Submenu();
+				if((item = submenu->FindItem(VPD_MSG_CAPTURE_OP_DUMP)) != NULL)
+					dumpBuffer = item->IsMarked();
+				if((item = submenu->FindItem(VPD_MSG_CAPTURE_OP_CPZ)) != NULL)
+					useCurPointSize = item->IsMarked();
+
+				// TODO: use BFilePanel
+				BFile f("/tmp/1.data", B_READ_WRITE | B_CREATE_FILE | B_ERASE_FILE);
+				if(f.InitCheck() != B_OK) break;
+
+				if(dumpBuffer)
+				{
+					if(view->Buffer() == NULL) break;
+					f.Write(view->Buffer(), view->BufferLength());
+					fprintf(stdout, "[VPDApp]: buffer written to \"/tmp/1.data\"\n");
+				}
+				else
+				{
+					// TODO
+					fprintf(stderr, "[VPDApp]: TODO !!!\n");
+				}
+			}
+			break;
+
+		case VPD_MSG_CAPTURE_OP_DUMP:
+		case VPD_MSG_CAPTURE_OP_CPZ:
+			{
+				BMenuItem *item = NULL;
+				if(msg->FindPointer("source", (void**)&item) != B_OK || item == NULL) break;
+				item->SetMarked(item->IsMarked() ? false : true);
+			}
 			break;
 
 		default:
@@ -205,6 +278,16 @@ VPDButton::ValueChanged()
 	{
 		BMessenger msgr(Looper(), Looper());
 		fKeyMsgRunner = new BMessageRunner(msgr, &msg, 200000);
+
+#ifndef ETK_MAJOR_VERSION
+		/*
+		 * NOTE:
+		 * 	On BeOS or Haiku, the BMessageRunner won't be able to send the message
+		 * 	before the value of button change again, so we send the message at first.
+		 */
+		msg.AddInt64("when", real_time_clock_usecs());
+		Looper()->PostMessage(&msg);
+#endif
 	}
 	else if(Value() == B_CONTROL_OFF && fKeyMsgRunner != NULL)
 	{
