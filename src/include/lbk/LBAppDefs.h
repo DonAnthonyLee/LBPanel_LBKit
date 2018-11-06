@@ -33,18 +33,20 @@
 
 #include <be/Be.h>
 
-#ifndef ETK_MAJOR_VERSION
-	#ifndef _EXPORT
-	#define _EXPORT		__declspec(dllexport)
-	#endif
-#endif
-
 #define LBK_QUIT_REQUESTED		'lBKq'
 #define LBK_APP_SETTINGS_UPDATED	'lBKs'
 #define LBK_VIEW_STOOD_BACK		'lBKb'
 
 
 #ifndef ETK_MAJOR_VERSION
+
+#include <bsd_mem.h>
+
+#ifndef _EXPORT
+#define _EXPORT		__declspec(dllexport)
+#endif
+
+#ifdef __cplusplus /* Just for C++ */
 
 // e_cast_as(): like cast_as(), but NULL accepted, implemented by ETK++
 template<class C, typename B> inline C* etk_cast_as(B *ptr)
@@ -53,7 +55,9 @@ template<class C, typename B> inline C* etk_cast_as(B *ptr)
 }
 #define e_cast_as(ptr, class)		etk_cast_as<class>(ptr)
 
-#endif
+#endif /* __cplusplus */
+
+#endif /* !ETK_MAJOR_VERSION */
 
 #endif /* __LBK_APP_DEFS_H__ */
 
