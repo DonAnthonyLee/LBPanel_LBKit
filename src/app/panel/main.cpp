@@ -42,8 +42,8 @@
 void show_usage(const char *cmd)
 {
 	printf("Usage: %s [options]\n", cmd);
-	printf("Options:\n");
-	printf("\t--conf config_path,		use the specified file as config file\n");
+	printf("Options:\n\
+    --conf config_path         Use the specified file as config file\n");
 }
 
 
@@ -68,15 +68,9 @@ int main(int argc, char **argv)
 	LBAppSettings cfg;
 	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK || cfg.AddItems(&f) == false)
 	{
-		fprintf(stderr, "Unable to open config file (%s), use default settings !\n", path_conf.Path());
+		fprintf(stderr, "Unable to open config file (%s) !\n", path_conf.Path());
 
-#if 1
-		cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so");
-#else
-		cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/vpd.so,point_size=2,width=128,height=64");
-#endif
-
-		// TODO: more
+		// TODO
 	}
 	f.Unset();
 
