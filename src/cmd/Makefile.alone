@@ -1,6 +1,10 @@
 SUB_DIRS =		\
-	npi-oled-hat	\
 	lbk
+
+ifeq ($(shell uname),Linux)
+SUB_DIRS += \
+	npi-oled-hat
+endif
 
 all:
 	for f in $(SUB_DIRS) .none; do \
