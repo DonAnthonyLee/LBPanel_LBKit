@@ -46,6 +46,10 @@ public:
 };
 
 
+#define VPD_MSG_CAPTURE_SCRREN	'vmgc'
+#define VPD_MSG_CAPTURE_OP_DUMP	'vmo1'
+#define VPD_MSG_CAPTURE_OP_CPZ	'vmo2'
+
 #define VPD_MSG_KEY		'vmgk'
 #define VPD_MSG_POWER_STATE	'vmgp'
 #define VPD_MSG_ENABLE_UPDATE	'vmgu'
