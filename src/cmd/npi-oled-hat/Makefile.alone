@@ -42,10 +42,10 @@ $(CXX_PROGRAM): $(CXX_PROGRAM).o
 
 targets:
 	for f in $(SINGLE_C_FILE_PROGRAMS) .none; do \
-		(test $$f = .none || CC=$(CC) $(MAKE) $(MAKEFLAGS) -f Makefile.alone C_PROGRAM=$$f $$f) \
+		(test $$f = .none || CC=$(CC) $(MAKE) -f Makefile.alone C_PROGRAM=$$f $$f) \
 	done
 	for f in $(SINGLE_CXX_FILE_PROGRAMS) .none; do \
-		(test $$f = .none || CXX=$(CXX) $(MAKE) $(MAKEFLAGS) -f Makefile.alone CXX_PROGRAM=$$f $$f) \
+		(test $$f = .none || CXX=$(CXX) $(MAKE) -f Makefile.alone CXX_PROGRAM=$$f $$f) \
 	done
 
 $(TARGET_1): $(OBJECTS_1)

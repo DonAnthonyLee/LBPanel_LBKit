@@ -84,15 +84,15 @@ $(CXX_PROGRAM): $(CXX_PROGRAM).o
 
 targets:
 	for f in $(SINGLE_C_FILE_PROGRAMS) .none; do \
-		(test $$f = .none || CC=$(CC) $(MAKE) $(MAKEFLAGS) -f Makefile.alone C_PROGRAM=$$f $$f) \
+		(test $$f = .none || CC=$(CC) $(MAKE) -f Makefile.alone C_PROGRAM=$$f $$f) \
 	done
 	for f in $(SINGLE_CXX_FILE_PROGRAMS) .none; do \
-		(test $$f = .none || CXX=$(CXX) $(MAKE) $(MAKEFLAGS) -f Makefile.alone CXX_PROGRAM=$$f $$f) \
+		(test $$f = .none || CXX=$(CXX) $(MAKE) -f Makefile.alone CXX_PROGRAM=$$f $$f) \
 	done
 
 addons:
 	for f in $(ADD_ONS_DIRS) .none; do \
-		(test $$f = .none || $(MAKE) $(MAKEFLAGS) -C add-ons/$$f -f Makefile.alone) \
+		(test $$f = .none || $(MAKE) -C add-ons/$$f -f Makefile.alone) \
 	done
 
 $(TARGET_1): $(OBJECTS_1)
@@ -106,7 +106,7 @@ $(TARGET_3): $(OBJECTS_3)
 
 clean:
 	for f in $(ADD_ONS_DIRS) .none; do \
-		(test $$f = .none || $(MAKE) $(MAKEFLAGS) clean -C add-ons/$$f -f Makefile.alone) \
+		(test $$f = .none || $(MAKE) clean -C add-ons/$$f -f Makefile.alone) \
 	done
 	for f in $(TARGET) $(OBJECTS) .none; do \
 		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \

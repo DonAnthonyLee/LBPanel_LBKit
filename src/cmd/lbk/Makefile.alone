@@ -1,27 +1,56 @@
 DEBUG_OPTIONS = -g -Wall
 OPTIMIZE = -O3
 
-SINGLE_C_FILE_PROGRAMS = lbk-notify
-SINGLE_CXX_FILE_PROGRAMS = lbk-uci2msg
+SINGLE_C_FILE_PROGRAMS =
+SINGLE_CXX_FILE_PROGRAMS =
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
 
-TARGET_1 =
+TARGET_1 = lbk-cmd
 TARGET_2 =
 TARGET_3 =
 
-OBJECTS_1 =
+OBJECTS_1 =		\
+	lbk-cmd.o	\
+	lbk-notify.o	\
+	lbk-uci2msg.o	\
+	lbk-menu.o
+
 OBJECTS_2 =
 OBJECTS_3 =
 
 TARGET = $(TARGET_1) $(TARGET_2) $(TARGET_3)
 OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 
+IS_BEOS_PLATFORM = 0
+ifeq ($(shell uname),Haiku)
+IS_BEOS_PLATFORM = 1
+else
+ifeq ($(shell uname),BeOS)
+IS_BEOS_PLATFORM = 1
+endif
+endif
+
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../../libs/include
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../include -I../../libs/include
-LDFLAGS =  $(shell lite-beapi-config --libs) -L../../libs/lbk -llbk
+
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+LDFLAGS =
+
+ifeq ($(IS_BEOS_PLATFORM),0)
+	CFLAGS += $(shell lite-beapi-config --cflags)
+	CXXFLAGS += $(shell lite-beapi-config --cflags)
+	LDFLAGS += $(shell lite-beapi-config --libs)
+else
+	# BeOS/HaikuOS
+	CXXFLAGS += -Wno-multichar
+	LDFLAGS += -lbe -lroot
+endif
+
+CFLAGS += -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
+CXXFLAGS += -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
+LDFLAGS += -L../../libs/lbk -llbk
 
 all: targets $(TARGET)
 
@@ -36,10 +65,10 @@ $(CXX_PROGRAM): $(CXX_PROGRAM).o
 
 targets:
 	for f in $(SINGLE_C_FILE_PROGRAMS) .none; do \
-		(test $$f = .none || CC=$(CC) $(MAKE) $(MAKEFLAGS) -f Makefile.alone C_PROGRAM=$$f $$f) \
+		(test $$f = .none || CC=$(CC) $(MAKE) -f Makefile.alone C_PROGRAM=$$f $$f) \
 	done
 	for f in $(SINGLE_CXX_FILE_PROGRAMS) .none; do \
-		(test $$f = .none || CXX=$(CXX) $(MAKE) $(MAKEFLAGS) -f Makefile.alone CXX_PROGRAM=$$f $$f) \
+		(test $$f = .none || CXX=$(CXX) $(MAKE) -f Makefile.alone CXX_PROGRAM=$$f $$f) \
 	done
 
 $(TARGET_1): $(OBJECTS_1)
