@@ -52,8 +52,12 @@
 	#define BDirectory		EDirectory
 #endif
 
+#ifdef ETK_OS_LINUX
+
 // TODO: Specified by config
 #define BOARD_CPU_THERMAL_ZONE		"/sys/devices/virtual/thermal/thermal_zone0"
+
+#endif
 
 #define POWER_REQUESTED_CONFIRM_MSG	'pwof'
 #define POWER_OFF_MSG			'pwOF'
@@ -902,7 +906,8 @@ TMainPageView::Activated(bool state)
 		else
 			cast_as(Looper(), LBApplication)->SetPulseRate(fTabIndex == 0 ? 500000 : 1000000);
 	}
-	else if(strcmp(StandingInView()->Name(), "logo") == 0) // showing logo
+	else if(!(StandingInView()->Name() == NULL ||
+		  strcmp(StandingInView()->Name(), "logo") != 0)) // showing logo
 	{
 		cast_as(Looper(), LBApplication)->SetPulseRate(50000);
 	}
