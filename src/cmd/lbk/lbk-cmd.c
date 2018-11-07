@@ -46,6 +46,8 @@ static int show_usage(int argc, char **argv)
         uci2msg                 Convert uci config to *Message flattened data\n\
         message                 Display message on specified panel device\n\
         menu                    Display menu on specified panel device\n", org_cmd);
+
+	return -1;
 }
 
 int main(int argc, char **argv)
