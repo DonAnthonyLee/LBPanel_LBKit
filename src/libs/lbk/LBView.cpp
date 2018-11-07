@@ -40,7 +40,8 @@ LBView::LBView(const char *name)
 	  fKeyState(0),
 	  fUpdateCount(0),
 	  fMasterView(NULL),
-	  fStandingInView(NULL)
+	  fStandingInView(NULL),
+	  fKeyMessage(NULL)
 {
 	fUpdateRect = BRect();
 	fStandInTimestamp = (bigtime_t)-1;
@@ -63,6 +64,8 @@ LBView::~LBView()
 
 	LBView *view;
 	while((view = (LBView*)fStickViews.RemoveItem((int32)0)) != NULL) delete view; 
+
+	if(fKeyMessage != NULL) delete fKeyMessage;
 }
 
 
@@ -420,6 +423,33 @@ LBView::KeyState(uint8 *down_state) const
 	return fKeyState;
 }
 
+
+BMessage*
+LBView::KeyMessage() const
+{
+	return fKeyMessage;
+}
+
+
+void
+LBView::SetKeyMessage(BMessage *msg, BMessenger target)
+{
+	if(fKeyMessage == msg) return;
+
+	if(fKeyMessage) delete fKeyMessage;
+	fKeyMessage = msg;
+	fKeyMsgTarget = target;
+}
+
+
+void
+LBView::SetKeyMessage(uint32 command)
+{
+	BMessage *msg = new BMessage(command);
+	SetKeyMessage(msg, BMessenger());
+}
+
+
 void
 LBView::MessageReceived(BMessage *msg)
 {
@@ -451,14 +481,50 @@ LBView::MessageReceived(BMessage *msg)
 				fKeyState |= (0x0100 << key);
 				if(GetPowerState() == false) break;
 				KeyDown(key, clicks);
+
+				if(fKeyMessage != NULL)
+				{
+					BMessage aMsg(*fKeyMessage);
+					aMsg.AddPointer("source", reinterpret_cast<void*>(this));
+					aMsg.AddInt8("key", *((int8*)&key));
+					aMsg.AddInt8("clicks", *((int8*)&clicks));
+					aMsg.AddInt64("when", real_time_clock_usecs());
+					aMsg.AddInt16("state", fKeyState & 0x00ff);
+					aMsg.AddInt16("down_state", (fKeyState >> 8) & 0x00ff);
+
+					if(fKeyMsgTarget.IsValid())
+						fKeyMsgTarget.SendMessage(&aMsg);
+					else
+						Looper()->PostMessage(&aMsg, this);
+				}
 			}
 			else if((fKeyState & (0x0100 << key)) != 0) // must be DOWN before
 			{
 				fKeyState &= ~(0x0100 << key);
 				if(GetPowerState() == false)
+				{
 					SetPowerState(true);
+				}
 				else
+				{
 					KeyUp(key, clicks);
+
+					if(fKeyMessage != NULL)
+					{
+						BMessage aMsg(*fKeyMessage);
+						aMsg.AddPointer("source", reinterpret_cast<void*>(this));
+						aMsg.AddInt8("key", *((int8*)&key));
+						aMsg.AddInt8("clicks", *((int8*)&clicks));
+						aMsg.AddInt64("when", real_time_clock_usecs());
+						aMsg.AddInt16("state", fKeyState & 0x00ff);
+						aMsg.AddInt16("down_state", (fKeyState >> 8) & 0x00ff);
+
+						if(fKeyMsgTarget.IsValid())
+							fKeyMsgTarget.SendMessage(&aMsg);
+						else
+							Looper()->PostMessage(&aMsg, this);
+					}
+				}
 				fKeyState &= ~(0x01 << key);
 			}
 			break;
