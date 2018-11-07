@@ -91,8 +91,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	data.x = (uint8_t)atoi(argv[n + 1]);
-	data.y = (uint8_t)atoi(argv[n + 2]);
+	data.x = (int16_t)atoi(argv[n + 1]);
+	data.y = (int16_t)atoi(argv[n + 2]);
 	data.size = (uint8_t)atoi(argv[n + 3]);
 	strncpy(data.str, argv[n + 4], sizeof(data.str));
 	data.erase_mode = (argc < 6 || *argv[n + 5] != '1') ? false : true;
