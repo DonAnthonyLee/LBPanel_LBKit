@@ -204,12 +204,11 @@ NPIHat::DrawString(const char *str,
 	_oled_ssd1306_show_t data;
 
 	if(str == NULL || *str == 0) return B_BAD_VALUE;
-	if(pt.x < 0 || pt.y < 0) return B_BAD_VALUE;
 
 	bzero(&data, sizeof(data));
 
-	data.x = (uint8_t)pt.x;
-	data.y = (uint8_t)pt.y;
+	data.x = (int16_t)pt.x;
+	data.y = (int16_t)pt.y;
 	data.size = fontHeight;
 	strncpy(data.str, str, sizeof(data.str));
 	data.erase_mode = erase ? 1 : 0;
