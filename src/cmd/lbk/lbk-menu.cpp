@@ -32,6 +32,7 @@
 #include <lbk/LBKit.h>
 
 
+// TODO: label alignment, specified selection, max count, etc.
 static void show_usage(void)
 {
 	printf("lbk-menu - Display menu on specified panel device.\n\n");
@@ -45,6 +46,45 @@ Return value:\n\
 }
 
 
+#define CMD_MSG_KEY		'cmdk'
+#define CMD_MSG_CONFIRM		'cmdc'
+
+
+static int32 cmd_ret = 0;
+static LBApplication *cmd_app = NULL;
+
+
+static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFilter *filter)
+{
+	uint8 key, clicks;
+	int16 state;
+
+	switch(msg->what)
+	{
+		case CMD_MSG_KEY:
+			if(msg->FindInt8("key", (int8*)&key) != B_OK) break;
+			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
+			if(msg->FindInt16("down_state", &state) != B_OK) break;
+
+			if(key == 1 && clicks == 0xff && (state & (0x0001 << 1)) != 0) // K2 long pressed
+				cmd_app->PostMessage(B_QUIT_REQUESTED);
+			break;
+
+		case CMD_MSG_CONFIRM:
+			if(msg->FindInt32("index", &cmd_ret) != B_OK)
+				return B_DISPATCH_MESSAGE;
+			cmd_ret += 1;
+			cmd_app->PostMessage(B_QUIT_REQUESTED);
+			break;
+
+		default:
+			return B_DISPATCH_MESSAGE;
+	}
+
+	return B_SKIP_MESSAGE;
+}
+
+
 extern "C" {
 
 #ifdef CMD_ALL_IN_ONE
@@ -55,6 +95,7 @@ int main(int argc, char **argv)
 {
 	BPath path_conf;
 	int32 panel_index = 0;
+	int32 selection = -1;
 
 	int n;
 	for(n = 1; n < argc; n++)
@@ -87,9 +128,39 @@ int main(int argc, char **argv)
 		cfg.AddItems(&f);
 	}
 
-	// TODO
+	cmd_app = new LBApplication(&cfg);
+	cfg.MakeEmpty();
 
-	return 0;
+	LBListView *listView = new LBListView(3);
+	listView->MakeSelectable(true);
+	listView->SetSelectionMessage(new BMessage('lbkm'));
+
+	for(int k = 1; k < argc; k++)
+		listView->AddItem(new LBListStringItem(argv[n + k]));
+
+	if(cmd_app->AddPageView(listView, false, panel_index) == false)
+	{
+		fprintf(stderr, "No such panel device (id = %d) !\n", panel_index);
+		delete listView;
+	}
+	else
+	{
+		if(selection >= 0)
+			listView->SetPosition(selection);
+
+		listView->SetMessage(new BMessage(CMD_MSG_CONFIRM));
+		listView->SetKeyMessage(CMD_MSG_KEY);
+		listView->SetTarget(BMessenger(listView));
+
+		cmd_app->AddCommonFilter(new BMessageFilter(B_ANY_DELIVERY, B_LOCAL_SOURCE, cmd_msg_filter));
+
+		cmd_app->Go();
+	}
+
+	cmd_app->Lock();
+	cmd_app->Quit();
+
+	return cmd_ret;
 }
 
 }; // extern "C"
