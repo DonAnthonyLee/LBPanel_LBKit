@@ -1,20 +1,17 @@
 /* --------------------------------------------------------------------------
  *
- * Defination for OLED (SSD1306) I2C device
+ * Defination for OLED (SSD1306) I2C driver
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
- * This library is free software; you can redistribute it and/or
+ * This file is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This file is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library.
  *
  * File: oled_ssd1306_ioctl.h
  * Description:
@@ -50,12 +47,12 @@ typedef struct {
 } _oled_ssd1306_clear_t;
 
 typedef struct {
-	uint8_t x;
-	uint8_t y;
+	int16_t x;
+	int16_t y;
 	uint8_t size;
 	uint8_t erase_mode;
 	char str[128];
-	uint8_t reserved[4];
+	uint8_t reserved[6];
 	uint64_t ts;
 } _oled_ssd1306_show_t;
 
