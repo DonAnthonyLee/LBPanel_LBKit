@@ -32,17 +32,20 @@
 #include <lbk/LBKit.h>
 
 
-// TODO: label alignment, specified selection, max count, etc.
 static void show_usage(void)
 {
 	printf("lbk-menu - Display menu on specified panel device.\n\n");
 	printf("Usage: lbk-menu [options] label1 label2 [label3 ...]\n\
 Options:\n\
+    -D device                  Index of panel device, default value: 0\n\
     --conf config_path         Use the specified file as config file\n\
-    -D device                  Index of panel device, default value is 0\n\
+    --align left/center/right  Specify the alignment of lables, default value: left\n\
+    --select index             Specify current selection's index, default value: 1\n\
+    --max count                Maximum count to show on panel device at the same time\n\
 \n\
 Return value:\n\
-    Return index of label if user selected, 0 if user canceled, -1 if error occured.\n");
+    Return index(start from 1) of label if user selected; return 0 if user canceled by\n\
+pressing \"OK\" for a long period; -1 if error occured.\n");
 }
 
 
@@ -56,6 +59,8 @@ static LBApplication *cmd_app = NULL;
 
 static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFilter *filter)
 {
+	LBView *view;
+	void *source = NULL;
 	uint8 key, clicks;
 	int16 state;
 
@@ -66,13 +71,25 @@ static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFi
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
 			if(msg->FindInt16("down_state", &state) != B_OK) break;
 
-			if(key == 1 && clicks == 0xff && (state & (0x0001 << 1)) != 0) // K2 long pressed
+			if(msg->FindPointer("source", &source) != B_OK) break;
+			if(source == NULL || (view = reinterpret_cast<LBView*>(source)) == NULL) break;
+
+			if(!is_kind_of(view, LBListView)) break;
+			if(cast_as(view, LBListView)->GetNavButtonIcon((int32)key) != LBK_ICON_OK) break;
+
+			if(clicks == 0xff && (state & (0x0001 << key)) != 0)
+			{
+				/*
+				 * NOTE:
+				 * 	Cancel the operation when "K2" long pressed.
+				 * 	Double clicks will cause issue sometimes when pressing switch quickly.
+				 */
 				cmd_app->PostMessage(B_QUIT_REQUESTED);
+			}
 			break;
 
 		case CMD_MSG_CONFIRM:
-			if(msg->FindInt32("index", &cmd_ret) != B_OK)
-				return B_DISPATCH_MESSAGE;
+			if(msg->FindInt32("index", &cmd_ret) != B_OK) break;
 			cmd_ret += 1;
 			cmd_app->PostMessage(B_QUIT_REQUESTED);
 			break;
@@ -96,22 +113,42 @@ int main(int argc, char **argv)
 	BPath path_conf;
 	int32 panel_index = 0;
 	int32 selection = -1;
+	int32 max_count = 3;
+	alignment align = B_ALIGN_LEFT;
 
 	int n;
 	for(n = 1; n < argc; n++)
 	{
-		if(n < argc - 1 && strcmp(argv[n], "--conf") == 0)
+		if(n >= argc - 1) break;
+
+		if(strcmp(argv[n], "--conf") == 0)
 		{
 			path_conf.SetTo(argv[++n]);
 		}
-		else if(n < argc - 1 && strcmp(argv[n], "-D") == 0)
+		else if(strcmp(argv[n], "-D") == 0)
 		{
 			panel_index = atoi(argv[++n]);
 		}
-		else
+		else if(strcmp(argv[n], "--align") == 0)
 		{
-			break;
+			n++;
+			if(strcmp(argv[n], "right") == 0)
+				align = B_ALIGN_RIGHT;
+			else if(strcmp(argv[n], "center") == 0)
+				align = B_ALIGN_CENTER;
+			else if(strcmp(argv[n], "left") != 0)
+				break;
 		}
+		else if(strcmp(argv[n], "--select") == 0)
+		{
+			selection = atoi(argv[++n]) - 1;
+		}
+		else if(strcmp(argv[n], "--max") == 0)
+		{
+			max_count = atoi(argv[++n]);
+			if(max_count < 1) max_count = 1;
+		}
+		else break;
 	}
 	argc -= (--n);
 
@@ -131,9 +168,8 @@ int main(int argc, char **argv)
 	cmd_app = new LBApplication(&cfg);
 	cfg.MakeEmpty();
 
-	LBListView *listView = new LBListView(3);
+	LBListView *listView = new LBListView(max_count);
 	listView->MakeSelectable(true);
-	listView->SetSelectionMessage(new BMessage('lbkm'));
 
 	for(int k = 1; k < argc; k++)
 		listView->AddItem(new LBListStringItem(argv[n + k]));
@@ -142,11 +178,14 @@ int main(int argc, char **argv)
 	{
 		fprintf(stderr, "No such panel device (id = %d) !\n", panel_index);
 		delete listView;
+
+		cmd_ret = -1;
 	}
 	else
 	{
 		if(selection >= 0)
 			listView->SetPosition(selection);
+		listView->SetItemsAlignment(align);
 
 		listView->SetMessage(new BMessage(CMD_MSG_CONFIRM));
 		listView->SetKeyMessage(CMD_MSG_KEY);
