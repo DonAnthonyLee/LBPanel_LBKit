@@ -434,10 +434,12 @@ LBView::KeyMessage() const
 void
 LBView::SetKeyMessage(BMessage *msg, BMessenger target)
 {
-	if(fKeyMessage == msg) return;
+	if(fKeyMessage != msg)
+	{
+		if(fKeyMessage) delete fKeyMessage;
+		fKeyMessage = msg;
+	}
 
-	if(fKeyMessage) delete fKeyMessage;
-	fKeyMessage = msg;
 	fKeyMsgTarget = target;
 }
 
