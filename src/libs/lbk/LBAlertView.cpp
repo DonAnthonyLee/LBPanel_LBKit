@@ -192,7 +192,7 @@ void
 LBAlertView::Draw(BRect rect)
 {
 	uint16 w;
-	BRect r;
+	BRect r, areaRect;
 
 	// title
 	r = LBView::Bounds();
@@ -204,13 +204,9 @@ LBAlertView::Draw(BRect rect)
 		DrawString(fTitle.String(), BPoint(r.left + r.Width() / 2.f - w / 2.f, 1));
 	}
 
-	// message area
 	r.OffsetBy(0, r.Height() + 1);
 	r.bottom = LBView::Bounds().bottom - 18;
-	if(r.Intersects(rect))
-	{
-		FillRect(r & rect);
-	}
+	areaRect = r;
 
 	// type icon
 	if(fIcons[3] != LBK_ICON_NONE)
@@ -222,13 +218,7 @@ LBAlertView::Draw(BRect rect)
 		tRect.OffsetBy(10, 0);
 
 		if(icon != NULL && tRect.Intersects(rect))
-		{
-			lbk_icon icon_inverse;
-			icon_inverse.type = icon->type;
-			for(size_t k = 0; k < sizeof(icon_inverse.data); k++)
-				icon_inverse.data[k] = ~(icon->data[k]);
-			DrawIcon(&icon_inverse, tRect.LeftTop());
-		}
+			DrawIcon(icon, tRect.LeftTop());
 	}
 
 	// text
@@ -246,17 +236,20 @@ LBAlertView::Draw(BRect rect)
 			if(found > 0)
 				tmpStr.Truncate(found);
 			DrawString(tmpStr.String(),
-				   found > 0 ? tRect.LeftTop() : (tRect.LeftTop() + BPoint(0, 8)),
-				   true);
+				   found > 0 ? tRect.LeftTop() : (tRect.LeftTop() + BPoint(0, 8)));
 			if(found > 0)
 			{
 				tmpStr.SetTo(fText.String() + found + 1);
-				DrawString(tmpStr.String(), tRect.LeftTop() + BPoint(0, 16), true);
+				DrawString(tmpStr.String(), tRect.LeftTop() + BPoint(0, 16));
 			}
 		}
 	}
 
-	// icon
+	// message area
+	if(areaRect.Intersects(rect))
+		InvertRect(areaRect & rect);
+
+	// button icon
 	r = LBView::Bounds();
 	r.top = r.bottom - 16;
 	r.bottom -= 1;

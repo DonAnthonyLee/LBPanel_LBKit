@@ -125,17 +125,11 @@ LBMenuView::Draw(BRect rect)
 		{
 			if(aItem == curItem)
 			{
-				FillRect(r & rect);
-
 				const lbk_icon *icon = lbk_get_icon_data(aItem->Icon());
 				if(icon != NULL)
-				{
-					lbk_icon icon_inverse;
-					icon_inverse.type = icon->type;
-					for(size_t k = 0; k < sizeof(icon_inverse.data); k++)
-						icon_inverse.data[k] = ~(icon->data[k]);
-					DrawIcon(&icon_inverse, r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15));
-				}
+					DrawIcon(icon, r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15));
+
+				InvertRect(r & rect);
 			}
 			else if(aItem->Icon() != LBK_ICON_NONE)
 			{

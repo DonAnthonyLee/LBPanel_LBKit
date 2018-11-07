@@ -77,27 +77,21 @@ LBListItem::DrawString(const char *str, BRect r, int32 n)
 	owner->SetFontSize(fontsize);
 
 	uint16 w = owner->StringWidth(str);
-	bool erase_mode = false;
-	if(owner->BorderStyle() == LBK_LIST_VIEW_INTERLACED_ROWS && (n & 0x01)) erase_mode = true;
- 
 	switch(owner->ItemsAlignment())
 	{
 		case B_ALIGN_LEFT:
 			owner->DrawString(str,
-					  BPoint(r.left + 2, r.top + r.Height() / 2.f - fontsize / 2.f),
-					  erase_mode);
+					  BPoint(r.left + 2, r.top + r.Height() / 2.f - fontsize / 2.f));
 			break;
 
 		case B_ALIGN_CENTER:
 			owner->DrawString(str,
-					  r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, fontsize / 2.f),
-					  erase_mode);
+					  r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(w / 2.f, fontsize / 2.f));
 			break;
 
 		default: // B_ALIGN_RIGHT
 			owner->DrawString(str,
-					  BPoint(r.right - w - 2.f, r.top + r.Height() / 2.f - fontsize / 2.f),
-					  erase_mode);
+					  BPoint(r.right - w - 2.f, r.top + r.Height() / 2.f - fontsize / 2.f));
 			break;
 	}
 }
@@ -170,35 +164,22 @@ LBListStringItem::Draw(BRect r, int32 n)
 		r.right -= r.Height() + 1.f;
 	}
 
+	BRect tRect = r;
 	if(fHasIcon)
 	{
 		const lbk_icon *icon = lbk_get_icon_data(fIcon);
-		if(icon != NULL)
-		{
-			bool erase_mode = false;
-			if(owner->BorderStyle() == LBK_LIST_VIEW_INTERLACED_ROWS && (n & 0x01)) erase_mode = true;
 
-			BRect tRect = r;
-			tRect.right = tRect.left + 11;
+		tRect.right = tRect.left + 11;
 
-			if(erase_mode)
-			{
-				lbk_icon icon_inverse;
-				icon_inverse.type = LBK_ICON_8x8;
-				for(size_t k = 0; k < 8; k++)
-					icon_inverse.data[k] = ~(icon->data[k]);
-				owner->DrawIcon(&icon_inverse, tRect.LeftTop() + BPoint(tRect.Width() / 2.f, tRect.Height() / 2.f) - BPoint(4, 4));
-			}
-			else
-			{
-				owner->DrawIcon(icon, tRect.LeftTop() + BPoint(tRect.Width() / 2.f, tRect.Height() / 2.f) - BPoint(4, 4));
-			}
-		}
+		owner->DrawIcon(icon, tRect.LeftTop() + BPoint(tRect.Width() / 2.f, tRect.Height() / 2.f) - BPoint(4, 4));
 
+		tRect = r;
 		r.left += 12;
 	}
 
 	DrawString(fText, r, n);
+
+	if(owner->BorderStyle() == LBK_LIST_VIEW_INTERLACED_ROWS && (n & 0x01)) owner->InvertRect(tRect);
 }
 
 
@@ -255,9 +236,6 @@ LBListControlItem::Draw(BRect rect, int32 n)
 	LBListView *owner = e_cast_as(ScopeHandler(), LBListView);
 	if(owner == NULL || owner->IsActivated() == false) return;
 
-	bool erase_mode = false;
-	if(owner->BorderStyle() == LBK_LIST_VIEW_INTERLACED_ROWS && (n & 0x01)) erase_mode = true;
- 
 	if(owner->IsSelectable())
 	{
 		rect.left += rect.Height() + 1.f;
@@ -271,17 +249,20 @@ LBListControlItem::Draw(BRect rect, int32 n)
 
 	r.left = r.right + 1.f;
 	r.right = rect.right;
+
 	r.InsetBy(2, 3);
 	if(r.IsValid() == false) return;
-	owner->StrokeRect(r, erase_mode);
+	owner->StrokeRect(r);
 
 	if(fValue == B_CONTROL_OFF)
 		r.right = r.left + r.Width() / 3.f;
 	else
 		r.left = r.right - r.Width() / 3.f;
 	r.InsetBy(2, -2);
-	owner->FillRect(r, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH);
+	owner->FillRect(r);
 	if(fValue == B_CONTROL_ON)
-		owner->StrokeRect(r.InsetBySelf(2, 2), !erase_mode);
+		owner->StrokeRect(r.InsetBySelf(2, 2), true);
+
+	if(owner->BorderStyle() == LBK_LIST_VIEW_INTERLACED_ROWS && (n & 0x01)) owner->InvertRect(rect);
 }
 
