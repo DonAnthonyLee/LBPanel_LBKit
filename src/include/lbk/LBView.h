@@ -87,6 +87,10 @@ public:
 
 	uint8		KeyState(uint8 *down_state = NULL) const;
 
+	BMessage*	KeyMessage() const;
+	void		SetKeyMessage(BMessage *msg, BMessenger target);
+	void		SetKeyMessage(uint32 command);
+
 	bool		IsActivated() const;
 	virtual void	Activated(bool state);
 
@@ -134,6 +138,9 @@ private:
 	LBView *fStandingInView;
 	BList fStickViews;
 	bigtime_t fStandInTimestamp;
+
+	BMessage *fKeyMessage;
+	BMessenger fKeyMsgTarget;
 
 #ifdef LBK_ENABLE_MORE_FEATURES
 	rgb_color fColors[3];
