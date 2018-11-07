@@ -126,9 +126,9 @@ LBListView::Draw(BRect rect)
 			DrawItemBorder(r, k);
 
 			LBListItem *aItem = cast_as(item, LBListItem);
+			aItem->Draw(r, k);
 			if(aItem == curItem)
 				DrawSelection(r, k);
-			aItem->Draw(r, k);
 		}
 		r.OffsetBy(0, r.Height() + 1.f);
 	}
@@ -450,5 +450,7 @@ LBListView::DrawSelection(BRect rect, int32 n)
 	r = rect;
 	r.left = r.right - r.Height();
 	if(r.IsValid()) DrawIcon(LBK_ICON_SMALL_LEFT, r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(4, 4));
+
+	if(fBorderStyle == LBK_LIST_VIEW_NO_BORDER) InvertRect(rect);
 }
 
