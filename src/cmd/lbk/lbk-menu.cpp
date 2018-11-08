@@ -42,10 +42,13 @@ Options:\n\
     --align left/center/right  Specify the alignment of lables, default value: left\n\
     --select index             Specify current selection's index, default value: 1\n\
     --max count                Maximum count to show on panel device at the same time\n\
+    --timeout seconds          Exit after specified seconds\n\
 \n\
 Return value:\n\
-    Return index(start from 1) of label if user selected; return 0 if user canceled by\n\
-pressing \"OK\" for a long period; -1 if error occured.\n");
+    Return index(start from 1) of label if user selected; return 0 if user canceled\n\
+by pressing \"OK\" for a long period; -1 if error occured; -2 if timeout.\n\
+    Usually, the negative exit code in shell will be turned to positive, such as,\n\
+255 for -1, 254 for -2.\n");
 }
 
 
@@ -55,6 +58,7 @@ pressing \"OK\" for a long period; -1 if error occured.\n");
 
 static int32 cmd_ret = 0;
 static LBApplication *cmd_app = NULL;
+bigtime_t cmd_end_time = 0;
 
 
 static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFilter *filter)
@@ -77,11 +81,11 @@ static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFi
 			if(!is_kind_of(view, LBListView)) break;
 			if(cast_as(view, LBListView)->GetNavButtonIcon((int32)key) != LBK_ICON_OK) break;
 
-			if(clicks == 0xff && (state & (0x0001 << key)) != 0)
+			if(clicks == 0xff && (state & (0x0001 << key)) == 0)
 			{
 				/*
 				 * NOTE:
-				 * 	Cancel the operation when "K2" long pressed.
+				 * 	Cancel the operation when "K2" long pressed then released.
 				 * 	Double clicks will cause issue sometimes when pressing switch quickly.
 				 */
 				cmd_app->PostMessage(B_QUIT_REQUESTED);
@@ -93,6 +97,14 @@ static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFi
 			cmd_ret += 1;
 			cmd_app->PostMessage(B_QUIT_REQUESTED);
 			break;
+
+		case B_PULSE:
+			if(cmd_end_time > 0 && real_time_clock_usecs() > cmd_end_time)
+			{
+				cmd_ret = -2;
+				cmd_app->PostMessage(B_QUIT_REQUESTED);
+			}
+			return B_DISPATCH_MESSAGE;
 
 		default:
 			return B_DISPATCH_MESSAGE;
@@ -115,6 +127,7 @@ int main(int argc, char **argv)
 	int32 selection = -1;
 	int32 max_count = 3;
 	alignment align = B_ALIGN_LEFT;
+	int32 timeout = -1;
 
 	int n;
 	for(n = 1; n < argc; n++)
@@ -147,6 +160,10 @@ int main(int argc, char **argv)
 		{
 			max_count = atoi(argv[++n]);
 			if(max_count < 1) max_count = 1;
+		}
+		else if(strcmp(argv[n], "--timeout") == 0)
+		{
+			timeout = atoi(argv[++n]);
 		}
 		else break;
 	}
@@ -192,6 +209,12 @@ int main(int argc, char **argv)
 		listView->SetTarget(BMessenger(listView));
 
 		cmd_app->AddCommonFilter(new BMessageFilter(B_ANY_DELIVERY, B_LOCAL_SOURCE, cmd_msg_filter));
+
+		if(timeout > 0)
+		{
+			cmd_end_time = real_time_clock_usecs() + (bigtime_t)1000000 * (bigtime_t)timeout;
+			cmd_app->SetPulseRate(timeout > 4 ? 1000000 : 200000);
+		}
 
 		cmd_app->Go();
 	}
