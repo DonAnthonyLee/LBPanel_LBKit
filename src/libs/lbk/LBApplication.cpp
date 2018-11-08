@@ -190,7 +190,7 @@ LBApplication::LBApplication(const LBAppSettings *settings)
 	  fPanelsCount(0),
 	  fIPC(NULL)
 {
-	fPipes[0] = -1;
+	fPipes[0] = fPipes[1] = -1;
 
 	LBAppSettings cfg;
 
@@ -503,7 +503,7 @@ LBApplication::Go()
 	struct timeval timeout;
 	uint32 count = 0;
 	bigtime_t pulse_sent_time[2] = {0, 0};
-	bigtime_t pulse_rate = 0;
+	bigtime_t pulse_rate = PulseRate();
 
 	timeout.tv_sec = 0;
 #ifdef ETK_MAJOR_VERSION
@@ -547,7 +547,7 @@ LBApplication::Go()
 						break;
 
 					default:
-						pulse_rate = this->PulseRate();
+						pulse_rate = PulseRate();
 				}
 			}
 		}
