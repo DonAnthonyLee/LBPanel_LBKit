@@ -1,5 +1,5 @@
-AM_CFLAGS = -fPIC -I../../../../include -I../../../include
-AM_CXXFLAGS = -fPIC -I../../../../include -I../../../include
+AM_CFLAGS = -I../../../../include -I../../../include
+AM_CXXFLAGS = -I../../../../include -I../../../include
 AM_LDFLAGS = -shared
 
 addonsdir = $(libdir)/add-ons/lbk
