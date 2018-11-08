@@ -11,6 +11,10 @@ PKG_MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
+define Package/luci-app-usb_gadget/conffiles
+/etc/config/usb_gadget
+endef
+
 define Package/luci-app-usb_gadget/postinst
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/usb_gadget enable || true
