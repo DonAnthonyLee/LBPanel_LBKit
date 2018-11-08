@@ -13,7 +13,8 @@ OBJECTS_1 =		\
 	lbk-cmd.o	\
 	lbk-notify.o	\
 	lbk-uci2msg.o	\
-	lbk-menu.o
+	lbk-menu.o	\
+	lbk-message.o
 
 OBJECTS_2 =
 OBJECTS_3 =

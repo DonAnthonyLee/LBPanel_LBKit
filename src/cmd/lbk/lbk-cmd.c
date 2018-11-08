@@ -34,6 +34,7 @@
 extern int cmd_notify(int argc, char **argv);
 extern int cmd_uci2msg(int argc, char **argv);
 extern int cmd_menu(int argc, char **argv);
+extern int cmd_message(int argc, char **argv);
 
 static char org_cmd[] = "lbk-cmd";
 
@@ -76,8 +77,8 @@ int main(int argc, char **argv)
 			func = cmd_uci2msg;
 		else if (strcmp(&cmd[4], "menu") == 0)
 			func = cmd_menu;
-
-		// TODO
+		else if (strcmp(&cmd[4], "message") == 0)
+			func = cmd_message;
 	}
 
 	if (func == NULL)
