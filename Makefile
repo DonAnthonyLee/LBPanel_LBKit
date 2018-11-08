@@ -24,6 +24,18 @@ define Package/lbk/description
   LBKit - Little Board application Kit
 endef
 
+define Package/lbk-cmd
+  SECTION:=utils
+  CATEGORY:=Utilities
+  DEPENDS:=+lbk $(CXX_DEPENDS)
+  TITLE:=Utilities for LBKit
+  MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
+endef
+
+define Package/lbk-cmd/description
+  Utilities for LBKit
+endef
+
 define Package/lbk-dev
   SECTION:=devel
   CATEGORY:=Development
@@ -36,16 +48,28 @@ define Package/lbk-dev/description
   LBKit - Little Board application Kit
 endef
 
-define Package/lb_panel
+define Package/lbpanel
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+etkxx-lite +lbk $(CXX_DEPENDS)
+  DEPENDS:=+lbk $(CXX_DEPENDS)
   TITLE:=LBPanel - Little Board Panel application
   MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 endef
 
-define Package/lb_panel/description
+define Package/lbpanel/description
   LBPanel - Little Board Panel application
+endef
+
+define Package/lbk-npi_oled_hat
+  SECTION:=utils
+  CATEGORY:=Utilities
+  DEPENDS:=+lbk $(CXX_DEPENDS)
+  TITLE:=Commands and library for NanoPi OLED hat using LBKit
+  MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
+endef
+
+define Package/lbk-npi_oled_hat/description
+  Commands and library for NanoPi OLED hat using LBKit
 endef
 
 CONFIGURE_ARGS+= \
@@ -54,15 +78,21 @@ CONFIGURE_ARGS+= \
 	--infodir=/usr/share/info \
 	--libdir=/usr/lib \
 	--sysconfdir=/etc \
-	--with-lite-beapi-config=$(STAGING_DIR)/usr/bin/lite-beapi-config \
-	CXX=$(PKG_BUILD_DIR)/wrapper/g++-uc
+	--with-lite-beapi-config=$(STAGING_DIR)/usr/bin/lite-beapi-config
+
+ifeq ($(CONFIG_USE_UCLIBCXX),y)
+	CONFIGURE_ARGS+= \
+		CXX=$(PKG_BUILD_DIR)/wrapper/g++-uc
+endif
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	cp -af ./src/* $(PKG_BUILD_DIR)/
+ifeq ($(CONFIG_USE_UCLIBCXX),y)
 	mkdir $(PKG_BUILD_DIR)/wrapper
 	cp -f $(TOOLCHAIN_DIR)/bin/g++-uc $(PKG_BUILD_DIR)/wrapper/g++-uc
 	cd $(PKG_BUILD_DIR)/wrapper && patch -p1 < $(CURDIR)/patches/g++-uc.patch
+endif
 endef
 
 define Build/Compile
@@ -94,8 +124,21 @@ endef
 define Package/lbk/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/liblbk.so* $(1)/usr/lib/
-	$(INSTALL_DIR) $(1)/usr/lib/add-ons/lbk
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/libnpi-oled-hat.so.0.0.0 $(1)/usr/lib/add-ons/lbk/npi-oled-hat.so
+	$(INSTALL_DIR) $(1)/etc
+	touch $(1)/etc/LBK.conf
+endef
+
+define Package/lbk/conffiles
+/etc/LBK.conf
+endef
+
+define Package/lbk-cmd/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(CP) $(PKG_INSTALL_DIR)/usr/bin/lbk-cmd $(1)/usr/bin/lbk-cmd
+	ln -sf ./lbk-cmd $(1)/usr/bin/lbk-notify
+	ln -sf ./lbk-cmd $(1)/usr/bin/lbk-uci2msg
+	ln -sf ./lbk-cmd $(1)/usr/bin/lbk-menu
+	ln -sf ./lbk-cmd $(1)/usr/bin/lbk-message
 endef
 
 define Package/lbk-dev/install
@@ -107,11 +150,32 @@ define Package/lbk-dev/install
 	$(CP) $(PKG_BUILD_DIR)/include/lbk/add-ons/*.h $(1)/usr/include/lbk/add-ons/
 endef
 
-define Package/lb_panel/install
+define Package/lbpanel/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/LBPanel $(1)/usr/bin/LBPanel
 endef
 
+define Package/lbk-npi_oled_hat/install
+	$(INSTALL_DIR) $(1)/usr/lib/add-ons/lbk
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/libnpi-oled-hat.so.0.0.0 $(1)/usr/lib/add-ons/lbk/npi-oled-hat.so
+	$(INSTALL_DIR) $(1)/bin
+	$(CP) $(PKG_INSTALL_DIR)/usr/bin/npi_hat_cmd $(1)/bin/npi_hat_cmd
+	ln -sf ./npi_hat_cmd $(1)/bin/oled_power
+	ln -sf ./npi_hat_cmd $(1)/bin/oled_update
+	ln -sf ./npi_hat_cmd $(1)/bin/oled_clear
+	ln -sf ./npi_hat_cmd $(1)/bin/oled_show
+endef
+
+define Package/lbk-npi_oled_hat/postinst
+#!/bin/sh
+FOUND = `grep "npi-oled-hat" $${IPKG_INSTROOT}/etc/LBK.conf`
+if [ -z "$$FOUND" ]; then
+	echo "PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so" >> $${IPKG_INSTROOT}/etc/LBK.conf
+fi
+endef
+
 $(eval $(call BuildPackage,lbk))
+$(eval $(call BuildPackage,lbk-cmd))
 $(eval $(call BuildPackage,lbk-dev))
-$(eval $(call BuildPackage,lb_panel))
+$(eval $(call BuildPackage,lbk-npi_oled_hat))
+$(eval $(call BuildPackage,lbpanel))
