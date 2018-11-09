@@ -70,7 +70,10 @@ public:
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 
+protected:
 	virtual void	DrawButtonIcon(lbk_icon_id idIcon, BPoint location);
+	int32		IndexOfButton(uint8 key) const;
+	lbk_icon_id	GetButtonIcon(int32 index) const;
 
 private:
 	BString fTitle;
