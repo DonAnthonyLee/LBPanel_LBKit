@@ -118,6 +118,28 @@ LBAlertView::SetText(const char *text)
 }
 
 
+int32
+LBAlertView::IndexOfButton(uint8 key) const
+{
+	if(key >= 8 || (fButtonMask & (0x01 << key)) == 0) return -1;
+
+	int32 idBtn = 0;
+	for(uint8 k = 0; k < key && k < LBK_KEY_TYPICAL_NUMBER && idBtn < 3; k++)
+	{
+		if((fButtonMask & (0x01 << k)) != 0) idBtn++;
+	}
+
+	return idBtn;
+}
+
+
+lbk_icon_id
+LBAlertView::GetButtonIcon(int32 index) const
+{
+	return((index < 0 || index > 3) ? LBK_ICON_NONE : fIcons[index]);
+}
+
+
 void
 LBAlertView::SetButtonIcon(int32 index, lbk_icon_id idIcon)
 {
