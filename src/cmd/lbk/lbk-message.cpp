@@ -47,6 +47,7 @@ Options:\n\
     --align left/center/right  Specify the alignment of icons to match keys\n\
     --response-even-none       Return even the icon of key is \"none\"\n\
     --timeout seconds          Exit after specified seconds\n\
+    --long-press down/up       Specify state when key long-pressed, default: up\n\
 \n\
 Icon:\n\
     none, ok, yes, no, exit\n\
@@ -71,23 +72,6 @@ static int32 cmd_ret = 0;
 static LBApplication *cmd_app = NULL;
 
 
-class TInvoker : public BInvoker {
-public:
-	TInvoker();
-
-	bool			IsInvoked() const;
-
-#ifdef ETK_MAJORE_VERSION
-	virtual status_t	Invoke(const BMessage *msg);
-#else
-	virtual status_t	Invoke(BMessage *msg);
-#endif
-
-private:
-	bool fInvoked;
-};
-
-
 class TAlertView : public LBAlertView {
 public:
 	TAlertView(const char *title,
@@ -95,11 +79,13 @@ public:
 		   lbk_icon_id btn3_icon,
 		   lbk_icon_id btn2_icon,
 		   lbk_icon_id btn1_icon,
-		   alert_type type);
+		   alert_type type,
+		   bool long_press_up);
 
 	void		SetResponseEvenNone();
 	void		SetTimeout(int32 seconds);
 
+	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	MessageReceived(BMessage *msg);
 	virtual void	Attached();
@@ -107,38 +93,9 @@ public:
 
 private:
 	bool fRespEvenNone;
+	bool fLongPressUp;
 	bigtime_t fTimestamp;
-	TInvoker *fInvoker;
 };
-
-
-TInvoker::TInvoker()
-	: BInvoker(), fInvoked(false)
-{
-}
-
-
-bool
-TInvoker::IsInvoked() const
-{
-	return fInvoked;
-}
-
-
-status_t
-#ifdef ETK_MAJORE_VERSION
-TInvoker::Invoke(const BMessage *msg)
-#else
-TInvoker::Invoke(BMessage *msg)
-#endif
-{
-	status_t st = BInvoker::Invoke(msg);
-
-	if(st == B_OK)
-		fInvoked = true;
-
-	return st;
-}
 
 
 TAlertView::TAlertView(const char *title,
@@ -146,11 +103,12 @@ TAlertView::TAlertView(const char *title,
 		       lbk_icon_id btn3_icon,
 		       lbk_icon_id btn2_icon,
 		       lbk_icon_id btn1_icon,
-		       alert_type type)
+		       alert_type type,
+		       bool long_press_up)
 	: LBAlertView(title, text, btn3_icon, btn2_icon, btn1_icon, type),
 	  fRespEvenNone(false),
-	  fTimestamp(0),
-	  fInvoker(NULL)
+	  fLongPressUp(long_press_up),
+	  fTimestamp(0)
 {
 }
 
@@ -184,10 +142,24 @@ TAlertView::SetTimeout(int32 seconds)
 void
 TAlertView::Attached()
 {
-	fInvoker = new TInvoker();
-	fInvoker->SetMessage(new BMessage(CMD_MSG_CONFIRM));
-	fInvoker->SetTarget(this);
-	SetInvoker(fInvoker);
+	SetInvoker(new BInvoker(new BMessage(CMD_MSG_CONFIRM), BMessenger(this)));
+}
+
+
+void
+TAlertView::KeyDown(uint8 key, uint8 clicks)
+{
+	LBAlertView::KeyDown(key, clicks);
+
+	int32 id = IndexOfButton(key);
+	if(clicks == 0xff && fLongPressUp == false && (id >= 0 || fRespEvenNone))
+	{
+		lbk_icon_id icon = GetButtonIcon(id);
+		if(icon == LBK_ICON_NONE && fRespEvenNone == false) return;
+
+		cmd_ret = (icon == LBK_ICON_NONE) ? 100 : (id + 101);
+		cmd_app->PostMessage(B_QUIT_REQUESTED);
+	}
 }
 
 
@@ -196,8 +168,8 @@ TAlertView::KeyUp(uint8 key, uint8 clicks)
 {
 	LBAlertView::KeyUp(key, clicks);
 
-	if(fInvoker == NULL) return;
-	if(fRespEvenNone && fInvoker->IsInvoked() == false)
+	lbk_icon_id icon = GetButtonIcon(IndexOfButton(key));
+	if(fRespEvenNone && icon == LBK_ICON_NONE)
 	{
 		cmd_ret = (clicks == 0xff) ? 100 : 0;
 		cmd_app->PostMessage(B_QUIT_REQUESTED);
@@ -215,7 +187,7 @@ TAlertView::MessageReceived(BMessage *msg)
 		case CMD_MSG_CONFIRM:
 			if(msg->FindInt32("which", &cmd_ret) != B_OK) break;
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
-			cmd_ret += 1 + (clicks == 0xff ? 100 : 0);
+			cmd_ret += (clicks == 0xff) ? 101 : 1;
 			cmd_app->PostMessage(B_QUIT_REQUESTED);
 			break;
 
@@ -271,6 +243,7 @@ int main(int argc, char **argv)
 	BString topic;
 	BString text;
 	bool respNone = false;
+	bool long_press_up = true;
 	int32 timeout = -1;
 
 	int n;
@@ -326,6 +299,14 @@ int main(int argc, char **argv)
 		{
 			timeout = atoi(argv[++n]);
 		}
+		else if(strcmp(argv[n], "--long-press") == 0)
+		{
+			n++;
+			if(strcmp(argv[n], "down") == 0)
+				long_press_up = false;
+			else if(strcmp(argv[n], "up") != 0)
+				break;
+		}
 		else break;
 	}
 	argc -= (--n);
@@ -355,7 +336,7 @@ int main(int argc, char **argv)
 
 	TAlertView *alert = new TAlertView(topic.String(),
 					   text.String(),
-					   icon3, icon2, icon1, t);
+					   icon3, icon2, icon1, t, long_press_up);
 	if(respNone)
 		alert->SetResponseEvenNone();
 	alert->SetButtonAlignment(align);

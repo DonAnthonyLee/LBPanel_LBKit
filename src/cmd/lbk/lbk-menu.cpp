@@ -43,6 +43,7 @@ Options:\n\
     --select index             Specify current selection's index, default value: 1\n\
     --max count                Maximum count to show on panel device at the same time\n\
     --timeout seconds          Exit after specified seconds\n\
+    --long-press down/up       Specify state when \"OK\" key long-pressed, default: up\n\
 \n\
 Return value:\n\
     Return index(start from 1) of label if user selected; return 0 if user canceled\n\
@@ -58,8 +59,8 @@ by pressing \"OK\" for a long period; -1 if error occured; -2 if timeout.\n\
 
 static int32 cmd_ret = 0;
 static LBApplication *cmd_app = NULL;
-bigtime_t cmd_end_time = 0;
-
+static bigtime_t cmd_end_time = 0;
+static int16 long_press_state = 0;
 
 static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFilter *filter)
 {
@@ -81,7 +82,7 @@ static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFi
 			if(!is_kind_of(view, LBListView)) break;
 			if(cast_as(view, LBListView)->GetNavButtonIcon((int32)key) != LBK_ICON_OK) break;
 
-			if(clicks == 0xff && (state & (0x0001 << key)) == 0)
+			if(clicks == 0xff && (state >> key) == long_press_state)
 			{
 				/*
 				 * NOTE:
@@ -164,6 +165,14 @@ int main(int argc, char **argv)
 		else if(strcmp(argv[n], "--timeout") == 0)
 		{
 			timeout = atoi(argv[++n]);
+		}
+		else if(strcmp(argv[n], "--long-press") == 0)
+		{
+			n++;
+			if(strcmp(argv[n], "down") == 0)
+				long_press_state = 1;
+			else if(strcmp(argv[n], "up") != 0)
+				break;
 		}
 		else break;
 	}
