@@ -10,22 +10,22 @@ msgid "USB Gadget"
 msgstr "OTG 设备"
 
 msgid "Specify the function of USB gadget."
-msgstr "指定 USB OTG 设备。"
+msgstr "指定设备功能。"
 
 msgid "Settings"
 msgstr "配置"
 
 msgid "Enable USB gadget"
-msgstr "启用 USB OTG 设备"
+msgstr "启用设备"
 
 msgid "Function"
 msgstr "功能"
 
 msgid "Ethernet"
-msgstr "网卡"
+msgstr "虚拟网卡"
 
 msgid "Mass Storage"
-msgstr "存储"
+msgstr "文件存储"
 
 msgid "Arguments for g_ether"
 msgstr "网卡模块参数"
