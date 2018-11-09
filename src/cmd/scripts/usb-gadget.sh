@@ -14,28 +14,34 @@ return 0
 }
 
 init_menu_items() {
-MENU_ITEMS=
+MENU_SELE=1
 
 if [ "x${USB_GADGET_ENABLED}" = "x1" ]; then
-	MENU_ITEMS="${MENU_ITEMS} 关闭设备"
+	MENU_ITEMS="关闭设备"
 else
-	MENU_ITEMS="${MENU_ITEMS} 启用设备"
+	MENU_ITEMS="启用设备"
 fi
 
 if [ "x${USB_GADGET_FUNCTION}" = "x0" ]; then
+	[ "x${USB_GADGET_ENABLED}" = "x0" ] || MENU_SELE=2
 	MENU_ITEMS="${MENU_ITEMS} 虚拟网卡(当前) 文件存储"
 else
+	[ "x${USB_GADGET_ENABLED}" = "x0" ] || MENU_SELE=3
 	MENU_ITEMS="${MENU_ITEMS} 虚拟网卡 文件存储(当前)"
 fi
 }
 
-check_env || { echo "Depend on luci-app-usb_gadget & lbk-cmd !" && exit 1; }
-load_config || { echo "Failed to get configuration !" && exit 1; }
+check_env || { echo "Requires luci-app-usb_gadget & lbk-cmd !" && exit 1; }
+load_config || { echo "Failed to get settings !" && exit 1; }
 
 init_menu_items
 
-lbk-menu --align center ${MENU_ITEMS} > /dev/null 2>&1
+lbk-menu --align center --long-press down --select ${MENU_SELE} ${MENU_ITEMS} > /dev/null 2>&1
 case "$?" in
+	0)
+	lbk-message --k2 none --k3 none --type info --topic "提示" --timeout 1 "操作取消"
+	exit 0
+;;
 	1)
 	if [ "x${USB_GADGET_ENABLED}" = "x1" ]; then
 		uci set usb_gadget.@usb_gadget[0].enabled=0
@@ -43,22 +49,20 @@ case "$?" in
 		uci set usb_gadget.@usb_gadget[0].enabled=1
 	fi
 ;;
-
 	2)
 	uci set usb_gadget.@usb_gadget[0].type=0
 ;;
-
 	3)
 	uci set usb_gadget.@usb_gadget[0].type=1
 ;;
-
 	*)
 	exit 1
 ;;
 esac
 
 uci commit usb_gadget
-/etc/init.d/usb_gadget reload || exit 1
+/etc/init.d/usb_gadget reload || { lbk-message --k2 none --k3 exit --type stop --topic "错误" "无法应用设置" && exit 1; }
+lbk-message --k2 none --k3 none --type idea --topic "信息" --timeout 1 "操作成功"
 
 exit 0
 
