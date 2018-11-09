@@ -30,14 +30,14 @@ init_config(){
 }
 
 start(){
-	USB_OTG_ENABLED=`uci get usb_gadget.@usb_gadget[0].enabled`
-	if [ "x${USB_OTG_ENABLED}" != "x1" ]; then
+	USB_GADGET_ENABLED=`uci get usb_gadget.@usb_gadget[0].enabled`
+	if [ "x${USB_GADGET_ENABLED}" != "x1" ]; then
 		echo "usb_gadget: disabled."
 	else
-		USB_OTG_FUNCTION=`uci get usb_gadget.@usb_gadget[0].type`
+		USB_GADGET_FUNCTION=`uci get usb_gadget.@usb_gadget[0].type`
 		rmmod g_ether > /dev/null 2>&1
 		rmmod g_mass_storage > /dev/null 2>&1
-		if [ "x${USB_OTG_FUNCTION}" = "x0" ]; then
+		if [ "x${USB_GADGET_FUNCTION}" = "x0" ]; then
 			MOD_NAME="g_ether"
 			MOD_ARGS=`uci get usb_gadget.@usb_gadget[0].g_ether_args`
 		else
@@ -85,8 +85,8 @@ restart(){
 }
 
 reload(){
-	USB_OTG_ENABLED=`uci get usb_gadget.@usb_gadget[0].enabled`
-	if [ "x${USB_OTG_ENABLED}" = "x1" ]; then
+	USB_GADGET_ENABLED=`uci get usb_gadget.@usb_gadget[0].enabled`
+	if [ "x${USB_GADGET_ENABLED}" = "x1" ]; then
 		restart
 	else
 		stop
