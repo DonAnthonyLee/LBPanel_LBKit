@@ -10,7 +10,6 @@ TARGET_2 =
 TARGET_3 =
 
 OBJECTS_1 = NPIHat.o
-
 OBJECTS_2 =
 OBJECTS_3 =
 
@@ -20,8 +19,8 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../../../include -I../../../include
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -I../../../../include -I../../../include
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include
 LDFLAGS =  $(shell lite-beapi-config --libs) -L../.. -llbk
 
 all: targets $(TARGET)
