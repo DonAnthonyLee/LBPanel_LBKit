@@ -71,37 +71,25 @@ TAboutView::Draw(BRect rect)
 	// Name
 	r = Bounds();
 	r.bottom = r.top + r.Height() / 4.f - 1.f;
-	if(r.Intersects(rect))
-	{
-		str.SetTo("应用: LBPanel");
-		DrawString(str.String(), r.LeftTop() + BPoint(5, (r.Height() - 11.f) / 2.f));
-	}
+	str.SetTo("应用: LBPanel");
+	DrawString(str.String(), r.LeftTop() + BPoint(5, (r.Height() - 11.f) / 2.f));
 
 	// Version
 	r.OffsetBy(0, r.Height() + 1);
-	if(r.Intersects(rect))
-	{
-		str.Truncate(0);
-		str << "版本: " << LBPANEL_MAJOR_VERSION << "." << LBPANEL_MINOR_VERSION;
-		DrawString(str.String(), r.LeftTop() + BPoint(5, (r.Height() - 11.f) / 2.f));
-	}
+	str.Truncate(0);
+	str << "版本: " << LBPANEL_MAJOR_VERSION << "." << LBPANEL_MINOR_VERSION;
+	DrawString(str.String(), r.LeftTop() + BPoint(5, (r.Height() - 11.f) / 2.f));
 
 	// Author
 	r.OffsetBy(0, r.Height() + 1);
-	if(r.Intersects(rect))
-	{
-		str.Truncate(0);
-		str.SetTo("作者: Anthony Lee");
-		DrawString(str.String(), r.LeftTop() + BPoint(5, (r.Height() - 11.f) / 2.f));
-	}
+	str.Truncate(0);
+	str.SetTo("作者: Anthony Lee");
+	DrawString(str.String(), r.LeftTop() + BPoint(5, (r.Height() - 11.f) / 2.f));
 
 	// Copyright
 	r.OffsetBy(0, r.Height() + 1);
-	if(r.Intersects(rect))
-	{
-		str.Truncate(0);
-		str.SetTo("协议: MIT");
-		DrawString(str.String(), r.LeftTop() + BPoint(5, (r.Height() - 11.f) / 2.f));
-	}
+	str.Truncate(0);
+	str.SetTo("协议: MIT");
+	DrawString(str.String(), r.LeftTop() + BPoint(5, (r.Height() - 11.f) / 2.f));
 }
 
