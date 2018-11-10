@@ -15,7 +15,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/lbk
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+etkxx-lite $(CXX_DEPENDS)
+  DEPENDS:=+etkxx $(CXX_DEPENDS)
   TITLE:=LBKit - Little Board application Kit
   MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 endef
@@ -39,7 +39,7 @@ endef
 define Package/lbk-dev
   SECTION:=devel
   CATEGORY:=Development
-  DEPENDS:=+etkxx-lite-dev +lite-beapi-dev $(CXX_DEPENDS)
+  DEPENDS:=+lite-beapi-dev $(CXX_DEPENDS)
   TITLE:=LBKit - Little Board application Kit
   MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 endef
