@@ -37,6 +37,7 @@
 #include <lbk/LBKit.h>
 #include "TMainPageView.h"
 #include "TMenuPageView.h"
+#include "TCommandsPageView.h"
 
 
 void show_usage(const char *cmd)
@@ -80,6 +81,7 @@ int main(int argc, char **argv)
 	cfg.MakeEmpty();
 
 	// TODO: Screen timeout, tools, custom commands, etc. IT'S A LOT ...
+	app->AddPageView(new TCommandsPageView(), true);
 	app->AddPageView(new TMainPageView(), false);
 	app->AddPageView(new TMenuPageView(), false);
 

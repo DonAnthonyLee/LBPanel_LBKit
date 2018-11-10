@@ -23,28 +23,63 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: TMenuPageView.h
+ * File: TCommandsPageView.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __T_MENU_PAGE_VIEW_H__
-#define __T_MENU_PAGE_VIEW_H__
+#include <stdio.h>
+#include "TCommandsPageView.h"
 
-#include <lbk/LBKit.h>
+#define MSG_SYSTEM_MENU		'msys'
+#define MSG_CUSTOM_MENU		'mcus'
 
-#ifdef __cplusplus /* Just for C++ */
 
-class TMenuPageView : public LBMenuView {
-public:
-	TMenuPageView(const char *name = NULL);
-	virtual ~TMenuPageView();
+TCommandsPageView::TCommandsPageView(const char *name)
+	: LBMenuView(name)
+{
+	AddItem(new LBMenuItem("系统功能", new BMessage(MSG_SYSTEM_MENU), LBK_ICON_SYSTEM));
+	AddItem(new LBMenuItem("自定功能", new BMessage(MSG_CUSTOM_MENU), LBK_ICON_CUSTOM));
+}
 
-	virtual void	KeyUp(uint8 key, uint8 clicks);
-	virtual void	MessageReceived(BMessage *msg);
-};
 
-#endif /* __cplusplus */
+TCommandsPageView::~TCommandsPageView()
+{
+	// TODO
+}
 
-#endif /* __T_MENU_PAGE_VIEW_H__ */
+
+void
+TCommandsPageView::KeyUp(uint8 key, uint8 clicks)
+{
+	LBMenuView::KeyUp(key, clicks);
+
+	if(clicks > 1 && clicks != 0xff)
+	{
+		if(key == 0) // Left
+			SwitchToPrevPage();
+		else if(key == 2) // Right
+			SwitchToNextPage();
+		return;
+	}
+}
+
+
+void
+TCommandsPageView::MessageReceived(BMessage *msg)
+{
+	switch(msg->what)
+	{
+		case MSG_SYSTEM_MENU:
+			// TODO
+			break;
+
+		case MSG_CUSTOM_MENU:
+			// TODO
+			break;
+
+		default:
+			LBMenuView::MessageReceived(msg);
+	}
+}
 

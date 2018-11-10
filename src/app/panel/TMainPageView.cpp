@@ -59,8 +59,9 @@
 
 #endif
 
-#define POWER_REQUESTED_CONFIRM_MSG	'pwof'
-#define POWER_OFF_MSG			'pwOF'
+#define MSG_POWER_REQUESTED_CONFIRM	'pwof'
+#define MSG_POWER_OFF			'pwOF'
+#define MSG_FREE_MEMORY_CACHE		'frmc'
 
 
 TMainPageView::TMainPageView(const char *name)
@@ -788,7 +789,7 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 						    "是否确定\n进行关机操作?",
 						    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
 						    B_WARNING_ALERT);
-		view->SetInvoker(new BInvoker(new BMessage(POWER_REQUESTED_CONFIRM_MSG), this));
+		view->SetInvoker(new BInvoker(new BMessage(MSG_POWER_REQUESTED_CONFIRM), this));
 		view->SetName("PowerOffRequested");
 		AddStickView(view);
 		view->StandIn();
@@ -828,6 +829,19 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 		}
 		else if(key == 1) // Setup
 		{
+#ifdef ETK_OS_LINUX
+			if(fTabIndex == -1) // BoardInfo Page
+			{
+				LBAlertView *view = new LBAlertView("释放缓存",
+								    "是否需要\n进行缓存释放?",
+								    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
+								    B_IDEA_ALERT);
+				view->SetInvoker(new BInvoker(new BMessage(MSG_FREE_MEMORY_CACHE), this));
+				view->SetName("FreeMemoryCache");
+				AddStickView(view);
+				view->StandIn();
+			}
+#endif
 			// TODO
 		}
 	}
@@ -911,9 +925,6 @@ TMainPageView::Activated(bool state)
 	{
 		cast_as(Looper(), LBApplication)->SetPulseRate(50000);
 	}
-
-	if(state)
-		SetPowerState(true);
 }
 
 
@@ -926,7 +937,7 @@ TMainPageView::MessageReceived(BMessage *msg)
 
 	switch(msg->what)
 	{
-		case POWER_REQUESTED_CONFIRM_MSG:
+		case MSG_POWER_REQUESTED_CONFIRM:
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
 			if(msg->FindInt32("which", &which) != B_OK) break;
 			if(clicks > 1) break;
@@ -945,10 +956,10 @@ TMainPageView::MessageReceived(BMessage *msg)
 			AddStickView(view);
 			view->StandIn();
 
-			Looper()->PostMessage(POWER_OFF_MSG, this);
+			Looper()->PostMessage(MSG_POWER_OFF, this);
 			break;
 
-		case POWER_OFF_MSG:
+		case MSG_POWER_OFF:
 			if(msg->HasBool("delay") == false) // in order to show the "Shutting down..."
 			{
 				msg->AddBool("delay", true);
@@ -959,6 +970,45 @@ TMainPageView::MessageReceived(BMessage *msg)
 			printf("[TMainPageView]: Going to power off !\n");
 			system("poweroff");
 			break;
+
+#ifdef ETK_OS_LINUX
+		case MSG_FREE_MEMORY_CACHE:
+			{
+				if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
+				if(msg->FindInt32("which", &which) != B_OK) break;
+				if(clicks > 1) break;
+
+				view = FindStickView("FreeMemoryCache");
+				if(view == NULL) break;
+				view->StandBack();
+				RemoveStickView(view);
+				delete view;
+
+				if(which != 1) break;
+
+				printf("[TMainPageView]: Freeing memory cache ...");
+
+				BFile f("/proc/sys/vm/drop_caches", B_READ_WRITE);
+				if(f.InitCheck() == B_OK)
+				{
+					char cmd[] = "3\n";
+					f.Write(&cmd, 2);
+					f.Unset();
+
+					if(f.SetTo("/proc/sys/vm/drop_caches", B_READ_WRITE) == B_OK)
+					{
+						cmd[0] = '0';
+						f.Write(&cmd, 2);
+
+						printf(" OK\n");
+						break;
+					}
+				}
+
+				printf(" Failed\n");
+			}
+			break;
+#endif
 
 		case LBK_VIEW_STOOD_BACK:
 			Activated(IsActivated()); // update pulse rate

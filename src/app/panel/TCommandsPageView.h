@@ -23,22 +23,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: TMenuPageView.h
+ * File: TCommandsPageView.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __T_MENU_PAGE_VIEW_H__
-#define __T_MENU_PAGE_VIEW_H__
+#ifndef __T_COMMANDS_PAGE_VIEW_H__
+#define __T_COMMANDS_PAGE_VIEW_H__
 
 #include <lbk/LBKit.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class TMenuPageView : public LBMenuView {
+class TCommandsPageView : public LBMenuView {
 public:
-	TMenuPageView(const char *name = NULL);
-	virtual ~TMenuPageView();
+	TCommandsPageView(const char *name = NULL);
+	virtual ~TCommandsPageView();
 
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	MessageReceived(BMessage *msg);
@@ -46,5 +46,5 @@ public:
 
 #endif /* __cplusplus */
 
-#endif /* __T_MENU_PAGE_VIEW_H__ */
+#endif /* __T_COMMANDS_PAGE_VIEW_H__ */
 
