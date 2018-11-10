@@ -63,7 +63,7 @@ endef
 define Package/lbk-npi_oled_hat
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+lbk $(CXX_DEPENDS)
+  DEPENDS:=+lbk $(CXX_DEPENDS) +kmod-oled_ssd1306
   TITLE:=Commands and library for NanoPi OLED hat using LBKit
   MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 endef
