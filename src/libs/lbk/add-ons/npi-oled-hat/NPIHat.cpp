@@ -151,6 +151,28 @@ NPIHat::ScreenHeight()
 
 
 status_t
+NPIHat::ConstrainClipping(BRect r, bigtime_t &ts)
+{
+	_oled_ssd1306_set_clipping_t data;
+
+	bzero(&data, sizeof(data));
+
+	if(r.IsValid() && r.left >= 0 && r.top >= 0 &&
+	   r.Width() < OLED_SCREEN_WIDTH && r.Height() < OLED_SCREEN_HEIGHT)
+	{
+		data.x = (uint8_t)r.left;
+		data.y = (uint8_t)r.top;
+		data.w = (uint8_t)(r.Width() + 1);
+		data.h = (uint8_t)(r.Height() + 1);
+	}
+
+	if(ioctl(fOLEDFD, OLED_SSD1306_IOC_SET_CLIPPING, &data) != 0) return B_ERROR;
+	ts = data.ts;
+	return B_OK;
+}
+
+
+status_t
 NPIHat::FillRect(BRect r,
 		 pattern p,
 		 bool patternVertical,
@@ -560,7 +582,11 @@ NPIHat::InputEventsObserver(void *arg)
 
 		BMessage msg(event.value == 0 ? B_KEY_UP : B_KEY_DOWN);
 		msg.AddInt8("key", *((int8*)&nKey));
-		msg.AddInt64("when", (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) + (bigtime_t)event.time.tv_usec);
+#if 0
+		msg.AddInt64("when", (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) + (bigtime_t)event.time.tv_usec - system_boot_time());
+#else
+		msg.AddInt64("when", system_time());
+#endif
 
 		self->SendMessageToApp(&msg);
 	}

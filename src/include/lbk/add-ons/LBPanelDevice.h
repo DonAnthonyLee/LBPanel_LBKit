@@ -63,6 +63,7 @@ public:
 	virtual status_t	SetHighColor(rgb_color c) = 0;
 	virtual status_t	SetLowColor(rgb_color c) = 0;
 #endif
+	virtual status_t	ConstrainClipping(BRect r, bigtime_t &ts) = 0;
 	virtual status_t	FillRect(BRect rect,
 					 pattern p,
 					 bool patternVertical,
