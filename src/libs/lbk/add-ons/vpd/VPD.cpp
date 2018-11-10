@@ -315,6 +315,14 @@ LBVPD::SetLowColor(rgb_color c)
 
 
 status_t
+LBVPD::ConstrainClipping(BRect r, bigtime_t &ts)
+{
+	// TODO
+	return B_ERROR;
+}
+
+
+status_t
 LBVPD::FillRect(BRect rect,
 		pattern p,
 		bool patternVertical,
