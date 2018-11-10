@@ -52,7 +52,6 @@ public:
 	void		Set24Hours(bool state = true);
 	void		ShowSeconds(bool state = true);
 
-	// TODO
 	virtual void	MessageReceived(BMessage *msg);
 
 private:
@@ -64,9 +63,15 @@ private:
 	BString fDate;
 	BString fTime;
 	BString fWeek;
+
 	int32 fInterfacesCount;
+	bigtime_t fInterfaceCheckTimestamp;
+	BString fInterfaceNames;
+
 	int32 fCPUSCount;
 	bigtime_t *fCPUTime;
+
+	void UpdatePulseRate(bigtime_t rate = (bigtime_t)-1);
 
 	void GetTime(BString*, BString*, BString*) const;
 
@@ -80,6 +85,8 @@ private:
 	bool GetInterfaceHWAddr(BString &hwaddr, const char *ifname) const;
 	bool GetInterfaceIPv4(BString &ipaddr, const char *ifname) const;
 	bool GetInterfaceIPv6(BString &ipaddr, const char *ifname) const;
+
+	bool CheckInterfaces(bool force = false);
 };
 
 #endif /* __cplusplus */

@@ -68,7 +68,7 @@ TMainPageView::TMainPageView(const char *name)
 	: LBPageView(name),
 	  fTabIndex(0),
 	  f24Hours(false), fShowSeconds(false), fShowTimestamp(0),
-	  fInterfacesCount(0),
+	  fInterfacesCount(0), fInterfaceCheckTimestamp(0),
 	  fCPUTime(NULL)
 {
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
@@ -85,8 +85,7 @@ TMainPageView::TMainPageView(const char *name)
 		bzero(fCPUTime, sizeof(bigtime_t) * fCPUSCount * 2);
 	}
 
-	// TODO: monitor the count
-	fInterfacesCount = GetInterfacesCount();
+	CheckInterfaces();
 }
 
 
@@ -100,7 +99,7 @@ TMainPageView::~TMainPageView()
 void
 TMainPageView::GetTime(BString *strDate, BString *strTime, BString *strWeek) const
 {
-	time_t timer = (time_t)(real_time_clock_usecs() / (bigtime_t)1000000);
+	time_t timer = (time_t)real_time_clock();
 	struct tm t;
 	if(localtime_r(&timer, &t) == NULL) return;
 
@@ -182,10 +181,10 @@ TMainPageView::Pulse()
 			Invalidate(r);
 		}
 
-		if(fShowTimestamp == 0 || real_time_clock_usecs() - fShowTimestamp < 2000000) return;
+		if(fShowTimestamp == 0 || system_time() - fShowTimestamp < 2000000) return;
 		fShowTimestamp = 0;
 
-		cast_as(Looper(), LBApplication)->SetPulseRate(fShowSeconds ? 1000000 : 10000000);
+		UpdatePulseRate();
 		HideNavButton(0);
 		HideNavButton(2);
 	}
@@ -199,6 +198,30 @@ TMainPageView::Pulse()
 	else if(fTabIndex == -2) // CPU Info
 	{
 		Invalidate(Bounds());
+	}
+
+	if(fTabIndex >= 0)
+	{
+		int32 saveIndex = fTabIndex;
+
+		if(CheckInterfaces())
+		{
+			if(saveIndex != fTabIndex && fTabIndex == 0)
+			{
+				UpdatePulseRate(500000);
+				fShowTimestamp = system_time();
+			}
+
+			if(fTabIndex < fInterfacesCount)
+				ShowNavButton(2);
+			else
+				HideNavButton(2);
+
+			if(saveIndex != fTabIndex || fTabIndex > 0)
+			{
+				Invalidate();
+			}
+		}
 	}
 }
 
@@ -797,7 +820,7 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 		printf("[TMainPageView]: Power off requested.\n");
 	}
 
-	fShowTimestamp = real_time_clock_usecs();
+	fShowTimestamp = system_time();
 	if(fTabIndex > -2)
 		ShowNavButton(0);
 	else
@@ -865,12 +888,10 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 
 	if(saveIndex != fTabIndex)
 	{
-		if(fTabIndex <= 0)
-			cast_as(Looper(), LBApplication)->SetPulseRate(fTabIndex == 0 ? 500000 : 1000000);
-		else
-			cast_as(Looper(), LBApplication)->SetPulseRate(0);
+		UpdatePulseRate(fTabIndex != 0 ? (bigtime_t)-1 : 500000);
+		if(fTabIndex >= 0) CheckInterfaces(true);
 
-		fShowTimestamp = real_time_clock_usecs();
+		fShowTimestamp = system_time();
 		if(fTabIndex > -2)
 			ShowNavButton(0);
 		else
@@ -909,21 +930,51 @@ TMainPageView::ShowSeconds(bool state)
 
 
 void
+TMainPageView::UpdatePulseRate(bigtime_t rate)
+{
+	if(rate < 0)
+	{
+		if(IsStoodIn() || IsActivated() == false)
+		{
+			// cease
+			rate = 0;
+		}
+		else if(fTabIndex > 0 || (fTabIndex == 0 && fShowSeconds == false))
+		{
+			// interval: 10 seconds
+			// monitor interfaces, or update minutes
+			rate = 10000000;
+		}
+		else
+		{
+			// interval: 1 seconds
+			// update memory usage, or cpu load, or update seconds
+			rate = 1000000;
+		}
+	}
+
+	cast_as(Looper(), LBApplication)->SetPulseRate(rate);
+}
+
+
+void
 TMainPageView::Activated(bool state)
 {
 	LBPageView::Activated(state);
 
-	if(IsStoodIn() == false)
+	if(fTabIndex == 0 &&
+	   state &&
+	   (IsNavButtonHidden(0) == false || IsNavButtonHidden(2) == false))
 	{
-		if(state == false || fTabIndex > 0)
-			cast_as(Looper(), LBApplication)->SetPulseRate(0);
-		else
-			cast_as(Looper(), LBApplication)->SetPulseRate(fTabIndex == 0 ? 500000 : 1000000);
+		UpdatePulseRate(500000);
+		fShowTimestamp = system_time();
 	}
-	else if(!(StandingInView()->Name() == NULL ||
-		  strcmp(StandingInView()->Name(), "logo") != 0)) // showing logo
+	else
 	{
-		cast_as(Looper(), LBApplication)->SetPulseRate(50000);
+		UpdatePulseRate((IsStoodIn() == false ||
+				 StandingInView()->Name() == NULL ||
+				 strcmp(StandingInView()->Name(), "logo") != 0) ?
+					(bigtime_t)-1 : 50000);
 	}
 }
 
@@ -944,9 +995,9 @@ TMainPageView::MessageReceived(BMessage *msg)
 
 			view = FindStickView("PowerOffRequested");
 			if(view == NULL) break;
+
+			// the view will be deleted in handling of "LBK_VIEW_STOOD_BACK"
 			view->StandBack();
-			RemoveStickView(view);
-			delete view;
 
 			if(which != 1) break;
 			view = new LBAlertView("关闭机器",
@@ -980,9 +1031,9 @@ TMainPageView::MessageReceived(BMessage *msg)
 
 				view = FindStickView("FreeMemoryCache");
 				if(view == NULL) break;
+
+				// the view will be deleted in handling of "LBK_VIEW_STOOD_BACK"
 				view->StandBack();
-				RemoveStickView(view);
-				delete view;
 
 				if(which != 1) break;
 
@@ -1011,7 +1062,19 @@ TMainPageView::MessageReceived(BMessage *msg)
 #endif
 
 		case LBK_VIEW_STOOD_BACK:
-			Activated(IsActivated()); // update pulse rate
+			{
+				UpdatePulseRate();
+
+				void *source = NULL;
+				if(msg->FindPointer("view", &source) != B_OK || source == NULL) break;
+
+				LBView *stickView = reinterpret_cast<LBView*>(source);
+				if(stickView)
+				{
+					RemoveStickView(stickView);
+					delete stickView;
+				}
+			}
 			break;
 
 		default:
@@ -1234,4 +1297,38 @@ TMainPageView::GetInterfaceIPv6(BString &ipaddr, const char *ifname) const
 
 	return false;
 }
+
+
+bool
+TMainPageView::CheckInterfaces(bool force)
+{
+	if(force == false && system_time() - fInterfaceCheckTimestamp < 10000000) return false;
+
+	int32 count = GetInterfacesCount();
+	BString str;
+
+	for(int32 k = 0; k < count; k++)
+	{
+		BString ifname;
+
+		if(GetInterfaceName(ifname, k))
+			str << ifname.String() << " ";
+	}
+
+	fInterfaceCheckTimestamp = system_time();
+
+	if(count != fInterfacesCount || str != fInterfaceNames)
+	{
+		fInterfacesCount = count;
+		fInterfaceNames.SetTo(str.String());
+
+		if(fTabIndex > fInterfacesCount)
+			fTabIndex = fInterfacesCount;
+
+		return true;
+	}
+
+	return false;
+}
+
 
