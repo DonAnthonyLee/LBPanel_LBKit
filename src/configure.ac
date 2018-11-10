@@ -103,6 +103,7 @@ libs/lbk/add-ons/vpd/Makefile
 cmd/Makefile
 cmd/npi-oled-hat/Makefile
 cmd/lbk/Makefile
+cmd/scripts/Makefile
 app/Makefile
 app/panel/Makefile
 ])
