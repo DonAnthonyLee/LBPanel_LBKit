@@ -6,6 +6,8 @@ noinst_PROGRAMS = lb_panel
 lb_panel_SOURCES =		\
 	TLogoView.cpp		\
 	TLogoView.h		\
+	TAboutView.cpp		\
+	TAboutView.h		\
 	TMainPageView.cpp	\
 	TMainPageView.h		\
 	TMenuPageView.cpp	\
