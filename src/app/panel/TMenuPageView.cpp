@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 #include "TMenuPageView.h"
+#include "TAboutView.h"
 
 #define MSG_TURN_OFF_SCREEN	'mtos'
 #define MSG_REBOOT		'mreb'
@@ -111,9 +112,8 @@ TMenuPageView::MessageReceived(BMessage *msg)
 			if(view != StandingInView()) break;
 			isPowerOff = (BString("PowerOffRequested") == view->Name());
 
+			// the view will be deleted in handling of "LBK_VIEW_STOOD_BACK"
 			view->StandBack();
-			RemoveStickView(view);
-			delete view;
 
 			if(which != 1) break;
 			view = new LBAlertView(isPowerOff ? "关闭机器" : "重新启动",
@@ -140,8 +140,21 @@ TMenuPageView::MessageReceived(BMessage *msg)
 			break;
 
 		case MSG_ABOUT:
-			// TODO
-			printf("[TMenuPageView]: About requested.\n");
+			AddStickView(new TAboutView("About"));
+			break;
+
+		case LBK_VIEW_STOOD_BACK:
+			{
+				void *source = NULL;
+				if(msg->FindPointer("view", &source) != B_OK || source == NULL) break;
+
+				LBView *stickView = reinterpret_cast<LBView*>(source);
+				if(stickView)
+				{
+					RemoveStickView(stickView);
+					delete stickView;
+				}
+			}
 			break;
 
 		case MSG_EXIT:
