@@ -51,7 +51,7 @@ endef
 define Package/lbpanel
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+lbk $(CXX_DEPENDS)
+  DEPENDS:=+lbk +lbk-cmd $(CXX_DEPENDS) +block-mount +luci-app-usb_gadget
   TITLE:=LBPanel - Little Board Panel application
   MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 endef
@@ -77,6 +77,7 @@ CONFIGURE_ARGS+= \
 	--mandir=/usr/share/man \
 	--infodir=/usr/share/info \
 	--libdir=/usr/lib \
+	--datadir=/usr/share \
 	--sysconfdir=/etc \
 	--with-lite-beapi-config=$(STAGING_DIR)/usr/bin/lite-beapi-config
 
@@ -153,6 +154,8 @@ endef
 define Package/lbpanel/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/LBPanel $(1)/usr/bin/LBPanel
+	$(INSTALL_DIR) $(1)/usr/share/lbpanel/scripts
+	$(CP) $(PKG_INSTALL_DIR)/usr/share/lbpanel/scripts/* $(1)/usr/share/lbpanel/scripts/
 endef
 
 define Package/lbk-npi_oled_hat/install
