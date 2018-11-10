@@ -607,6 +607,8 @@ LBView::Activated(bool state)
 		fUpdateRect = BRect();
 		fUpdateCount = 0;
 		Invalidate(); // redraw later
+
+		SetPowerState(true);
 	}
 }
 
