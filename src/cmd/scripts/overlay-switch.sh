@@ -86,7 +86,6 @@ if [ ! -z $FOUND ]; then
 	FOUND="${FOUND%%.target=\'/overlay\'}"
 	$UCI delete $FOUND > /dev/null 2>&1
 fi
-$UCI commit fstab
 }
 
 add_new_overlay_settings() {
@@ -97,7 +96,6 @@ add_new_overlay_settings() {
 	$UCI set fstab.@mount[-1].options='rw,sync'
 	$UCI set fstab.@mount[-1].enable_fsck=0
 	$UCI set fstab.@mount[-1].enabled=1
-	$UCI commit fstab
 }
 
 check_env || { echo "Requires block-mount & lbk-cmd !" && exit 1; }
@@ -142,6 +140,7 @@ if [ ! -z "${DST_OVERLAY_DEV}" ]; then
 
 	delete_old_overlay_settings
 	[ "${DST_OVERLAY_DEV}" == "${ROOTFS_DATA_DEV}" ] || add_new_overlay_settings ${DST_OVERLAY_DEV}
+	$UCI commit fstab
 
 	lbk-message --type warning --topic "警告" "重启方可生效!\\n确定重启吗?"
 	if [ "$?" = "2" ]; then
