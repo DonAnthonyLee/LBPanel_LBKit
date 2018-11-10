@@ -100,7 +100,7 @@ static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFi
 			break;
 
 		case B_PULSE:
-			if(cmd_end_time > 0 && real_time_clock_usecs() > cmd_end_time)
+			if(cmd_end_time > 0 && system_time() > cmd_end_time)
 			{
 				cmd_ret = -2;
 				cmd_app->PostMessage(B_QUIT_REQUESTED);
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
 
 		if(timeout > 0)
 		{
-			cmd_end_time = real_time_clock_usecs() + (bigtime_t)1000000 * (bigtime_t)timeout;
+			cmd_end_time = system_time() + (bigtime_t)1000000 * (bigtime_t)timeout;
 			cmd_app->SetPulseRate(timeout > 4 ? 1000000 : 200000);
 		}
 

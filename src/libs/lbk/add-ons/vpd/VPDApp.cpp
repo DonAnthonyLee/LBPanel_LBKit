@@ -174,7 +174,7 @@ VPDWindow::MessageReceived(BMessage *msg)
 			if(msg->FindInt8("id", &keyID) != B_OK || keyID < 0 || keyID >= 8) break;
 			if(msg->FindBool("state", &keyState) != B_OK) break;
 			if(msg->FindInt64("when", &when) != B_OK)
-				when = real_time_clock_usecs();
+				when = system_time();
 			if(keyState)
 				fVPD->KeyDown((uint8)keyID, when);
 			else
@@ -285,7 +285,7 @@ VPDButton::ValueChanged()
 		 * 	On BeOS or Haiku, the BMessageRunner won't be able to send the message
 		 * 	before the value of button change again, so we send the message at first.
 		 */
-		msg.AddInt64("when", real_time_clock_usecs());
+		msg.AddInt64("when", system_time());
 		Looper()->PostMessage(&msg);
 #endif
 	}
@@ -294,7 +294,7 @@ VPDButton::ValueChanged()
 		delete fKeyMsgRunner;
 		fKeyMsgRunner = NULL;
 
-		msg.AddInt64("when", real_time_clock_usecs());
+		msg.AddInt64("when", system_time());
 		Looper()->PostMessage(&msg);
 	}
 }
