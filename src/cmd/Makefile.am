@@ -1,4 +1,4 @@
-SUBDIRS = lbk npi-oled-hat
+SUBDIRS = lbk npi-oled-hat scripts
 
 noinst_PROGRAMS =
 
