@@ -490,7 +490,7 @@ LBView::MessageReceived(BMessage *msg)
 					aMsg.AddPointer("source", reinterpret_cast<void*>(this));
 					aMsg.AddInt8("key", *((int8*)&key));
 					aMsg.AddInt8("clicks", *((int8*)&clicks));
-					aMsg.AddInt64("when", real_time_clock_usecs());
+					aMsg.AddInt64("when", system_time());
 					aMsg.AddInt16("state", fKeyState & 0x00ff);
 					aMsg.AddInt16("down_state", (fKeyState >> 8) & 0x00ff);
 
@@ -517,7 +517,7 @@ LBView::MessageReceived(BMessage *msg)
 						aMsg.AddPointer("source", reinterpret_cast<void*>(this));
 						aMsg.AddInt8("key", *((int8*)&key));
 						aMsg.AddInt8("clicks", *((int8*)&clicks));
-						aMsg.AddInt64("when", real_time_clock_usecs());
+						aMsg.AddInt64("when", system_time());
 						aMsg.AddInt16("state", fKeyState & 0x00ff);
 						aMsg.AddInt16("down_state", (fKeyState >> 8) & 0x00ff);
 
@@ -795,7 +795,7 @@ LBView::StandIn()
 	fMasterView->Invalidate();
 	fMasterView->fKeyState = 0; // reset the key state of master view too !
 	fKeyState = 0;
-	fStandInTimestamp = real_time_clock_usecs();
+	fStandInTimestamp = system_time();
 }
 
 
@@ -821,7 +821,7 @@ bigtime_t
 LBView::GetStandInTime() const
 {
 	if(fStandInTimestamp < (bigtime_t)0) return -1;
-	return(real_time_clock_usecs() - fStandInTimestamp);
+	return(system_time() - fStandInTimestamp);
 }
 
 

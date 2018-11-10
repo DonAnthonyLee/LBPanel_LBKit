@@ -552,20 +552,20 @@ LBApplication::Go()
 			}
 		}
 
-		if(count > 0 && real_time_clock_usecs() - pulse_sent_time[0] >= (bigtime_t)(LBK_KEY_INTERVAL / 2))
+		if(count > 0 && system_time() - pulse_sent_time[0] >= (bigtime_t)(LBK_KEY_INTERVAL / 2))
 		{
 			count--;
 			PostMessage(B_PULSE, this);
-			pulse_sent_time[0] = real_time_clock_usecs();
+			pulse_sent_time[0] = system_time();
 		}
 
-		if(pulse_rate > 0 && real_time_clock_usecs() - pulse_sent_time[1] >= pulse_rate)
+		if(pulse_rate > 0 && system_time() - pulse_sent_time[1] >= pulse_rate)
 		{
 			BMessage aMsg(B_PULSE);
 			aMsg.AddBool("no_button_check", true);
 
 			PostMessage(&aMsg, this);
-			pulse_sent_time[1] = real_time_clock_usecs();
+			pulse_sent_time[1] = system_time();
 		}
 
 		if(ipc != NULL)
@@ -717,7 +717,7 @@ LBApplication::MessageReceived(BMessage *msg)
 			}
 
 			stopRunner = true;
-			when = real_time_clock_usecs();
+			when = system_time();
 
 			for(id = 0; id < CountPanels(); id++)
 			{

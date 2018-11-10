@@ -123,7 +123,7 @@ TAlertView::SetResponseEvenNone()
 void
 TAlertView::Pulse()
 {
-	if(fTimestamp > 0 && real_time_clock_usecs() > fTimestamp)
+	if(fTimestamp > 0 && system_time() > fTimestamp)
 	{
 		cmd_ret = -2;
 		cmd_app->PostMessage(B_QUIT_REQUESTED);
@@ -135,7 +135,7 @@ void
 TAlertView::SetTimeout(int32 seconds)
 {
 	fTimestamp = (seconds > 0 ?
-			(real_time_clock_usecs() + (bigtime_t)1000000 * (bigtime_t)seconds) : 0);
+			(system_time() + (bigtime_t)1000000 * (bigtime_t)seconds) : 0);
 }
 
 
