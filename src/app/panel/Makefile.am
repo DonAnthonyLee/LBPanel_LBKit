@@ -10,6 +10,8 @@ lb_panel_SOURCES =		\
 	TMainPageView.h		\
 	TMenuPageView.cpp	\
 	TMenuPageView.h		\
+	TCommandsPageView.cpp	\
+	TCommandsPageView.h	\
 	main.cpp
 lb_panel_LDADD = ../../libs/lbk/liblbk.la
 
