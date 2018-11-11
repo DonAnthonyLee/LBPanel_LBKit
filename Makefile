@@ -154,8 +154,8 @@ endef
 define Package/lbpanel/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/LBPanel $(1)/usr/bin/LBPanel
-	$(INSTALL_DIR) $(1)/usr/share/lbpanel/scripts
-	$(CP) $(PKG_INSTALL_DIR)/usr/share/lbpanel/scripts/* $(1)/usr/share/lbpanel/scripts/
+	$(INSTALL_DIR) $(1)/usr/share/scripts
+	$(CP) $(PKG_INSTALL_DIR)/usr/share/scripts/* $(1)/usr/share/scripts/
 endef
 
 define Package/lbk-npi_oled_hat/install
