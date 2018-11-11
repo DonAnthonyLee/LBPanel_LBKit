@@ -187,8 +187,8 @@ LBMenuView::KeyUp(uint8 key, uint8 clicks)
 		LBMenuItem *curItem = CurrentSelection();
 		if(curItem != NULL)
 		{
-			curItem->Invoke();
-			ItemInvoked(curItem);
+			if(curItem->Invoke() == B_OK)
+				ItemInvoked(curItem);
 		}
 		return;
 	}
@@ -305,6 +305,8 @@ void
 LBMenuView::Attached()
 {
 	LBMenuItem *item;
+
+	LBPageView::Attached();
 
 	for(int32 k = 0; k < CountItems(); k++)
 	{
