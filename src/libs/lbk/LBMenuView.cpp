@@ -39,7 +39,8 @@
 
 LBMenuView::LBMenuView(const char *name)
 	: LBPageView(name),
-	  LBScopeHandler()
+	  LBScopeHandler(),
+	  fAutoStandBack(true)
 {
 #if LBK_KEY_TYPICAL_NUMBER == 2
 	SetNavButtonIcon(0, LBK_ICON_LEFT);
@@ -297,7 +298,7 @@ LBMenuView::RefreshNavButtonIcons()
 void
 LBMenuView::ItemInvoked(LBMenuItem *item)
 {
-	StandBack();
+	if(fAutoStandBack) StandBack();
 }
 
 
@@ -360,5 +361,12 @@ void
 LBMenuView::ScopeChanged()
 {
 	RefreshNavButtonIcons();
+}
+
+
+void
+LBMenuView::SetAutoStandBack(bool state)
+{
+	fAutoStandBack = state;
 }
 
