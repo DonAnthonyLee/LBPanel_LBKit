@@ -43,6 +43,9 @@ public:
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	Attached();
 	virtual void	MessageReceived(BMessage *msg);
+
+private:
+	bigtime_t fBlockKeyEventsTimestamp;
 };
 
 #endif /* __cplusplus */
