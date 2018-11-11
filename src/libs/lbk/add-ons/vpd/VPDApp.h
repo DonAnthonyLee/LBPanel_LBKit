@@ -60,6 +60,7 @@ public:
 #define VPD_MSG_GET_BUFFER	'vmgg'
 #define VPD_MSG_SET_BUFFER	'vmgb'
 #define VPD_MSG_SYNC		'vmgy'
+#define VPD_MSG_SET_CLIPPING	'vmgl'
 
 
 class VPDWindow : public BWindow {

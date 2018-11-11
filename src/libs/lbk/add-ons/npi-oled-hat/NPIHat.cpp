@@ -62,7 +62,9 @@ NPIHat::NPIHat()
 	  fOLEDFD(-1),
 	  fInputFD(-1),
 	  fThread(NULL),
-	  fBuffer(NULL)
+	  fBuffer(NULL),
+	  fBlockKeyEvents(false),
+	  fBlockTimestamp(0)
 {
 	fPipes[0] = -1;
 
@@ -501,6 +503,24 @@ NPIHat::PipeHandle() const
 }
 
 
+status_t
+NPIHat::BlockKeyEvents(bool state)
+{
+	EAutolock <NPIHat>autolock(this);
+	if(autolock.IsLocked() == false) return B_ERROR;
+
+	if(fBlockKeyEvents != state)
+	{
+		fBlockKeyEvents = state;
+
+		if(fBlockKeyEvents == false)
+			fBlockTimestamp = system_time();
+	}
+
+	return B_OK;
+}
+
+
 int32
 NPIHat::InputEventsObserver(void *arg)
 {
@@ -555,6 +575,17 @@ NPIHat::InputEventsObserver(void *arg)
 			continue;
 		}
 
+		bigtime_t when = (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) +
+				 (bigtime_t)event.time.tv_usec - etk_system_boot_time();
+
+		if(self->Lock() == false) continue;
+		if(self->fBlockKeyEvents || self->fBlockTimestamp > when)
+		{
+			self->Unlock();
+			continue;
+		}
+		self->Unlock();
+
 		uint8 nKey;
 		if(event.code == OLED_KEY1_CODE) nKey = 0;
 #if OLED_KEYS_COUNT > 1
@@ -582,11 +613,7 @@ NPIHat::InputEventsObserver(void *arg)
 
 		BMessage msg(event.value == 0 ? B_KEY_UP : B_KEY_DOWN);
 		msg.AddInt8("key", *((int8*)&nKey));
-#if 0
-		msg.AddInt64("when", (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) + (bigtime_t)event.time.tv_usec - system_boot_time());
-#else
-		msg.AddInt64("when", system_time());
-#endif
+		msg.AddInt64("when", when);
 
 		self->SendMessageToApp(&msg);
 	}
