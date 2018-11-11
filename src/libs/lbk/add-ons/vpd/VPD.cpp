@@ -53,7 +53,9 @@ LBVPD::LBVPD()
 	  fState(true),
 	  fTimestamp(0),
 	  fBuffer(NULL),
-	  fBufferLen(0)
+	  fBufferLen(0),
+	  fBlockKeyEvents(false),
+	  fBlockTimestamp(0)
 {
 #ifdef LBK_ENABLE_MORE_FEATURES
 	fDepth = 1;
@@ -317,8 +319,18 @@ LBVPD::SetLowColor(rgb_color c)
 status_t
 LBVPD::ConstrainClipping(BRect r, bigtime_t &ts)
 {
-	// TODO
-	return B_ERROR;
+	BMessage msg(VPD_MSG_SET_CLIPPING);
+	msg.AddRect("rect", r);
+
+	status_t st = fMsgr.SendMessage(&msg);
+	if(st == B_OK)
+	{
+		Lock();
+		ts = fTimestamp = system_time();
+		Unlock();
+	}
+
+	return st;
 }
 
 
@@ -450,6 +462,7 @@ LBVPD::SetPowerState(bool state,
 #else
 	BAutolock autolock(this);
 #endif
+	if(autolock.IsLocked() == false) return B_ERROR;
 
 	if(state != fState)
 	{
@@ -667,9 +680,33 @@ LBVPD::RunBeApp(void *arg)
 }
 
 
+status_t
+LBVPD::BlockKeyEvents(bool state)
+{
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBVPD>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false) return B_ERROR;
+
+	if(fBlockKeyEvents != state)
+	{
+		fBlockKeyEvents = state;
+
+		if(fBlockKeyEvents == false)
+			fBlockTimestamp = system_time();
+	}
+
+	return B_OK;
+}
+
+
 void
 LBVPD::KeyDown(uint8 key, bigtime_t when)
 {
+	if(fBlockKeyEvents || fBlockTimestamp > when) return;
+
 	BMessage msg(B_KEY_DOWN);
 	msg.AddInt8("key", *((int8*)&key));
 	msg.AddInt64("when", when);
@@ -681,6 +718,8 @@ LBVPD::KeyDown(uint8 key, bigtime_t when)
 void
 LBVPD::KeyUp(uint8 key, bigtime_t when)
 {
+	if(fBlockKeyEvents || fBlockTimestamp > when) return;
+
 	BMessage msg(B_KEY_UP);
 	msg.AddInt8("key", *((int8*)&key));
 	msg.AddInt64("when", when);

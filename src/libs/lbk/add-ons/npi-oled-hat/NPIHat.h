@@ -81,6 +81,7 @@ public:
 
 	/* keys */
 	virtual status_t	GetCountOfKeys(uint8 &count);
+	virtual status_t	BlockKeyEvents(bool state);
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual status_t	GetOrientationOfKeys(orientation &o);
 	virtual status_t	GetSideOfKeys(bool &right_or_bottom);
@@ -97,6 +98,8 @@ private:
 	int fPipes[2];
 	void *fThread;
 	void *fBuffer;
+	bool fBlockKeyEvents;
+	bigtime_t fBlockTimestamp;
 
 	static int32		InputEventsObserver(void*);
 };
