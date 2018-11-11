@@ -337,5 +337,9 @@ LBAlertView::KeyUp(uint8 key, uint8 clicks)
 		aMsg.AddInt8("clicks", *((int8*)&clicks));
 		fInvoker->Invoke(&aMsg);
 	}
+	else
+	{
+		StandBack();
+	}
 }
 
