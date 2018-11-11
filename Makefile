@@ -143,8 +143,6 @@ define Package/lbk-cmd/install
 endef
 
 define Package/lbk-dev/install
-	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/liblbk.so* $(1)/usr/lib/
 	$(INSTALL_DIR) $(1)/usr/include/lbk
 	$(CP) $(PKG_BUILD_DIR)/include/lbk/*.h $(1)/usr/include/lbk/
 	$(INSTALL_DIR) $(1)/usr/include/lbk/add-ons
@@ -171,7 +169,7 @@ endef
 
 define Package/lbk-npi_oled_hat/postinst
 #!/bin/sh
-FOUND = `grep "npi-oled-hat" $${IPKG_INSTROOT}/etc/LBK.conf`
+FOUND=`grep "npi-oled-hat" $${IPKG_INSTROOT}/etc/LBK.conf`
 if [ -z "$$FOUND" ]; then
 	echo "PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so" >> $${IPKG_INSTROOT}/etc/LBK.conf
 fi
