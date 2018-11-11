@@ -69,6 +69,8 @@ public:
 
 	virtual void		InvalidateItem(int32 index);
 
+	void			SetAutoStandBack(bool state);
+
 	virtual void		Draw(BRect updateRect);
 	virtual void		KeyDown(uint8 key, uint8 clicks);
 	virtual void		KeyUp(uint8 key, uint8 clicks);
@@ -93,6 +95,7 @@ private:
 	alignment fItemsAlignment;
 	uint8 fBorderStyle;
 	BMessage *fSelectionMessage;
+	bool fAutoStandBack;
 };
 
 #endif /* __cplusplus */

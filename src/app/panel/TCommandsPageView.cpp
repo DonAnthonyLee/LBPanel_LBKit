@@ -63,6 +63,7 @@ TCommandsPageView::TCommandsPageView(const char *name)
 	}
 	listView->SetMessage(new BMessage(MSG_SYSTEM_MENU_ITEM));
 	listView->MakeSelectable(true);
+	listView->SetAutoStandBack(false);
 	AddStickView(listView);
 }
 
@@ -140,6 +141,7 @@ TCommandsPageView::MessageReceived(BMessage *msg)
 					if(system_menus[index].args != NULL)
 						cmdStr << " " << system_menus[index].args;
 
+					// TODO: when script running, the key events still in the queue, maybe we should handle it in LBApplication ...
 					int err = system(cmdStr.String());
 					if(err < 0 || err == 127)
 					{

@@ -48,6 +48,8 @@ public:
 	virtual BRect	ItemLabelBounds() const;
 	virtual BRect	ItemIconBounds() const;
 
+	void		SetAutoStandBack(bool state);
+
 	virtual void	Draw(BRect updateRect);
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
@@ -66,6 +68,9 @@ protected:
 	virtual void	OffsetChanged(int32 offset, int32 old);
 	virtual void	ScopeChanged();
 	virtual bool	IsValidKind(LBScopeItem *item) const;
+
+private:
+	bool fAutoStandBack;
 };
 
 #endif /* __cplusplus */
