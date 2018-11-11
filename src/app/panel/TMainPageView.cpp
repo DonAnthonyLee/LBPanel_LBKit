@@ -1108,6 +1108,8 @@ TMainPageView::GetInterfacesCount() const
 	}
 	if(offset < str.Length()) lines++;
 	if(str.FindFirst(" lo: ") > 0) lines--; // ignore "local"
+	if(str.FindFirst(" ifb0: ") > 0) lines--; // ignore "ifb"
+	if(str.FindFirst(" ifb1: ") > 0) lines--; // ignore "ifb"
 
 	return(lines - 2);
 #else
@@ -1137,8 +1139,12 @@ TMainPageView::GetInterfaceName(BString &ifname, int32 id) const
 	}
 
 	int32 lines = 0, offset = 0, found;
-	while((found = str.FindFirst('\n', offset)) > offset)
+	while(offset < str.Length())
 	{
+		found = str.FindFirst('\n', offset);
+		if(found < offset)
+			found = str.Length();
+
 		offset = found + 1;
 		lines++;
 
@@ -1150,7 +1156,7 @@ TMainPageView::GetInterfaceName(BString &ifname, int32 id) const
 		str.Truncate(found - offset);
 		str.RemoveAll(" ");
 		if(str.Length() == 0) break;
-		if(str == "lo") // ignore "local"
+		if(str == "lo" || str == "ifb0" || str == "ifb1") // ignore "local" or "ifb"
 		{
 			id++;
 			continue;
