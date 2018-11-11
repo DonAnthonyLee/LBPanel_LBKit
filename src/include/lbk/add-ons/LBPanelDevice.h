@@ -93,6 +93,7 @@ public:
 
 	/* keys */
 	virtual status_t	GetCountOfKeys(uint8 &count) = 0;
+	virtual status_t	BlockKeyEvents(bool state) = 0;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual status_t	GetOrientationOfKeys(orientation &o) = 0;
 	virtual status_t	GetSideOfKeys(bool &right_or_bottom) = 0;

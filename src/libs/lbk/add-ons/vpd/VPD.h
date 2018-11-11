@@ -81,6 +81,7 @@ public:
 
 	/* keys */
 	virtual status_t	GetCountOfKeys(uint8 &count);
+	virtual status_t	BlockKeyEvents(bool state);
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual status_t	GetOrientationOfKeys(orientation &o);
 	virtual status_t	GetSideOfKeys(bool &right_or_bottom);
@@ -106,6 +107,8 @@ private:
 	BMessenger fMsgr;
 	void *fBuffer;
 	size_t fBufferLen;
+	bool fBlockKeyEvents;
+	bigtime_t fBlockTimestamp;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	uint8 fDepth;
 	color_space fColorSpace;

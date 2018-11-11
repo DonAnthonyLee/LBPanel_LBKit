@@ -190,6 +190,7 @@ VPDWindow::MessageReceived(BMessage *msg)
 		case VPD_MSG_GET_BUFFER:
 		case VPD_MSG_SET_BUFFER:
 		case VPD_MSG_SYNC:
+		case VPD_MSG_SET_CLIPPING:
 			if((view = e_cast_as(FindView("screen"), VPDView)) == NULL)
 			{
 				if(msg->IsSourceWaiting())

@@ -543,6 +543,15 @@ VPDView::MessageReceived(BMessage *msg)
 				msg->SendReply(B_REPLY);
 			break;
 
+		case VPD_MSG_SET_CLIPPING:
+			{
+				BRect r;
+				if(msg->FindRect("rect", &r) != B_OK) break;
+
+				// TODO
+			}
+			break;
+
 		default:
 			BView::MessageReceived(msg);
 	}
