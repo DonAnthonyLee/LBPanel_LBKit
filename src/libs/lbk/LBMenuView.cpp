@@ -89,6 +89,13 @@ LBMenuView::CurrentSelection() const
 
 
 void
+LBMenuView::DrawMenuIcon(lbk_icon_id icon, BPoint location)
+{
+	DrawIcon(icon, location);
+}
+
+
+void
 LBMenuView::Draw(BRect rect)
 {
 	LBPageView::Draw(rect);
@@ -123,18 +130,11 @@ LBMenuView::Draw(BRect rect)
 
 		if(r.Intersects(rect))
 		{
-			if(aItem == curItem)
-			{
-				const lbk_icon *icon = lbk_get_icon_data(aItem->Icon());
-				if(icon != NULL)
-					DrawIcon(icon, r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15));
+			DrawMenuIcon(aItem->Icon(),
+				     r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15));
 
+			if(aItem == curItem)
 				InvertRect(r & rect);
-			}
-			else if(aItem->Icon() != LBK_ICON_NONE)
-			{
-				DrawIcon(aItem->Icon(), r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15));
-			}
 		}
 
 		r.OffsetBy(r.Width() + 1, 0);
