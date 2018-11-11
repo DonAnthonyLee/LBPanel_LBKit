@@ -542,7 +542,7 @@ LBView::MessageReceived(BMessage *msg)
 			break;
 
 		case '_UPN': // like _UPDATE_IF_NEEDED_ in BeOS API
-			if(IsActivated() == false) break;
+			if(IsActivated() == false || fStandingInView != NULL) break;
 			if(IsNeededToRegen())
 				fUpdateRect = LBView::Bounds();
 			else
@@ -552,10 +552,7 @@ LBView::MessageReceived(BMessage *msg)
 			{
 				EnableUpdate(false);
 				Clear(fUpdateRect); // auto clear
-				if(fStandingInView != NULL)
-					fStandingInView->Draw(fUpdateRect);
-				else
-					Draw(fUpdateRect);
+				Draw(fUpdateRect);
 				EnableUpdate(true);
 
 				fUpdateRect = BRect();
@@ -563,7 +560,11 @@ LBView::MessageReceived(BMessage *msg)
 			break;
 
 		default:
+#if 0
+			// with this, the message will be sent to next handler, it isn't what we want !!!
 			BHandler::MessageReceived(msg);
+#endif
+			break;
 	}
 }
 
@@ -625,9 +626,7 @@ LBView::Invalidate(BRect r)
 {
 	if(fMasterView != NULL)
 	{
-		if(fMasterView->IsStoodIn())
-			fMasterView->Invalidate(r);
-		return;
+		if(fMasterView->StandingInView() != this) return;
 	}
 
 	if(Looper() == NULL) return;
@@ -791,11 +790,13 @@ void
 LBView::StandIn()
 {
 	if(fMasterView == NULL || fMasterView->fStandingInView == this) return;
+
 	fMasterView->fStandingInView = this;
-	fMasterView->Invalidate();
 	fMasterView->fKeyState = 0; // reset the key state of master view too !
 	fKeyState = 0;
 	fStandInTimestamp = system_time();
+
+	Invalidate();
 }
 
 
@@ -803,10 +804,8 @@ void
 LBView::StandBack()
 {
 	if(fMasterView == NULL || fMasterView->fStandingInView != this) return;
-	fMasterView->fStandingInView = NULL;
-	fMasterView->Invalidate();
-	fStandInTimestamp = (bigtime_t)-1;
 
+	fStandInTimestamp = (bigtime_t)-1;
 	if(Looper() != NULL)
 	{
 		BMessage msg(LBK_VIEW_STOOD_BACK);
@@ -814,6 +813,9 @@ LBView::StandBack()
 
 		Looper()->PostMessage(&msg, fMasterView);
 	}
+
+	fMasterView->fStandingInView = NULL;
+	fMasterView->Invalidate();
 }
 
 
