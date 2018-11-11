@@ -45,7 +45,8 @@ LBListView::LBListView(int32 visible_items_count, const char *name)
 	  fVisibleItemsCount(visible_items_count),
 	  fItemsAlignment(B_ALIGN_LEFT),
 	  fBorderStyle(LBK_LIST_VIEW_NO_BORDER),
-	  fSelectionMessage(NULL)
+	  fSelectionMessage(NULL),
+	  fAutoStandBack(true)
 {
 #if LBK_KEY_TYPICAL_NUMBER == 2
 	SetNavButtonIcon(0, LBK_ICON_UP);
@@ -353,7 +354,7 @@ LBListView::Invoke(const BMessage *msg)
 	aMsg.AddInt32("index", Position());
 
 	status_t st = BInvoker::Invoke(&aMsg);
-	if(st == B_OK) StandBack();
+	if(st == B_OK && fAutoStandBack) StandBack();
 	return st;
 }
 
@@ -452,5 +453,12 @@ LBListView::DrawSelection(BRect rect, int32 n)
 	if(r.IsValid()) DrawIcon(LBK_ICON_SMALL_LEFT, r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(4, 4));
 
 	if(fBorderStyle == LBK_LIST_VIEW_NO_BORDER) InvertRect(rect);
+}
+
+
+void
+LBListView::SetAutoStandBack(bool state)
+{
+	fAutoStandBack = state;
 }
 
