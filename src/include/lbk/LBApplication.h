@@ -40,7 +40,8 @@ class LBPanelDevice;
 
 class _EXPORT LBApplication : public BLooper {
 public:
-	LBApplication(const LBAppSettings *settings);
+	LBApplication(const LBAppSettings *settings,
+		      bool use_lbk_default_settings = true);
 	virtual ~LBApplication();
 
 	bool		AddPageView(LBView *view, bool left_side = true, int32 panel_index = 0);
