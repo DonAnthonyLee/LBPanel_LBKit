@@ -44,13 +44,15 @@ struct tMenuItem {
 
 
 static struct tMenuItem system_menus[] = {
+	{"返回", NULL, NULL},
 	{"OTG 设备功能设置", "/usr/share/scripts/usb-gadget.sh", NULL},
 	{"覆盖文件分区切换", "/usr/share/scripts/overlay-switch.sh", NULL},
 };
 
 
 TCommandsPageView::TCommandsPageView(const char *name)
-	: LBMenuView(name)
+	: LBMenuView(name),
+	  fBlockKeyEventsTimestamp(0)
 {
 	AddItem(new LBMenuItem("系统功能", new BMessage(MSG_SYSTEM_MENU), LBK_ICON_SYSTEM));
 	AddItem(new LBMenuItem("自定功能", new BMessage(MSG_CUSTOM_MENU), LBK_ICON_CUSTOM));
@@ -107,17 +109,26 @@ TCommandsPageView::Attached()
 void
 TCommandsPageView::MessageReceived(BMessage *msg)
 {
+	bigtime_t when;
 	int32 index;
 	LBView *view;
 
 	switch(msg->what)
 	{
+		case B_KEY_DOWN:
+		case B_KEY_UP:
+			if(msg->FindInt64("when", &when) != B_OK) break;
+			if(fBlockKeyEventsTimestamp > when) break;
+			LBMenuView::MessageReceived(msg);
+			break;
+
 		case MSG_SYSTEM_MENU:
 			if(IsStoodIn() || (view = FindStickView("system")) == NULL) break;
 			view->StandIn();
 			break;
 
 		case MSG_SYSTEM_MENU_ITEM:
+			if((view = FindStickView("system")) == NULL || StandingInView() != view) break;
 			if(msg->FindInt32("index", &index) != B_OK) break;
 			if(index < 0 || index >= (int32)(sizeof(system_menus) / sizeof(system_menus[0]))) break;
 			if(system_menus[index].command != NULL)
@@ -126,13 +137,13 @@ TCommandsPageView::MessageReceived(BMessage *msg)
 
 				if(entry.Exists() == false)
 				{
-					view = new LBAlertView("错误", "文件不存在!",
-							       LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
-							       B_WARNING_ALERT);
+					LBView *alertView = new LBAlertView("错误", "文件不存在!",
+									    LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
+									    B_WARNING_ALERT);
 
 					// LBAlertView will run StandBack() automatically when it has no invoker.
-					AddStickView(view);
-					view->StandIn();
+					AddStickView(alertView);
+					alertView->StandIn();
 					break;
 				}
 				else
@@ -141,23 +152,27 @@ TCommandsPageView::MessageReceived(BMessage *msg)
 					if(system_menus[index].args != NULL)
 						cmdStr << " " << system_menus[index].args;
 
-					// TODO: when script running, the key events still in the queue, maybe we should handle it in LBApplication ...
+					LBPanelDevice *dev = PanelDevice();
+
+					dev->BlockKeyEvents(true);
 					int err = system(cmdStr.String());
+					fBlockKeyEventsTimestamp = system_time();
+					dev->BlockKeyEvents(false);
+
 					if(err < 0 || err == 127)
 					{
-						view = new LBAlertView("错误", "无法执行命令!",
-								       LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
-								       B_WARNING_ALERT);
+						LBView *alertView = new LBAlertView("错误", "无法执行命令!",
+										     LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
+										     B_WARNING_ALERT);
 
 						// LBAlertView will run StandBack() automatically when it has no invoker.
-						AddStickView(view);
-						view->StandIn();
+						AddStickView(alertView);
+						alertView->StandIn();
 						break;
 					}
 				}
-
-				Invalidate();
 			}
+			view->StandBack();
 			break;
 
 
