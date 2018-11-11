@@ -33,6 +33,20 @@
 
 #define MSG_SYSTEM_MENU		'msys'
 #define MSG_CUSTOM_MENU		'mcus'
+#define MSG_SYSTEM_MENU_ITEM	'msyi'
+#define MSG_CUSTOM_MENU_ITEM	'mcui'
+
+struct tMenuItem {
+	const char *title;
+	const char *command;
+	const char *args;
+};
+
+
+static struct tMenuItem system_menus[] = {
+	{"OTG 设备功能设置", "/usr/share/scripts/usb-gadget.sh", NULL},
+	{"覆盖文件分区切换", "/usr/share/scripts/overlay-switch.sh", NULL},
+};
 
 
 TCommandsPageView::TCommandsPageView(const char *name)
@@ -40,6 +54,16 @@ TCommandsPageView::TCommandsPageView(const char *name)
 {
 	AddItem(new LBMenuItem("系统功能", new BMessage(MSG_SYSTEM_MENU), LBK_ICON_SYSTEM));
 	AddItem(new LBMenuItem("自定功能", new BMessage(MSG_CUSTOM_MENU), LBK_ICON_CUSTOM));
+
+
+	LBListView *listView = new LBListView(3, "system");
+	for(int k = 0; k < (int)(sizeof(system_menus) / sizeof(system_menus[0])); k++)
+	{
+		listView->AddItem(new LBListStringItem(system_menus[k].title));
+	}
+	listView->SetMessage(new BMessage(MSG_SYSTEM_MENU_ITEM));
+	listView->MakeSelectable(true);
+	AddStickView(listView);
 }
 
 
@@ -66,20 +90,101 @@ TCommandsPageView::KeyUp(uint8 key, uint8 clicks)
 
 
 void
+TCommandsPageView::Attached()
+{
+	LBMenuView::Attached();
+
+	LBListView *view = e_cast_as(FindStickView("system"), LBListView);
+	if(view != NULL)
+	{
+		view->SetPosition(0);
+		view->SetTarget(this);
+	}
+}
+
+
+void
 TCommandsPageView::MessageReceived(BMessage *msg)
 {
+	int32 index;
+	LBView *view;
+
 	switch(msg->what)
 	{
 		case MSG_SYSTEM_MENU:
-			// TODO
+			if(IsStoodIn() || (view = FindStickView("system")) == NULL) break;
+			view->StandIn();
 			break;
+
+		case MSG_SYSTEM_MENU_ITEM:
+			if(msg->FindInt32("index", &index) != B_OK) break;
+			if(index < 0 || index >= (int32)(sizeof(system_menus) / sizeof(system_menus[0]))) break;
+			if(system_menus[index].command != NULL)
+			{
+				BEntry entry(system_menus[index].command);
+
+				if(entry.Exists() == false)
+				{
+					view = new LBAlertView("错误", "文件不存在!",
+							       LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
+							       B_WARNING_ALERT);
+
+					// LBAlertView will run StandBack() automatically when it has no invoker.
+					AddStickView(view);
+					view->StandIn();
+					break;
+				}
+				else
+				{
+					BString cmdStr(system_menus[index].command);
+					if(system_menus[index].args != NULL)
+						cmdStr << " " << system_menus[index].args;
+
+					int err = system(cmdStr.String());
+					if(err < 0 || err == 127)
+					{
+						view = new LBAlertView("错误", "无法执行命令!",
+								       LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
+								       B_WARNING_ALERT);
+
+						// LBAlertView will run StandBack() automatically when it has no invoker.
+						AddStickView(view);
+						view->StandIn();
+						break;
+					}
+				}
+
+				Invalidate();
+			}
+			break;
+
 
 		case MSG_CUSTOM_MENU:
 			// TODO
+			break;
+
+		case MSG_CUSTOM_MENU_ITEM:
+			// TODO
+			break;
+
+		case LBK_VIEW_STOOD_BACK:
+			{
+				void *source = NULL;
+				if(msg->FindPointer("view", &source) != B_OK || source == NULL) break;
+
+				LBView *stickView = reinterpret_cast<LBView*>(source);
+				if(stickView->Name() == NULL ||
+				   !(strcmp(stickView->Name(), "system") == 0))
+				{
+					RemoveStickView(stickView);
+					delete stickView;
+				}
+			}
 			break;
 
 		default:
 			LBMenuView::MessageReceived(msg);
 	}
 }
+
 
