@@ -209,13 +209,18 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		if(selection >= 0)
-			listView->SetPosition(selection);
 		listView->SetItemsAlignment(align);
 
 		listView->SetMessage(new BMessage(CMD_MSG_CONFIRM));
 		listView->SetKeyMessage(CMD_MSG_KEY);
 		listView->SetTarget(BMessenger(listView));
+
+		if(selection >= 0)
+		{
+			// active the view, so LBListView::SetPosition() can work as expected
+			cmd_app->ActivatePageView(0, false, panel_index);
+			listView->SetPosition(selection);
+		}
 
 		cmd_app->AddCommonFilter(new BMessageFilter(B_ANY_DELIVERY, B_LOCAL_SOURCE, cmd_msg_filter));
 
