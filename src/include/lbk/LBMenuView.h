@@ -56,6 +56,8 @@ public:
 	virtual void	Attached();
 
 protected:
+	virtual void	DrawMenuIcon(lbk_icon_id icon, BPoint location);
+
 	virtual void	ItemInvoked(LBMenuItem *item);
 	virtual void	RefreshNavButtonIcons();
 

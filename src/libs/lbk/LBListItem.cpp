@@ -153,6 +153,13 @@ LBListStringItem::RemoveIcon()
 
 
 void
+LBListStringItem::DrawIcon(LBListView *owner, lbk_icon_id icon, BPoint location)
+{
+	owner->DrawIcon(icon, location);
+}
+
+
+void
 LBListStringItem::Draw(BRect r, int32 n)
 {
 	LBListView *owner = e_cast_as(ScopeHandler(), LBListView);
@@ -167,11 +174,10 @@ LBListStringItem::Draw(BRect r, int32 n)
 	BRect tRect = r;
 	if(fHasIcon)
 	{
-		const lbk_icon *icon = lbk_get_icon_data(fIcon);
-
 		tRect.right = tRect.left + 11;
 
-		owner->DrawIcon(icon, tRect.LeftTop() + BPoint(tRect.Width() / 2.f, tRect.Height() / 2.f) - BPoint(4, 4));
+		DrawIcon(owner, fIcon,
+			 tRect.LeftTop() + BPoint(tRect.Width() / 2.f, tRect.Height() / 2.f) - BPoint(4, 4));
 
 		tRect = r;
 		r.left += 12;

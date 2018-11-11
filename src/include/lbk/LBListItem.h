@@ -75,6 +75,10 @@ public:
 	void			SetIcon(lbk_icon_id icon);
 	void			RemoveIcon();
 
+protected:
+	virtual void		DrawIcon(LBListView *owner,
+					 lbk_icon_id icon, BPoint location);
+
 private:
 	char *fText;
 	bool fHasIcon;
