@@ -183,7 +183,7 @@ static LBPanelDeviceAddOnData* lbk_app_get_panel_device_data(const BList &addOns
 }
 
 
-LBApplication::LBApplication(const LBAppSettings *settings)
+LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default_settings)
 	: BLooper(NULL, B_URGENT_DISPLAY_PRIORITY),
 	  fQuitLooper(false),
 	  fPulseRate(0),
@@ -194,17 +194,19 @@ LBApplication::LBApplication(const LBAppSettings *settings)
 
 	LBAppSettings cfg;
 
-	BFile f("/etc/LBK.conf", B_READ_ONLY);
-	if(f.InitCheck() != B_OK || cfg.AddItems(&f) == false)
+	if(use_lbk_default_settings)
 	{
-		fprintf(stderr, "[LBApplication]: use default settings.\n");
+		BFile f("/etc/LBK.conf", B_READ_ONLY);
+		if(f.InitCheck() != B_OK || cfg.AddItems(&f) == false)
+		{
+			fprintf(stderr, "[LBApplication]: use default settings.\n");
 #if 1
-		cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so");
+			cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so");
 #else
-		cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/vpd.so,point_size=2,width=128,height=64");
+			cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/vpd.so,point_size=2,width=128,height=64");
 #endif
+		}
 	}
-	f.Unset();
 
 	if(settings != NULL)
 		cfg.AddItems(*settings);
