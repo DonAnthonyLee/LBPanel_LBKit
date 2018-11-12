@@ -1,7 +1,10 @@
 DEBUG_OPTIONS = -g -Wall
 OPTIMIZE = -O3
 
-SINGLE_C_FILE_PROGRAMS =
+C_PROGRAM := 
+CXX_PROGRAM := 
+
+SINGLE_C_FILE_PROGRAMS = oled_capture
 SINGLE_CXX_FILE_PROGRAMS =
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
 
@@ -25,14 +28,19 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../../include -I../../libs/include
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) -I../../include -I../../libs/include
 LDFLAGS =
 
-all: targets $(TARGET)
+ifeq ($(C_PROGRAM), )
+CFLAGS += -DCMD_ALL_IN_ONE
+endif
 
-$(C_PROGRAM): $(C_PROGRAM).o
-	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+ifeq ($(CXX_PROGRAM), )
+CXXFLAGS += -DCMD_ALL_IN_ONE
+endif
+
+all: targets $(TARGET)
 
 $(C_PROGRAM): $(C_PROGRAM).o
 	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)

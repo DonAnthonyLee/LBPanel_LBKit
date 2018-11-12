@@ -104,7 +104,7 @@ TAlertView::TAlertView(const char *title,
 		       lbk_icon_id btn2_icon,
 		       lbk_icon_id btn1_icon,
 		       alert_type type,
-		       bool long_press_act)
+		       int8 long_press_act)
 	: LBAlertView(title, text, btn3_icon, btn2_icon, btn1_icon, type),
 	  fRespEvenNone(false),
 	  fLongPressAct(long_press_act),

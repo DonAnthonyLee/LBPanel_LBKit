@@ -1,6 +1,9 @@
 DEBUG_OPTIONS = -g -Wall
 OPTIMIZE = -O3
 
+C_PROGRAM := 
+CXX_PROGRAM := 
+
 SINGLE_C_FILE_PROGRAMS =
 SINGLE_CXX_FILE_PROGRAMS =
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
@@ -49,14 +52,19 @@ else
 	LDFLAGS += -lbe -lroot
 endif
 
-CFLAGS += -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
-CXXFLAGS += -I../../include -I../../libs/include -DCMD_ALL_IN_ONE
+CFLAGS += -I../../include -I../../libs/include
+CXXFLAGS += -I../../include -I../../libs/include
 LDFLAGS += -L../../libs/lbk -llbk
 
-all: targets $(TARGET)
+ifeq ($(C_PROGRAM), )
+CFLAGS += -DCMD_ALL_IN_ONE
+endif
 
-$(C_PROGRAM): $(C_PROGRAM).o
-	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+ifeq ($(CXX_PROGRAM), )
+CXXFLAGS += -DCMD_ALL_IN_ONE
+endif
+
+all: targets $(TARGET)
 
 $(C_PROGRAM): $(C_PROGRAM).o
 	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
