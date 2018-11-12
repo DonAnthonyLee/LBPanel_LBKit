@@ -45,6 +45,18 @@ umount ${ROOTFS_DATA_MOUNT_DIR}
 rmdir ${ROOTFS_DATA_MOUNT_DIR}
 }
 
+remove_extroot_uuid() {
+mkdir -p ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+
+mount -t ext4 -o rw,sync $1 ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+
+[ "$?" = "0" ] || { rmdir ${ROOTFS_DATA_MOUNT_DIR} && return; }
+[ ! -e ${ROOTFS_DATA_MOUNT_DIR}/etc/.extroot-uuid ] || rm -f ${ROOTFS_DATA_MOUNT_DIR}/etc/.extroot-uuid
+
+umount ${ROOTFS_DATA_MOUNT_DIR}
+rmdir ${ROOTFS_DATA_MOUNT_DIR}
+}
+
 find_item_dev() {
 CUR_ITEM=3
 SELE_ITEM_DEV=
@@ -146,7 +158,8 @@ if [ ! -z "${DST_OVERLAY_DEV}" ]; then
 	#echo "DST_OVERLAY_DEV=${DST_OVERLAY_DEV}"
 
 	delete_old_overlay_settings
-	[ "${DST_OVERLAY_DEV}" == "${ROOTFS_DATA_DEV}" ] || add_new_overlay_settings ${DST_OVERLAY_DEV}
+	[ "${DST_OVERLAY_DEV}" == "${ROOTFS_DATA_DEV}" ] || \
+		{ add_new_overlay_settings ${DST_OVERLAY_DEV} && remove_extroot_uuid ${DST_OVERLAY_DEV} ; }
 	$UCI commit fstab
 
 	lbk-message --type warning --topic "警告" "重启方可生效!\\n确定重启吗?"
