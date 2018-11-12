@@ -125,10 +125,10 @@ TMainPageView::GetTime(BString *strDate, BString *strTime, BString *strWeek) con
 
 		if(fShowSeconds)
 			snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
-				 (f24Hours ? t.tm_hour : (t.tm_hour % 12)), t.tm_min, t.tm_sec);
+				 t.tm_hour - ((f24Hours || t.tm_hour < 13) ? 0 : 12), t.tm_min, t.tm_sec);
 		else
 			snprintf(buf, sizeof(buf), "%02d:%02d",
-				 (f24Hours ? t.tm_hour : (t.tm_hour % 12)), t.tm_min);
+				 t.tm_hour - ((f24Hours || t.tm_hour < 13) ? 0 : 12), t.tm_min);
 		strTime->Append(buf);
 	}
 
