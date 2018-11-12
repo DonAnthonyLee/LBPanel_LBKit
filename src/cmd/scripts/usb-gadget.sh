@@ -65,7 +65,11 @@ case "$?" in
 esac
 
 uci commit usb_gadget
+
+lbk-message --k2 none --k3 none --type info --topic "信息" --timeout 0 "重启服务中..."
+
 /etc/init.d/usb_gadget reload || { lbk-message --k2 none --k3 exit --type stop --topic "错误" "无法应用设置" && exit 1; }
+
 lbk-message --k2 none --k3 none --type idea --topic "信息" --timeout 1 "操作成功"
 
 exit 0

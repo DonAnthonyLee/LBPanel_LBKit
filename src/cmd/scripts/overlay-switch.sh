@@ -120,6 +120,9 @@ add_new_overlay_settings() {
 }
 
 check_env || { echo "Requires block-mount & lbk-cmd !" && exit 1; }
+
+lbk-message --k2 none --k3 none --type info --topic "信息" --timeout 0 "正在检测..."
+
 detect_rootfs_data || { \
 lbk-message --k2 none --k3 exit --type stop --topic "错误" "检测失败!\\n(rootfs_data)" && exit 1; }
 
@@ -162,6 +165,8 @@ esac
 
 if [ ! -z "${DST_OVERLAY_DEV}" ]; then
 	#echo "DST_OVERLAY_DEV=${DST_OVERLAY_DEV}"
+
+	lbk-message --k2 none --k3 none --type info --topic "信息" --timeout 0 "正在设置..."
 
 	remove_extroot_uuid ${DST_OVERLAY_DEV}
 	if [ $? != 0 ]; then
