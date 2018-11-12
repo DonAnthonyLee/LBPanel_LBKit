@@ -46,7 +46,7 @@ rmdir ${ROOTFS_DATA_MOUNT_DIR}
 }
 
 find_item_dev() {
-CUR_ITEM=2
+CUR_ITEM=3
 SELE_ITEM_DEV=
 for bo in ${EXT4FS_BLOCKS}; do
 	if [ "x${CUR_ITEM}" = "x$1" ]; then
@@ -59,14 +59,17 @@ return 1
 }
 
 init_menu_items() {
+MENU_SELE=1
+MENU_ITEMS="返回"
+
 if [ "${ROOTFS_DATA_DEV}" = "${CUR_OVERLAY_DEV}" ]; then
-	MENU_ITEMS="原始分区(+)"
-	MENU_SELE=1
+	MENU_ITEMS="${MENU_ITEMS} 原始分区(+)"
+	MENU_SELE=2
 else
-	MENU_ITEMS="原始分区"
+	MENU_ITEMS="${MENU_ITEMS} 原始分区"
 fi
 
-CUR_ITEM=2
+CUR_ITEM=3
 for bo in ${EXT4FS_BLOCKS}; do
 	MENU_ITEMS="${MENU_ITEMS} $bo"
 	if [ "$bo" = ${CUR_OVERLAY_DEV} ]; then
@@ -112,7 +115,7 @@ lbk-message --k2 none --k3 exit --type stop --topic "错误" "挂载分区失败
 
 init_menu_items
 
-lbk-menu --long-press down --select ${MENU_SELE} ${MENU_ITEMS} > /dev/null 2>&1
+lbk-menu --long-press off --select ${MENU_SELE} ${MENU_ITEMS} > /dev/null 2>&1
 SELE_ITEM=$?
 DST_OVERLAY_DEV=
 case "${SELE_ITEM}" in
@@ -122,6 +125,10 @@ case "${SELE_ITEM}" in
 	exit 0
 ;;
 	1)
+	umount_rootfs_data
+	exit 0
+;;
+	2)
 	if [ "${ROOTFS_DATA_DEV}" != "${CUR_OVERLAY_DEV}" ]; then
 		DST_OVERLAY_DEV="${ROOTFS_DATA_DEV}"
 	fi
