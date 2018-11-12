@@ -29,7 +29,6 @@
  * --------------------------------------------------------------------------*/
 
 #include "TLogoView.h"
-#include "TMainPageView.h" // for "LBPANEL_xxxx_VERSION"
 
 
 TLogoView::TLogoView(const char *name)
@@ -75,12 +74,9 @@ TLogoView::Draw(BRect updateRect)
 	uint16 w;
 
 	r = Bounds();
-	if(fTicks == 0)
-		FillRect(r, B_SOLID_LOW);
 	r.top = r.top + r.Height() / 2.f - 15;
 	r.bottom = r.top + 30;
-	if(fTicks > 0)
-		FillRect(r, B_SOLID_LOW);
+	FillRect(r, B_SOLID_LOW);
 
 	SetFontSize(24);
 	w = StringWidth(str.String());
@@ -89,16 +85,6 @@ TLogoView::Draw(BRect updateRect)
 
 	r.top = r.bottom - r.Height() / 2.f + 1;
 	InvertRect(r);
-
-	if(fTicks == 0)
-	{
-		SetFontSize(12);
-		str.Truncate(0);
-		str << "版本 " << LBPANEL_MAJOR_VERSION << "." << LBPANEL_MINOR_VERSION;
-		w = StringWidth(str.String());
-		pt = r.RightBottom() - BPoint(w + 1, -2);
-		DrawString(str.String(), pt);
-	}
 
 	r.OffsetBy(0, -(r.Height() + 1));
 	r.right = r.left + 8 * fTicks;
@@ -109,6 +95,8 @@ TLogoView::Draw(BRect updateRect)
 void
 TLogoView::Pulse()
 {
+	// TODO: reading settings, etc.
+
 	fTicks++;
 	EnableUpdate(false);
 	Draw(Bounds());
