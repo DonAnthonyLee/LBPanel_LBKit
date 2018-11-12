@@ -15,11 +15,12 @@ return 0
 
 init_menu_items() {
 MENU_SELE=1
+MENU_ITEMS="返回"
 
 if [ "x${USB_GADGET_ENABLED}" = "x1" ]; then
-	MENU_ITEMS="关闭设备"
+	MENU_ITEMS="${MENU_ITEMS} 关闭设备"
 else
-	MENU_ITEMS="启用设备"
+	MENU_ITEMS="${MENU_ITEMS} 启用设备"
 fi
 
 if [ "x${USB_GADGET_FUNCTION}" = "x0" ]; then
@@ -36,23 +37,26 @@ load_config || { echo "Failed to get settings !" && exit 1; }
 
 init_menu_items
 
-lbk-menu --align center --long-press down --select ${MENU_SELE} ${MENU_ITEMS} > /dev/null 2>&1
+lbk-menu --align center --long-press off --select ${MENU_SELE} ${MENU_ITEMS} > /dev/null 2>&1
 case "$?" in
 	0)
 	lbk-message --k2 none --k3 none --type info --topic "提示" --timeout 1 "操作取消"
 	exit 0
 ;;
 	1)
+	exit 0
+;;
+	2)
 	if [ "x${USB_GADGET_ENABLED}" = "x1" ]; then
 		uci set usb_gadget.@usb_gadget[0].enabled=0
 	else
 		uci set usb_gadget.@usb_gadget[0].enabled=1
 	fi
 ;;
-	2)
+	3)
 	uci set usb_gadget.@usb_gadget[0].type=0
 ;;
-	3)
+	4)
 	uci set usb_gadget.@usb_gadget[0].type=1
 ;;
 	*)
