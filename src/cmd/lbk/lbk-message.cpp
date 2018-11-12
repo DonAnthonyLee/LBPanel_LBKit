@@ -47,7 +47,7 @@ Options:\n\
     --align left/center/right  Specify the alignment of icons to match keys\n\
     --response-even-none       Return even the icon of key is \"none\"\n\
     --timeout seconds          Exit after specified seconds\n\
-    --long-press down/up       Specify state when key long-pressed, default: up\n\
+    --long-press down/up/off   Specify state when key long-pressed, default: up\n\
 \n\
 Icon:\n\
     none, ok, yes, no, exit\n\
@@ -80,7 +80,7 @@ public:
 		   lbk_icon_id btn2_icon,
 		   lbk_icon_id btn1_icon,
 		   alert_type type,
-		   bool long_press_up);
+		   int8 long_press_act);
 
 	void		SetResponseEvenNone();
 	void		SetTimeout(int32 seconds);
@@ -93,7 +93,7 @@ public:
 
 private:
 	bool fRespEvenNone;
-	bool fLongPressUp;
+	int8 fLongPressAct;
 	bigtime_t fTimestamp;
 };
 
@@ -104,10 +104,10 @@ TAlertView::TAlertView(const char *title,
 		       lbk_icon_id btn2_icon,
 		       lbk_icon_id btn1_icon,
 		       alert_type type,
-		       bool long_press_up)
+		       bool long_press_act)
 	: LBAlertView(title, text, btn3_icon, btn2_icon, btn1_icon, type),
 	  fRespEvenNone(false),
-	  fLongPressUp(long_press_up),
+	  fLongPressAct(long_press_act),
 	  fTimestamp(0)
 {
 }
@@ -151,8 +151,10 @@ TAlertView::KeyDown(uint8 key, uint8 clicks)
 {
 	LBAlertView::KeyDown(key, clicks);
 
+	if(fLongPressAct != 0 || clicks != 0xff) return;
+
 	int32 id = IndexOfButton(key);
-	if(clicks == 0xff && fLongPressUp == false && (id >= 0 || fRespEvenNone))
+	if(id >= 0 || fRespEvenNone)
 	{
 		lbk_icon_id icon = GetButtonIcon(id);
 		if(icon == LBK_ICON_NONE && fRespEvenNone == false) return;
@@ -167,6 +169,8 @@ void
 TAlertView::KeyUp(uint8 key, uint8 clicks)
 {
 	LBAlertView::KeyUp(key, clicks);
+
+	if(fLongPressAct > 1 && clicks == 0xff) return;
 
 	lbk_icon_id icon = GetButtonIcon(IndexOfButton(key));
 	if(fRespEvenNone && icon == LBK_ICON_NONE)
@@ -243,7 +247,7 @@ int main(int argc, char **argv)
 	BString topic;
 	BString text;
 	bool respNone = false;
-	bool long_press_up = true;
+	int8 long_press_act = 1;
 	int32 timeout = -1;
 
 	int n;
@@ -302,8 +306,10 @@ int main(int argc, char **argv)
 		else if(strcmp(argv[n], "--long-press") == 0)
 		{
 			n++;
-			if(strcmp(argv[n], "down") == 0)
-				long_press_up = false;
+			if(strcmp(argv[n], "off") == 0)
+				long_press_act = 2;
+			else if(strcmp(argv[n], "down") == 0)
+				long_press_act = 0;
 			else if(strcmp(argv[n], "up") != 0)
 				break;
 		}
@@ -336,7 +342,7 @@ int main(int argc, char **argv)
 
 	TAlertView *alert = new TAlertView(topic.String(),
 					   text.String(),
-					   icon3, icon2, icon1, t, long_press_up);
+					   icon3, icon2, icon1, t, long_press_act);
 	if(respNone)
 		alert->SetResponseEvenNone();
 	alert->SetButtonAlignment(align);

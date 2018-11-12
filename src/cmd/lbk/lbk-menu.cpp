@@ -43,7 +43,7 @@ Options:\n\
     --select index             Specify current selection's index, default value: 1\n\
     --max count                Maximum count to show on panel device at the same time\n\
     --timeout seconds          Exit after specified seconds\n\
-    --long-press down/up       Specify state when \"OK\" key long-pressed, default: up\n\
+    --long-press down/up/off   Specify state when \"OK\" key long-pressed, default: up\n\
 \n\
 Return value:\n\
     Return index(start from 1) of label if user selected; return 0 if user canceled\n\
@@ -169,7 +169,9 @@ int main(int argc, char **argv)
 		else if(strcmp(argv[n], "--long-press") == 0)
 		{
 			n++;
-			if(strcmp(argv[n], "down") == 0)
+			if(strcmp(argv[n], "off") == 0)
+				long_press_state = 0xffff;
+			else if(strcmp(argv[n], "down") == 0)
 				long_press_state = 1;
 			else if(strcmp(argv[n], "up") != 0)
 				break;
