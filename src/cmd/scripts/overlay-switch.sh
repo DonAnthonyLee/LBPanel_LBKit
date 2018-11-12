@@ -1,6 +1,7 @@
 #!/bin/sh
 
 ROOTFS_DATA_MOUNT_DIR="/tmp/rootfs_data_mount"
+OVERLAY_SOURCE_MOUNT_DIR="/tmp/overlay_source"
 UCI="uci -c ${ROOTFS_DATA_MOUNT_DIR}/upper/etc/config"
 
 check_env() {
@@ -46,15 +47,20 @@ rmdir ${ROOTFS_DATA_MOUNT_DIR}
 }
 
 remove_extroot_uuid() {
-mkdir -p ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+[ "x$1" != "x" ] || return 1
+[ "x${ROOTFS_DATA_DEV}" != "x$1" ] || return 0
 
-mount -t ext4 -o rw,sync $1 ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+mkdir -p ${OVERLAY_SOURCE_MOUNT_DIR} > /dev/null 2>&1
 
-[ "$?" = "0" ] || { rmdir ${ROOTFS_DATA_MOUNT_DIR} && return; }
-[ ! -e ${ROOTFS_DATA_MOUNT_DIR}/etc/.extroot-uuid ] || rm -f ${ROOTFS_DATA_MOUNT_DIR}/etc/.extroot-uuid
+mount -t ext4 -o rw,sync $1 ${OVERLAY_SOURCE_MOUNT_DIR} > /dev/null 2>&1
 
-umount ${ROOTFS_DATA_MOUNT_DIR}
-rmdir ${ROOTFS_DATA_MOUNT_DIR}
+[ "$?" = "0" ] || { rmdir ${OVERLAY_SOURCE_MOUNT_DIR} && return 1; }
+[ ! -e ${OVERLAY_SOURCE_MOUNT_DIR}/etc/.extroot-uuid ] || rm -f ${OVERLAY_SOURCE_MOUNT_DIR}/etc/.extroot-uuid
+
+umount ${OVERLAY_SOURCE_MOUNT_DIR}
+rmdir ${OVERLAY_SOURCE_MOUNT_DIR}
+
+return 0
 }
 
 find_item_dev() {
@@ -157,9 +163,16 @@ esac
 if [ ! -z "${DST_OVERLAY_DEV}" ]; then
 	#echo "DST_OVERLAY_DEV=${DST_OVERLAY_DEV}"
 
+	remove_extroot_uuid ${DST_OVERLAY_DEV}
+	if [ $? != 0 ]; then
+		umount_rootfs_data
+		lbk-message --k2 none --k3 exit --type stop --topic "错误" "挂载分区失败!\\n(overlay)"
+		exit 1
+	fi
+
 	delete_old_overlay_settings
 	[ "${DST_OVERLAY_DEV}" == "${ROOTFS_DATA_DEV}" ] || \
-		{ add_new_overlay_settings ${DST_OVERLAY_DEV} && remove_extroot_uuid ${DST_OVERLAY_DEV} ; }
+		add_new_overlay_settings ${DST_OVERLAY_DEV}
 	$UCI commit fstab
 
 	lbk-message --type warning --topic "警告" "重启方可生效!\\n确定重启吗?"
