@@ -46,7 +46,7 @@ Options:\n\
     --topic topic              Specify the topic showing at the top line\n\
     --align left/center/right  Specify the alignment of icons to match keys\n\
     --response-even-none       Return even the icon of key is \"none\"\n\
-    --timeout seconds          Exit after specified seconds\n\
+    --timeout seconds          Exit after specified seconds (>=0)\n\
     --long-press down/up/off   Specify state when key long-pressed, default: up\n\
 \n\
 Icon:\n\
@@ -90,6 +90,7 @@ public:
 	virtual void	MessageReceived(BMessage *msg);
 	virtual void	Attached();
 	virtual void	Pulse();
+	virtual void	Draw(BRect r);
 
 private:
 	bool fRespEvenNone;
@@ -132,10 +133,26 @@ TAlertView::Pulse()
 
 
 void
+TAlertView::Draw(BRect r)
+{
+	LBAlertView::Draw(r);
+
+	if(fTimestamp < 0) // for timeout = 0
+	{
+		cmd_ret = -2;
+		cmd_app->PostMessage(B_QUIT_REQUESTED);
+	}
+}
+
+
+void
 TAlertView::SetTimeout(int32 seconds)
 {
-	fTimestamp = (seconds > 0 ?
-			(system_time() + (bigtime_t)1000000 * (bigtime_t)seconds) : 0);
+	if(seconds == 0)
+		fTimestamp = (bigtime_t)-1;
+	else
+		fTimestamp = (seconds > 0 ?
+				(system_time() + (bigtime_t)1000000 * (bigtime_t)seconds) : 0);
 }
 
 
@@ -356,7 +373,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		if(timeout > 0)
+		if(timeout >= 0)
 		{
 			alert->SetTimeout(timeout);
 			cmd_app->SetPulseRate(timeout > 4 ? 1000000 : 200000);
