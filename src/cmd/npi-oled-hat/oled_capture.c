@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 	const uint8_t *bits;
 	int x, y;
 	uint8_t c;
-	uint8_t str[OLED_SCREEN_WIDTH + 4];
+	char str[OLED_SCREEN_WIDTH + 4];
 
 	for (n = 1; n < argc; n++) {
 		if (n < argc - 1 && strcmp(argv[n], "-D") == 0) {
@@ -96,24 +96,25 @@ int main(int argc, char **argv)
 
 	if ((out = open(argv[n + 1], O_CREAT | O_TRUNC | O_RDWR, 0600)) < 0) {
 		perror("Open output");
+		close(f);
 		exit(1);
 	}
 
 	buffer = mmap(NULL, len, PROT_READ, MAP_SHARED, f, 0);
 	if(buffer == MAP_FAILED)
 	{
+		perror("mmap");
 		close(out);
 		close(f);
-		perror("mmap");
 		exit(1);
 	}
 
 	memset(str, 0, sizeof(str));
-	sprintf((char*)str, "%d %d", OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT);
+	sprintf(str, "%d %d", OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT);
 
 	do {
 		if ((err = write(out, xpm_header1, strlen(xpm_header1))) < 0) break;
-		if ((err = write(out, str, strlen((char*)str))) < 0) break;
+		if ((err = write(out, str, strlen(str))) < 0) break;
 		if ((err = write(out, xpm_header2, strlen(xpm_header2))) < 0) break;
 
 		str[0] = '"';
@@ -130,7 +131,8 @@ int main(int argc, char **argv)
 			if ((err = write(out, str, OLED_SCREEN_WIDTH + 4)) < 0) break;
 		}
 
-		err = write(out, "};\n", 3);
+		if (err > 0)
+			err = write(out, "};\n", 3);
 	} while(0);
 
 	if (err < 0)
