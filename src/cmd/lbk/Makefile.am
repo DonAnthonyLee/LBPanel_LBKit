@@ -4,7 +4,7 @@ AM_LDFLAGS = -L../../libs/lbk -llbk
 
 bin_PROGRAMS = lbk-cmd
 
-lbk_cmd_SOURCES = lbk-cmd.c lbk-notify.c lbk-uci2msg.cpp lbk-menu.cpp lbk-message.cpp
+lbk_cmd_SOURCES = lbk-cmd.c lbk-notify.c lbk-menu.cpp lbk-message.cpp
 
 DISTCLEANFILES = Makefile.in
 

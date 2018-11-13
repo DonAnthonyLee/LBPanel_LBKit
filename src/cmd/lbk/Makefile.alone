@@ -15,7 +15,6 @@ TARGET_3 =
 OBJECTS_1 =		\
 	lbk-cmd.o	\
 	lbk-notify.o	\
-	lbk-uci2msg.o	\
 	lbk-menu.o	\
 	lbk-message.o
 

@@ -32,7 +32,6 @@
 #include <string.h>
 
 extern int cmd_notify(int argc, char **argv);
-extern int cmd_uci2msg(int argc, char **argv);
 extern int cmd_menu(int argc, char **argv);
 extern int cmd_message(int argc, char **argv);
 
@@ -44,7 +43,6 @@ static int show_usage(int argc, char **argv)
 	printf("Usage: %s [commad] cmd_options\n\
     Valid commands:\n\
         notify                  Notify the application using LBKit\n\
-        uci2msg                 Convert uci config to *Message flattened data\n\
         message                 Display message on specified panel device\n\
         menu                    Display menu on specified panel device\n", org_cmd);
 
@@ -73,8 +71,6 @@ int main(int argc, char **argv)
 	if (strncmp(cmd, "lbk-", 4) == 0) {
 		if (strcmp(&cmd[4], "notify") == 0)
 			func = cmd_notify;
-		else if (strcmp(&cmd[4], "uci2msg") == 0)
-			func = cmd_uci2msg;
 		else if (strcmp(&cmd[4], "menu") == 0)
 			func = cmd_menu;
 		else if (strcmp(&cmd[4], "message") == 0)
