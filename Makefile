@@ -137,7 +137,6 @@ define Package/lbk-cmd/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/lbk-cmd $(1)/usr/bin/lbk-cmd
 	ln -sf ./lbk-cmd $(1)/usr/bin/lbk-notify
-	ln -sf ./lbk-cmd $(1)/usr/bin/lbk-uci2msg
 	ln -sf ./lbk-cmd $(1)/usr/bin/lbk-menu
 	ln -sf ./lbk-cmd $(1)/usr/bin/lbk-message
 endef
