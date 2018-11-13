@@ -112,7 +112,7 @@ status_t
 LBMenuItem::Invoke(const BMessage *msg)
 {
 	BMessage *message = const_cast<BMessage*>(msg);
-	return BInvoker::Invoke(msg);
+	return BInvoker::Invoke(message);
 }
 #endif
 
