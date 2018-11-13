@@ -44,8 +44,33 @@ public:
 	virtual void	Attached();
 	virtual void	MessageReceived(BMessage *msg);
 
+protected:
+	virtual int32	VisibleItemsCountMax() const;
+
 private:
 	bigtime_t fBlockKeyEventsTimestamp;
+
+	status_t	ExecCommand(const char *command, const char *args);
+};
+
+
+class TListItem : public LBListStringItem {
+public:
+	TListItem(const char *text, BMessage *msg);
+	virtual ~TListItem();
+
+	const BMessage* Message() const;
+
+private:
+	BMessage *fMessage;
+};
+
+
+class TListView : public LBListView {
+public:
+	TListView(const char *name);
+
+	virtual status_t Invoke(const BMessage *message);
 };
 
 #endif /* __cplusplus */
