@@ -27,10 +27,10 @@ LBPanel 初始界面通过左右键（K1/K3）双击跳转左右页视图，按�
 
 LBKit 借助 Lite BeAPI，可在 Linux 系统下，以基本与 BeOS API (C++) 相同的方式编写交互应用程序。开发调试时，甚至可以结合虚拟面板实现（VPD），直接在 HaikuOS 系统（开源 BeOS 复现）上，无需任何其它运行库直接运行 LBPanel。
 
-LBKit 可以视为 BeOS API 中 InterfaceKit（类似其它开发库中的 GUI 部分） 的低端设备上另类实现，结合裁剪版的 ETK++（Lite BeAPI 本源），基本具备 KernelKit、SupportKit、NetKit、StorageKit、InterfaceKit（以 LBKit 替代）的嵌入式 C++ 综合开发环境。
+LBKit 可以视为 BeOS API 中 InterfaceKit（类似其它开发库中的 GUI 部分） 的另类实现（更适合低端设备），结合裁剪版的 ETK++（Lite BeAPI 本源），基本具备 KernelKit、SupportKit、NetKit、StorageKit、AppKit、InterfaceKit（以 LBKit 替代）的嵌入式 C++ 综合开发环境。
 
 LBKit 另扩展出 lbk-menu、lbk-message 等实用命令行交互工具，可于 shell 脚本中调用，方便实现简便开发。通过 LBKit 交互设备（面板）扩展接口，亦可自行扩充显示和输入设备，甚至可以基于网络C/S模式实现。
 
-LBKit 显示相关接口，目前仅考虑单色低分辨率屏幕（目前适用平台设备），彩色低分辨屏幕仅预留实现框架。高分辨率整体屏幕可直接使用 InterfaceKit，所以在 LBKit 中不予考虑。
+LBKit 显示相关接口，目前仅考虑单色低分辨率屏幕（目前适用平台设备），彩色低分辨屏幕仅预留实现框架。高分辨率彩色整体屏幕可直接使用 InterfaceKit，在 LBKit 中不予考虑。
 
  
