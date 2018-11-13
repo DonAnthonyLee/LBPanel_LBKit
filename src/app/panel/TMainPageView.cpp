@@ -914,6 +914,7 @@ TMainPageView::Set24Hours(bool state)
 	if(f24Hours != state)
 	{
 		f24Hours = state;
+		GetTime(&fDate, &fTime, &fWeek);
 		if(fTabIndex == 0) Invalidate();
 	}
 }
@@ -925,6 +926,7 @@ TMainPageView::ShowSeconds(bool state)
 	if(fShowSeconds != state)
 	{
 		fShowSeconds = state;
+		GetTime(&fDate, &fTime, &fWeek);
 		if(fTabIndex == 0) Invalidate();
 	}
 }
