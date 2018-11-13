@@ -14,6 +14,8 @@ lb_panel_SOURCES =		\
 	TMenuPageView.h		\
 	TCommandsPageView.cpp	\
 	TCommandsPageView.h	\
+	TApplication.cpp	\
+	TApplication.h		\
 	main.cpp
 lb_panel_LDADD = ../../libs/lbk/liblbk.la
 
@@ -24,6 +26,5 @@ install-data-local: lb_panel
 uninstall-local:
 	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(bindir)/LBPanel
 
-EXTRA_DIST = test-panel.sh
 DISTCLEANFILES = Makefile.in
 
