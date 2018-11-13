@@ -36,9 +36,6 @@
 
 #include <lbk/LBKit.h>
 
-#include "TMainPageView.h"
-#include "TMenuPageView.h"
-#include "TCommandsPageView.h"
 #include "TApplication.h"
 
 
@@ -81,10 +78,6 @@ int main(int argc, char **argv)
 
 	TApplication *app = new TApplication(&cfg);
 	cfg.MakeEmpty();
-
-	app->AddPageView(new TCommandsPageView(), true);
-	app->AddPageView(new TMainPageView(), false);
-	app->AddPageView(new TMenuPageView(), false);
 
 	app->Go();
 
