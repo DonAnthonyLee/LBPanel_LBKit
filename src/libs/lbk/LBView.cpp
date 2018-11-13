@@ -791,6 +791,9 @@ LBView::StandIn()
 {
 	if(fMasterView == NULL || fMasterView->fStandingInView == this) return;
 
+	if(fMasterView->fStandingInView != NULL)
+		fMasterView->fStandingInView->StandBack();
+
 	fMasterView->fStandingInView = this;
 	fMasterView->fKeyState = 0; // reset the key state of master view too !
 	fKeyState = 0;
