@@ -51,6 +51,10 @@ public:
 
 	bool		IsHidden() const;
 
+#ifndef ETK_MAJOR_VERSION
+	status_t	Invoke(const BMessage *msg);
+#endif
+
 private:
 	char *fLabel;
 	lbk_icon_id fIcon;
