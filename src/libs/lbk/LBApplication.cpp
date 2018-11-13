@@ -214,11 +214,11 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 	for(int32 k = 0; k < cfg.CountItems(); k++)
 	{
 		BString item(cfg.ItemAt(k));
+		item.RemoveAll("\r");
+		item.RemoveAll(" ");
 		if(item.Length() == 0) continue;
 		if(item.ByteAt(0) == '#' || item.FindFirst("//") == 0) continue;
-		item.RemoveAll("\r");
-		item.RemoveAll("\n");
-		item.RemoveAll(" ");
+		if(item.FindFirst("::") >= 0) continue; // sub-settings
 
 		int32 found = item.FindFirst("=");
 		if(found <= 0 || found == item.Length() - 1) continue;
@@ -232,6 +232,7 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 #endif
 
 		found = value.FindFirst(",");
+		if(found == 0) continue;
 		if(found > 0)
 		{
 			if(found < value.Length() - 1)
