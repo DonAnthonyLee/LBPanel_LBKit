@@ -50,6 +50,10 @@ public:
 
 	const char*		operator[](int index) const;
 	const char*		ItemAt(int32 index) const;
+	status_t		GetItemAt(int32 index,
+					  BString *name,
+					  BString *value,
+					  BString *options = NULL) const;
 	int32			CountItems() const;
 
 private:
