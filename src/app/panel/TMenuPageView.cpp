@@ -136,7 +136,15 @@ TMenuPageView::MessageReceived(BMessage *msg)
 			}
 
 			printf("[TMainPageView]: Going to %s !\n", (msg->what == MSG_REBOOT_GO) ? "reboot" : "power off");
-			system((msg->what == MSG_REBOOT_GO) ? "reboot" : "poweroff");
+			if(system((msg->what == MSG_REBOOT_GO) ? "reboot" : "poweroff") < 0)
+			{
+				view = new LBAlertView("错误",
+						       (msg->what == MSG_REBOOT_GO) ? "无法重启!" : "无法关机!",
+						       LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
+						       B_STOP_ALERT);
+				AddStickView(view);
+				view->StandIn();
+			}
 			break;
 
 		case MSG_ABOUT:
