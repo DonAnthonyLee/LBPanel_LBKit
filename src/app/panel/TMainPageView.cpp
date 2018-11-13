@@ -1019,7 +1019,15 @@ TMainPageView::MessageReceived(BMessage *msg)
 			}
 
 			printf("[TMainPageView]: Going to power off !\n");
-			system("poweroff");
+			if(system("poweroff") < 0)
+			{
+				view = new LBAlertView("错误",
+						       "无法关机!",
+						       LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
+						       B_STOP_ALERT);
+				AddStickView(view);
+				view->StandIn();
+			}
 			break;
 
 #ifdef ETK_OS_LINUX
