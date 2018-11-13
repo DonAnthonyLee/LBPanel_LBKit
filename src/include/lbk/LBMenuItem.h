@@ -43,16 +43,16 @@ public:
 		   lbk_icon_id idIcon);
 	virtual ~LBMenuItem();
 
-	const char*	Label() const;
-	void		SetLabel(const char *label);
+	const char*		Label() const;
+	void			SetLabel(const char *label);
 
-	lbk_icon_id	Icon() const;
-	void		SetIcon(lbk_icon_id idIcon);
+	lbk_icon_id		Icon() const;
+	void			SetIcon(lbk_icon_id idIcon);
 
-	bool		IsHidden() const;
+	bool			IsHidden() const;
 
 #ifndef ETK_MAJOR_VERSION
-	status_t	Invoke(const BMessage *msg);
+	virtual status_t	Invoke(const BMessage *msg);
 #endif
 
 private:
