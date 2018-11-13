@@ -29,13 +29,105 @@
  * --------------------------------------------------------------------------*/
 
 #include "TApplication.h"
+#include "TMainPageView.h"
+#include "TMenuPageView.h"
+#include "TCommandsPageView.h"
 
 
 TApplication::TApplication(const LBAppSettings *settings)
 	: LBApplication(settings),
 	  fScreenOffTimeout(0)
 {
-	// TODO: get custom menu for "settings"
+	bool use24Hours = false;
+	bool showSeconds = false;
+	int32 thermalZone = 0;
+	bool useLCDStyle = false;
+
+	for(int32 k = 0; k < settings->CountItems(); k++)
+	{
+		BString item(settings->ItemAt(k));
+		item.RemoveAll("\r");
+		if(item.Length() == 0) continue;
+		if(item.ByteAt(0) == '#' || item.FindFirst("//") == 0) continue;
+		if(item.FindFirst("LBPanel::") != 0) continue;
+
+		int32 found = item.FindFirst("=");
+		if(found <= 9 || found == item.Length() - 1) continue;
+
+		BString name(item.String() + 9, found - 9);
+		BString value(item.String() + found + 1);
+		BString options;
+
+		found = value.FindFirst(",");
+		if(found == 0) continue;
+		if(found > 0)
+		{
+			if(found < value.Length() - 1)
+				options.SetTo(value.String() + found + 1);
+			value.Truncate(found);
+		}
+
+#if 0
+		ETK_OUTPUT("[TApplication]: name = %s, value = %s, options = %s\n",
+			   name.String(), value.String(), options.String());
+#endif
+
+		if(name == "MenuItem" && options.Length() > 0) do
+		{
+			BString str;
+
+			found = options.FindFirst(",");
+			if(found == 0) break;
+			if(found > 0)
+			{
+				if(found < options.Length() - 1)
+					str.SetTo(options.String() + found + 1);
+				options.Truncate(found);
+			}
+
+			t_menu_item *item = (t_menu_item*)malloc(sizeof(t_menu_item));
+			if(item == NULL || fCustomMenu.AddItem(item) == false)
+			{
+				if(item != NULL) free(item);
+				break;
+			}
+
+			item->title = strdup(value.String());
+			item->command = strdup(options.String());
+			item->args = (str.Length() > 0) ? strdup(str.String()) : NULL;
+		} while(false);
+
+		if(name == "ScreenOffTimeout")
+		{
+			fScreenOffTimeout = (int32)atoi(value.String());
+		}
+		else if(name == "24Hours")
+		{
+			use24Hours = (value == "1" || value.ICompare("true") == 0);
+		}
+		else if(name == "ShowSeconds")
+		{
+			showSeconds = (value == "1" || value.ICompare("true") == 0);
+		}
+		else if(name == "ThermalZone")
+		{
+			thermalZone = (int32)atoi(value.String());
+		}
+		else if(name == "LCDStyle")
+		{
+			useLCDStyle = (value == "1" || value.ICompare("true") == 0);
+		}
+	}
+
+	TMainPageView *mainPageView = new TMainPageView();
+	if(use24Hours) mainPageView->Set24Hours();
+	if(showSeconds) mainPageView->ShowSeconds();
+	if(useLCDStyle) mainPageView->SetLCDStyle();
+	mainPageView->SetThermalZone(thermalZone);
+
+	AddPageView(new TCommandsPageView(), true);
+	AddPageView(mainPageView, false);
+	AddPageView(new TMenuPageView(), false);
 }
 
 

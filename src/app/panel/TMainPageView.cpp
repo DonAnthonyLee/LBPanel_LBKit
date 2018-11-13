@@ -52,13 +52,6 @@
 	#define BDirectory		EDirectory
 #endif
 
-#ifdef ETK_OS_LINUX
-
-// TODO: Specified by config
-#define BOARD_CPU_THERMAL_ZONE		"/sys/devices/virtual/thermal/thermal_zone0"
-
-#endif
-
 #define MSG_POWER_REQUESTED_CONFIRM	'pwof'
 #define MSG_POWER_OFF			'pwOF'
 #define MSG_FREE_MEMORY_CACHE		'frmc'
@@ -67,7 +60,9 @@
 TMainPageView::TMainPageView(const char *name)
 	: LBPageView(name),
 	  fTabIndex(0),
-	  f24Hours(false), fShowSeconds(false), fShowTimestamp(0),
+	  f24Hours(false), fShowSeconds(false), fLCDStyle(false),
+	  fShowTimestamp(0),
+	  fThermalZone(0),
 	  fInterfacesCount(0), fInterfaceCheckTimestamp(0),
 	  fCPUTime(NULL)
 {
@@ -248,6 +243,8 @@ TMainPageView::DrawDateAndTime(BRect rect)
 	if(r.Intersects(rect) && fTime.Length() > 0)
 	{
 		FillRect(r & rect);
+
+		// TODO: LCD style
 
 		SetFontSize(fShowSeconds ? 24 : 32);
 		if(fShowSeconds == false && f24Hours == false && fTime.Length() > 6)
@@ -456,17 +453,18 @@ TMainPageView::DrawCPUInfo(BRect rect)
 	r.right = r.left + r.Width() / (fCPUSCount + 1) - 1.f;
 
 	// CPU Temperature
-	if(r.Intersects(rect))
+	if(r.Intersects(rect) && fThermalZone >= 0)
 	{
+		BString path;
 		int trip_points[4];
 		int trip_points_count = 0;
 		int trip_point_max = 0;
 
 		for(size_t k = 0; k < sizeof(trip_points) / sizeof(trip_points[0]); k++)
 		{
-			BString p(BOARD_CPU_THERMAL_ZONE);
-			p << "/trip_point_" << k << "_temp";
-			if(f.SetTo(p.String(), B_READ_ONLY) != B_OK) break;
+			path.SetTo("/sys/devices/virtual/thermal/thermal_zone");
+			path << fThermalZone << "/trip_point_" << k << "_temp";
+			if(f.SetTo(path.String(), B_READ_ONLY) != B_OK) break;
 
 			bzero(buffer, sizeof(buffer));
 			f.Read(buffer, sizeof(buffer));
@@ -485,8 +483,11 @@ TMainPageView::DrawCPUInfo(BRect rect)
 			trip_point_max = trip_points[0] = 100;
 		}
 
+		path.SetTo("/sys/devices/virtual/thermal/thermal_zone");
+		path << fThermalZone << "/temp";
+
 		int cur_temp = 0;
-		if(f.SetTo(BOARD_CPU_THERMAL_ZONE "/temp", B_READ_ONLY) == B_OK)
+		if(f.SetTo(path.String(), B_READ_ONLY) == B_OK)
 		{
 			bzero(buffer, sizeof(buffer));
 			f.Read(buffer, sizeof(buffer));
@@ -925,6 +926,28 @@ TMainPageView::ShowSeconds(bool state)
 	{
 		fShowSeconds = state;
 		if(fTabIndex == 0) Invalidate();
+	}
+}
+
+
+void
+TMainPageView::SetLCDStyle(bool state)
+{
+	if(fLCDStyle != state)
+	{
+		fLCDStyle = state;
+		if(fTabIndex == 0) Invalidate();
+	}
+}
+
+
+void
+TMainPageView::SetThermalZone(int32 zone)
+{
+	if(fThermalZone != zone)
+	{
+		fThermalZone = zone;
+		if(fTabIndex == -2) Invalidate();
 	}
 }
 
