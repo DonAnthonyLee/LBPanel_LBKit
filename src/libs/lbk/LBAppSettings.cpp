@@ -106,7 +106,7 @@ LBAppSettings::AddItems(BFile *f, int32 index)
 		if(found < offset)
 			found = str.Length();
 
-		if(found > offset && str[offset] != '#')
+		if(found > offset)
 		{
 #if 0
 			char *data = strndup(str.String() + offset, found - offset);
