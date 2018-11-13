@@ -23,74 +23,43 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: main.cpp
+ * File: TApplication.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
+#ifndef __T_APPLICATION_H__
+#define __T_APPLICATION_H__
 
 #include <lbk/LBKit.h>
 
-#include "TMainPageView.h"
-#include "TMenuPageView.h"
-#include "TCommandsPageView.h"
-#include "TApplication.h"
+#ifdef __cplusplus /* Just for C++ */
 
+typedef struct {
+	char *title;
+	char *command;
+	char *args;
+} t_menu_item;
 
-void show_usage(const char *cmd)
-{
-	printf("Usage: %s [options]\n", cmd);
-	printf("Options:\n\
-    --conf config_path         Use the specified file as config file\n");
-}
+class TApplication : public LBApplication {
+public:
+	TApplication(const LBAppSettings *settings);
+	virtual ~TApplication();
 
+	virtual void		Pulse();
+	virtual void		MessageReceived(BMessage *msg);
 
-int main(int argc, char **argv)
-{
-	BPath path_conf("/etc/LBPanel.conf");
-	BFile f;
+	int32			CountCustomMenuItems() const;
+	const t_menu_item*	CustomMenuItemAt(int32 index) const;
 
-	for(int n = 1; n < argc; n++)
-	{
-		if (n < argc - 1 && strcmp(argv[n], "--conf") == 0)
-		{
-			path_conf.SetTo(argv[++n]);
-		}
-		else
-		{
-			show_usage(argv[0]);
-			exit(-1);
-		}
-	}
+private:
+	uint32 fScreenOffTimeout;
+	BList fCustomMenu;
 
-	LBAppSettings cfg;
-	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK || cfg.AddItems(&f) == false)
-	{
-		fprintf(stderr, "Unable to open config file (%s) !\n", path_conf.Path());
+	void EmptyCustomMenu();
+};
 
-		// TODO
-	}
-	f.Unset();
+#endif /* __cplusplus */
 
-	cfg.AddItem("IPC=LBPanel", 0);
-
-	TApplication *app = new TApplication(&cfg);
-	cfg.MakeEmpty();
-
-	app->AddPageView(new TCommandsPageView(), true);
-	app->AddPageView(new TMainPageView(), false);
-	app->AddPageView(new TMenuPageView(), false);
-
-	app->Go();
-
-	app->Lock();
-	app->Quit();
-
-	return 0;
-}
+#endif /* __T_APPLICATION_H__ */
 
