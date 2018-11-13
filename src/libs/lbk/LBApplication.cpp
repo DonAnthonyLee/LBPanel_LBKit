@@ -252,7 +252,7 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 			unlink(pth.Path());
 			if(mkfifo(pth.Path(), 0600) == -1 ||
 			   chmod(pth.Path(), 0600) == -1 ||
-			   (fd = open(pth.Path(), O_NONBLOCK | O_RDONLY)) < 0) {
+			   (fd = open(pth.Path(), O_NONBLOCK | O_RDWR)) < 0) {
 				fprintf(stderr,
 					"[LBApplication]: %s --- Failed to create fifo (%s) !\n",
 					__func__, pth.Path());
@@ -547,20 +547,18 @@ LBApplication::Go()
 			if(status > 0 && FD_ISSET(ipc->fd, &rset))
 			{
 				uint8 byte = 0x00;
-				while(true)
+				if(read(ipc->fd, &byte, 1) == 1)
 				{
-					// avoid EWOULDBLOCK
-					if(read(ipc->fd, &byte, 1) != 0) break;
-				}
-				switch(byte)
-				{
-					case 0xfe:
-						PostMessage(LBK_APP_SETTINGS_UPDATED, this);
-						break;
+					switch(byte)
+					{
+						case 0xfe:
+							PostMessage(LBK_APP_SETTINGS_UPDATED, this);
+							break;
 
-					default:
-						// TODO
-						break;
+						default:
+							// TODO
+							break;
+					}
 				}
 			}
 #else
