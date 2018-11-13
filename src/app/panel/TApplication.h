@@ -55,8 +55,10 @@ public:
 private:
 	uint32 fScreenOffTimeout;
 	BList fCustomMenu;
+	BPath fConfigPath;
 
 	void EmptyCustomMenu();
+	void LoadConfig(const LBAppSettings *cfg);
 };
 
 #endif /* __cplusplus */
