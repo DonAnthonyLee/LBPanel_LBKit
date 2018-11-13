@@ -45,43 +45,22 @@ TApplication::TApplication(const LBAppSettings *settings)
 
 	for(int32 k = 0; k < settings->CountItems(); k++)
 	{
-		BString item(settings->ItemAt(k));
-		item.RemoveAll("\r");
-		if(item.Length() == 0) continue;
-		if(item.ByteAt(0) == '#' || item.FindFirst("//") == 0) continue;
-		if(item.FindFirst("LBPanel::") != 0) continue;
+		BString name, value, options;
 
-		int32 found = item.FindFirst("=");
-		if(found <= 9 || found == item.Length() - 1) continue;
-
-		BString name(item.String() + 9, found - 9);
-		BString value(item.String() + found + 1);
-		BString options;
-
-		found = value.FindFirst(",");
-		if(found == 0) continue;
-		if(found > 0)
-		{
-			if(found < value.Length() - 1)
-				options.SetTo(value.String() + found + 1);
-			value.Truncate(found);
-		}
-
-#if 0
-		ETK_OUTPUT("[TApplication]: name = %s, value = %s, options = %s\n",
-			   name.String(), value.String(), options.String());
-#endif
+		if(settings->GetItemAt(k, &name, &value, &options) != B_OK) continue;
+		if(name.FindFirst("LBPanel::") != 0) continue;
+		name.Remove(0, 9);
 
 		if(name == "MenuItem" && options.Length() > 0) do
 		{
-			BString str;
+			BString args;
 
-			found = options.FindFirst(",");
+			int32 found = options.FindFirst(",");
 			if(found == 0) break;
 			if(found > 0)
 			{
 				if(found < options.Length() - 1)
-					str.SetTo(options.String() + found + 1);
+					args.SetTo(options.String() + found + 1);
 				options.Truncate(found);
 			}
 
@@ -94,7 +73,7 @@ TApplication::TApplication(const LBAppSettings *settings)
 
 			item->title = strdup(value.String());
 			item->command = strdup(options.String());
-			item->args = (str.Length() > 0) ? strdup(str.String()) : NULL;
+			item->args = (args.Length() > 0) ? strdup(args.String()) : NULL;
 		} while(false);
 
 		if(name == "ScreenOffTimeout")

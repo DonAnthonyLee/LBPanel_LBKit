@@ -67,11 +67,7 @@ int main(int argc, char **argv)
 
 	LBAppSettings cfg;
 	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK || cfg.AddItems(&f) == false)
-	{
 		fprintf(stderr, "Unable to open config file (%s) !\n", path_conf.Path());
-
-		// TODO
-	}
 	f.Unset();
 
 	cfg.AddItem("IPC=LBPanel", 0);
