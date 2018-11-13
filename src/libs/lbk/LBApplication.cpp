@@ -197,15 +197,7 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 	if(use_lbk_default_settings)
 	{
 		BFile f("/etc/LBK.conf", B_READ_ONLY);
-		if(f.InitCheck() != B_OK || cfg.AddItems(&f) == false)
-		{
-			fprintf(stderr, "[LBApplication]: use default settings.\n");
-#if 1
-			cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so");
-#else
-			cfg.AddItem("PanelDeviceAddon=/usr/lib/add-ons/lbk/vpd.so,point_size=2,width=128,height=64");
-#endif
-		}
+		cfg.AddItems(&f);
 	}
 
 	if(settings != NULL)
@@ -213,32 +205,10 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 
 	for(int32 k = 0; k < cfg.CountItems(); k++)
 	{
-		BString item(cfg.ItemAt(k));
-		item.RemoveAll("\r");
-		item.RemoveAll(" ");
-		if(item.Length() == 0) continue;
-		if(item.ByteAt(0) == '#' || item.FindFirst("//") == 0) continue;
-		if(item.FindFirst("::") >= 0) continue; // sub-settings
+		BString name, value, options;
 
-		int32 found = item.FindFirst("=");
-		if(found <= 0 || found == item.Length() - 1) continue;
-
-		BString name(item.String(), found);
-		BString value(item.String() + found + 1);
-		BString options;
-
-#if 0
-		fprintf(stdout, "[LBApplication]: name = %s, value = %s\n", name.String(), value.String());
-#endif
-
-		found = value.FindFirst(",");
-		if(found == 0) continue;
-		if(found > 0)
-		{
-			if(found < value.Length() - 1)
-				options.SetTo(value.String() + found + 1);
-			value.Truncate(found);
-		}
+		if(cfg.GetItemAt(k, &name, &value, &options) != B_OK) continue;
+		if(name.FindFirst("::") >= 0) continue; // sub-settings
 
 		if(name == "PanelDeviceAddon")
 		{
