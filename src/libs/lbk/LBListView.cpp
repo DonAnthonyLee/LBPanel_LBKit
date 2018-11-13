@@ -181,7 +181,7 @@ LBListView::KeyUp(uint8 key, uint8 clicks)
 #endif
 		{
 			LBListItem *curItem = CurrentSelection();
-			if(curItem != NULL) Invoke();
+			if(curItem != NULL) Invoke((const BMessage*)NULL);
 			return;
 		}
 	}
@@ -309,7 +309,7 @@ LBListView::PositionChanged(int32 pos, int32 old)
 	if(fSelectable)
 	{
 		if(fSelectionMessage != NULL)
-			Invoke(fSelectionMessage);
+			Invoke((const BMessage*)fSelectionMessage);
 		SelectionChanged();
 	}
 }

@@ -106,3 +106,13 @@ LBMenuItem::IsHidden() const
 	return(!IsVisible());
 }
 
+
+#ifndef ETK_MAJOR_VERSION
+status_t
+LBMenuItem::Invoke(const BMessage *msg)
+{
+	BMessage *message = const_cast<BMessage*>(msg);
+	return BInvoker::Invoke(msg);
+}
+#endif
+
