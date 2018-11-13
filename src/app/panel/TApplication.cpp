@@ -23,74 +23,77 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: main.cpp
+ * File: TApplication.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <lbk/LBKit.h>
-
-#include "TMainPageView.h"
-#include "TMenuPageView.h"
-#include "TCommandsPageView.h"
 #include "TApplication.h"
 
 
-void show_usage(const char *cmd)
+TApplication::TApplication(const LBAppSettings *settings)
+	: LBApplication(settings),
+	  fScreenOffTimeout(0)
 {
-	printf("Usage: %s [options]\n", cmd);
-	printf("Options:\n\
-    --conf config_path         Use the specified file as config file\n");
+	// TODO: get custom menu for "settings"
 }
 
 
-int main(int argc, char **argv)
+TApplication::~TApplication()
 {
-	BPath path_conf("/etc/LBPanel.conf");
-	BFile f;
-
-	for(int n = 1; n < argc; n++)
-	{
-		if (n < argc - 1 && strcmp(argv[n], "--conf") == 0)
-		{
-			path_conf.SetTo(argv[++n]);
-		}
-		else
-		{
-			show_usage(argv[0]);
-			exit(-1);
-		}
-	}
-
-	LBAppSettings cfg;
-	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK || cfg.AddItems(&f) == false)
-	{
-		fprintf(stderr, "Unable to open config file (%s) !\n", path_conf.Path());
-
-		// TODO
-	}
-	f.Unset();
-
-	cfg.AddItem("IPC=LBPanel", 0);
-
-	TApplication *app = new TApplication(&cfg);
-	cfg.MakeEmpty();
-
-	app->AddPageView(new TCommandsPageView(), true);
-	app->AddPageView(new TMainPageView(), false);
-	app->AddPageView(new TMenuPageView(), false);
-
-	app->Go();
-
-	app->Lock();
-	app->Quit();
-
-	return 0;
+	EmptyCustomMenu();
 }
+
+
+void
+TApplication::EmptyCustomMenu()
+{
+	for(int32 k = 0; k < fCustomMenu.CountItems(); k++)
+	{
+		t_menu_item *item = (t_menu_item*)fCustomMenu.ItemAt(k);
+
+		if(item->title) free(item->title);
+		if(item->command) free(item->command);
+		if(item->args) free(item->args);
+		free(item);
+	}
+	fCustomMenu.MakeEmpty();
+}
+
+
+int32
+TApplication::CountCustomMenuItems() const
+{
+	return fCustomMenu.CountItems();
+}
+
+
+const t_menu_item*
+TApplication::CustomMenuItemAt(int32 index) const
+{
+	t_menu_item *item = (t_menu_item*)fCustomMenu.ItemAt(index);
+	return item;
+}
+
+
+void
+TApplication::Pulse()
+{
+	// TODO
+}
+
+
+void
+TApplication::MessageReceived(BMessage *msg)
+{
+	switch(msg->what)
+	{
+		case LBK_APP_SETTINGS_UPDATED:
+			// TODO: update custom menu, screen off timeout, etc.
+			break;
+
+		default:
+			LBApplication::MessageReceived(msg);
+	}
+};
 
