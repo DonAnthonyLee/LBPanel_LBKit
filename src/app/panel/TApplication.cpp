@@ -38,75 +38,11 @@ TApplication::TApplication(const LBAppSettings *settings)
 	: LBApplication(settings),
 	  fScreenOffTimeout(0)
 {
-	bool use24Hours = false;
-	bool showSeconds = false;
-	int32 thermalZone = 0;
-	bool useLCDStyle = false;
-
-	for(int32 k = 0; k < settings->CountItems(); k++)
-	{
-		BString name, value, options;
-
-		if(settings->GetItemAt(k, &name, &value, &options) != B_OK) continue;
-		if(name.FindFirst("LBPanel::") != 0) continue;
-		name.Remove(0, 9);
-
-		if(name == "MenuItem" && options.Length() > 0) do
-		{
-			BString args;
-
-			int32 found = options.FindFirst(",");
-			if(found == 0) break;
-			if(found > 0)
-			{
-				if(found < options.Length() - 1)
-					args.SetTo(options.String() + found + 1);
-				options.Truncate(found);
-			}
-
-			t_menu_item *item = (t_menu_item*)malloc(sizeof(t_menu_item));
-			if(item == NULL || fCustomMenu.AddItem(item) == false)
-			{
-				if(item != NULL) free(item);
-				break;
-			}
-
-			item->title = strdup(value.String());
-			item->command = strdup(options.String());
-			item->args = (args.Length() > 0) ? strdup(args.String()) : NULL;
-		} while(false);
-
-		if(name == "ScreenOffTimeout")
-		{
-			fScreenOffTimeout = (int32)atoi(value.String());
-		}
-		else if(name == "24Hours")
-		{
-			use24Hours = (value == "1" || value.ICompare("true") == 0);
-		}
-		else if(name == "ShowSeconds")
-		{
-			showSeconds = (value == "1" || value.ICompare("true") == 0);
-		}
-		else if(name == "ThermalZone")
-		{
-			thermalZone = (int32)atoi(value.String());
-		}
-		else if(name == "LCDStyle")
-		{
-			useLCDStyle = (value == "1" || value.ICompare("true") == 0);
-		}
-	}
-
-	TMainPageView *mainPageView = new TMainPageView();
-	if(use24Hours) mainPageView->Set24Hours();
-	if(showSeconds) mainPageView->ShowSeconds();
-	if(useLCDStyle) mainPageView->SetLCDStyle();
-	mainPageView->SetThermalZone(thermalZone);
-
 	AddPageView(new TCommandsPageView(), true);
-	AddPageView(mainPageView, false);
+	AddPageView(new TMainPageView(), false);
 	AddPageView(new TMenuPageView(), false);
+
+	LoadConfig(settings);
 }
 
 
@@ -155,12 +91,99 @@ TApplication::Pulse()
 
 
 void
+TApplication::LoadConfig(const LBAppSettings *cfg)
+{
+	bool use24Hours = false;
+	bool showSeconds = false;
+	int32 thermalZone = 0;
+	bool useLCDStyle = false;
+
+	EmptyCustomMenu();
+
+	for(int32 k = 0; k < cfg->CountItems(); k++)
+	{
+		BString name, value, options;
+
+		if(cfg->GetItemAt(k, &name, &value, &options) != B_OK) continue;
+		if(name.FindFirst("LBPanel::") != 0) continue;
+		name.Remove(0, 9);
+
+		if(name == "MenuItem" && options.Length() > 0) do
+		{
+			BString args;
+
+			int32 found = options.FindFirst(",");
+			if(found == 0) break;
+			if(found > 0)
+			{
+				if(found < options.Length() - 1)
+					args.SetTo(options.String() + found + 1);
+				options.Truncate(found);
+			}
+
+			t_menu_item *item = (t_menu_item*)malloc(sizeof(t_menu_item));
+			if(item == NULL || fCustomMenu.AddItem(item) == false)
+			{
+				if(item != NULL) free(item);
+				break;
+			}
+
+			item->title = strdup(value.String());
+			item->command = strdup(options.String());
+			item->args = (args.Length() > 0) ? strdup(args.String()) : NULL;
+		} while(false);
+
+		if(name == "ScreenOffTimeout")
+		{
+			fScreenOffTimeout = (int32)atoi(value.String());
+		}
+		else if(name == "24Hours")
+		{
+			use24Hours = (value == "1" || value.ICompare("true") == 0);
+		}
+		else if(name == "ShowSeconds")
+		{
+			showSeconds = (value == "1" || value.ICompare("true") == 0);
+		}
+		else if(name == "ThermalZone")
+		{
+			thermalZone = (int32)atoi(value.String());
+		}
+		else if(name == "LCDStyle")
+		{
+			useLCDStyle = (value == "1" || value.ICompare("true") == 0);
+		}
+		else if(name == "Config" && fConfigPath.Path() == NULL)
+		{
+			fConfigPath.SetTo(value.String(), NULL, true);
+		}
+	}
+
+	TMainPageView *mainPageView = e_cast_as(PageViewAt(0, false), TMainPageView);
+	if(mainPageView != NULL)
+	{
+		mainPageView->Set24Hours(use24Hours);
+		mainPageView->ShowSeconds(showSeconds);
+		mainPageView->SetLCDStyle(useLCDStyle);
+		mainPageView->SetThermalZone(thermalZone);
+	}
+}
+
+
+void
 TApplication::MessageReceived(BMessage *msg)
 {
 	switch(msg->what)
 	{
 		case LBK_APP_SETTINGS_UPDATED:
-			// TODO: update custom menu, screen off timeout, etc.
+			if(fConfigPath.Path() != NULL)
+			{
+				LBAppSettings cfg;
+				BFile f(fConfigPath.Path(), B_READ_ONLY);
+
+				if(f.InitCheck() != B_OK || cfg.AddItems(&f) == false) break;
+				LoadConfig(&cfg);
+			}
 			break;
 
 		default:

@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	{
 		if (n < argc - 1 && strcmp(argv[n], "--conf") == 0)
 		{
-			path_conf.SetTo(argv[++n]);
+			path_conf.SetTo(argv[++n], NULL, true);
 		}
 		else
 		{
@@ -65,11 +65,17 @@ int main(int argc, char **argv)
 		}
 	}
 
+	BString strConfSettings;
+
 	LBAppSettings cfg;
 	if(f.SetTo(path_conf.Path(), B_READ_ONLY) != B_OK || cfg.AddItems(&f) == false)
 		fprintf(stderr, "Unable to open config file (%s) !\n", path_conf.Path());
+	else
+		strConfSettings << "LBPanel::Config=" << path_conf.Path();
 	f.Unset();
 
+	if(strConfSettings.Length() > 0)
+		cfg.AddItem(strConfSettings.String(), 0);
 	cfg.AddItem("IPC=LBPanel", 0);
 
 	TApplication *app = new TApplication(&cfg);
