@@ -24,10 +24,10 @@ else
 fi
 
 if [ "x${USB_GADGET_FUNCTION}" = "x0" ]; then
-	[ "x${USB_GADGET_ENABLED}" = "x0" ] || MENU_SELE=2
+	[ "x${USB_GADGET_ENABLED}" = "x0" ] || MENU_SELE=3
 	MENU_ITEMS="${MENU_ITEMS} 虚拟网卡(当前) 文件存储"
 else
-	[ "x${USB_GADGET_ENABLED}" = "x0" ] || MENU_SELE=3
+	[ "x${USB_GADGET_ENABLED}" = "x0" ] || MENU_SELE=4
 	MENU_ITEMS="${MENU_ITEMS} 虚拟网卡 文件存储(当前)"
 fi
 }
