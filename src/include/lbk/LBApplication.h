@@ -56,7 +56,7 @@ public:
 	void		Go();
 
 	bigtime_t	PulseRate() const;
-	void		SetPulseRate(bigtime_t rate);
+	virtual void	SetPulseRate(bigtime_t rate);
 
 	virtual bool	QuitRequested();
 	virtual void	MessageReceived(BMessage *msg);

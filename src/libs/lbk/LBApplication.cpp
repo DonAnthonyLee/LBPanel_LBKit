@@ -528,16 +528,13 @@ LBApplication::Go()
 		if(count > 0 && system_time() - pulse_sent_time[0] >= (bigtime_t)(LBK_KEY_INTERVAL / 2))
 		{
 			count--;
-			PostMessage(B_PULSE, this);
+			PostMessage('_EVP', this); // like _EVENTS_PENDING_
 			pulse_sent_time[0] = system_time();
 		}
 
 		if(pulse_rate > 0 && system_time() - pulse_sent_time[1] >= pulse_rate)
 		{
-			BMessage aMsg(B_PULSE);
-			aMsg.AddBool("no_button_check", true);
-
-			PostMessage(&aMsg, this);
+			PostMessage(B_PULSE, this);
 			pulse_sent_time[1] = system_time();
 		}
 
@@ -675,18 +672,15 @@ LBApplication::MessageReceived(BMessage *msg)
 			break;
 
 		case B_PULSE:
-			DBGOUT("[LBApplication]: B_PULSE received.\n");
-			if(msg->HasBool("no_button_check"))
+			for(id = 0; id < CountPanels(); id++)
 			{
-				for(id = 0; id < CountPanels(); id++)
-				{
-					dev = lbk_app_get_panel_device_data(fAddOnsList, id);
-					if(dev->preferHandler != NULL)
-						PostMessage(B_PULSE, dev->preferHandler);
-				}
-				break;
+				dev = lbk_app_get_panel_device_data(fAddOnsList, id);
+				if(dev->preferHandler != NULL)
+					PostMessage(B_PULSE, dev->preferHandler);
 			}
+			break;
 
+		case '_EVP': // like _EVENT_PENDING_
 			stopRunner = true;
 			when = system_time();
 
