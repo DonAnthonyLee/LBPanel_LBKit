@@ -2,8 +2,10 @@
 
 START=90
 
+LBPANEL_CONFIG="/tmp/LBPanel.conf"
+
 start(){
-	. /usr/share/scripts/start-lbpanel.sh &
+	. /usr/share/scripts/start-lbpanel.sh ${LBPANEL_CONFIG}
 }
 
 stop(){
@@ -16,7 +18,7 @@ restart(){
 	start
 }
 
-reload_uci_config(){
-	. /usr/share/scripts/lbpanel-reload-uci-config.sh
+reload(){
+	. /usr/share/scripts/lbpanel-uci-config.sh reload ${LBPANEL_CONFIG} &
 }
 
