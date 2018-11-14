@@ -140,6 +140,10 @@ TMainPageView::GetTime(BString *strDate, BString *strTime, BString *strWeek) con
 void
 TMainPageView::Pulse()
 {
+	bool state;
+	LBPanelDevice *dev = PanelDevice();
+	if(dev == NULL || dev->GetPowerState(state) != B_OK || state == false) return;
+
 	BRect r;
 
 	if(fTabIndex == 0) // Date And Time
