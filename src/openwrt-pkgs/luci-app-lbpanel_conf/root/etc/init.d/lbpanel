@@ -1,0 +1,22 @@
+#!/bin/sh /etc/rc.common
+
+START=90
+
+start(){
+	. /usr/share/scripts/start-lbpanel.sh &
+}
+
+stop(){
+	killall LBPanel
+}
+
+restart(){
+	stop
+	sleep 2
+	start
+}
+
+reload_uci_config(){
+	. /usr/share/scripts/lbpanel-reload-uci-config.sh
+}
+
