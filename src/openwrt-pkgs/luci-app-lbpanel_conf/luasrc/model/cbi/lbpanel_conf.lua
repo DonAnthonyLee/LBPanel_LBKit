@@ -8,7 +8,7 @@ local m, s, c
 -- BEGIN Map
 m = Map("lbpanel_conf", translate("LBPanel"), translate("Little board panel application"))
 function m.on_commit(self)
-    sys.exec("/etc/init.d/lbpanel reload_uci_config")
+    sys.exec("/etc/init.d/lbpanel reload")
 end
 -- END Map
 
@@ -20,7 +20,7 @@ s.anonymous = true
 -- END Section
 
 --- BEGIN screen_timeout
-c = d:option(Value, "screen_off_timeout", translate("Screen off timeout (s)"), translate("0 to disable, minimum value: 10."))
+c = s:option(Value, "screen_off_timeout", translate("Screen off timeout (s)"), translate("0 to disable, minimum value: 10."))
 c.optional = false
 c.datatype = "range(0,600)"
 c.rmempty = false
@@ -45,7 +45,7 @@ c.rmempty = false
 -- END Checkbox
 
 -- BEGIN Section
-s = m:section(TypedSection, "menuitem", "")
+s = m:section(TypedSection, "custom_menu", translate("Custom menu"))
 s.template = "cbi/tblsection"
 s.anonymous = true
 s.addremove = true

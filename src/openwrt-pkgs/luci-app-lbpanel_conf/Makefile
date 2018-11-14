@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=LuCI support for changing configuration of LBPanel
-LUCI_DEPENDS:=+lbpanel
+LUCI_DEPENDS:=+lbpanel +lbk-cmd +lbk-npi_oled_hat
 LUCI_PKGARCH:=all
 
 PKG_NAME:=luci-app-lbpanel_conf
