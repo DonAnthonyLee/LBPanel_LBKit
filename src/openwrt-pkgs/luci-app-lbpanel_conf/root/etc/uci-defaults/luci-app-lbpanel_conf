@@ -1,0 +1,11 @@
+#!/bin/sh
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@lbpanel_conf[-1]
+	add ucitrack lbpanel_conf
+	set ucitrack.@lbpanel_conf[-1].init=lbpanel_conf
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache
+exit 0
+
