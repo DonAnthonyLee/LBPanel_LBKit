@@ -528,7 +528,7 @@ LBApplication::Go()
 		if(count > 0 && system_time() - pulse_sent_time[0] >= (bigtime_t)(LBK_KEY_INTERVAL / 2))
 		{
 			count--;
-			PostMessage('_EVP', this); // like _EVENTS_PENDING_
+			PostMessage(LBK_EVENT_PENDING, this);
 			pulse_sent_time[0] = system_time();
 		}
 
@@ -680,7 +680,7 @@ LBApplication::MessageReceived(BMessage *msg)
 			}
 			break;
 
-		case '_EVP': // like _EVENT_PENDING_
+		case LBK_EVENT_PENDING:
 			stopRunner = true;
 			when = system_time();
 
