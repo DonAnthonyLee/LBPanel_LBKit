@@ -36,13 +36,18 @@
 
 TApplication::TApplication(const LBAppSettings *settings)
 	: LBApplication(settings),
-	  fScreenOffTimeout(0)
+	  fScreenOffTimeout(0),
+	  fPulseNeeded(false)
 {
+	if(CountPanels() == 0) return;
+
 	AddPageView(new TCommandsPageView(), true);
 	AddPageView(new TMainPageView(), false);
 	AddPageView(new TMenuPageView(), false);
 
 	LoadConfig(settings);
+
+	fLastKeyTimestamp = system_time();
 }
 
 
@@ -84,9 +89,13 @@ TApplication::CustomMenuItemAt(int32 index) const
 
 
 void
-TApplication::Pulse()
+TApplication::SetPulseRate(bigtime_t rate)
 {
-	// TODO
+	fPulseNeeded = (rate > 0);
+	if(fPulseNeeded == false && fScreenOffTimeout > 0)
+		rate = 10000000; // max rate of LBApplication
+
+	LBApplication::SetPulseRate(rate);
 }
 
 
@@ -175,6 +184,35 @@ TApplication::MessageReceived(BMessage *msg)
 {
 	switch(msg->what)
 	{
+		case B_KEY_DOWN:
+		case B_KEY_UP:
+			LBApplication::MessageReceived(msg);
+			fLastKeyTimestamp = system_time();
+			break;
+
+		case B_PULSE:
+			if(fScreenOffTimeout > 0 && fLastKeyTimestamp > 0) do
+			{
+				LBPanelDevice *dev = PanelAt(0);
+				bool state;
+
+				if(dev == NULL) break;
+				if(dev->GetPowerState(state) != B_OK || state == false) break;
+
+				if(system_time() - fLastKeyTimestamp > (bigtime_t)fScreenOffTimeout * 1000000)
+				{
+					bigtime_t ts;
+					dev->SetPowerState(false, ts);
+
+					if(fPulseNeeded == false)
+						LBApplication::SetPulseRate(0);
+				}
+			} while(false);
+
+			if(fPulseNeeded)
+				LBApplication::MessageReceived(msg);
+			break;
+
 		case LBK_APP_SETTINGS_UPDATED:
 			if(fConfigPath.Path() != NULL)
 			{
