@@ -48,7 +48,7 @@ check_env || { echo "Requires LBPanel & lbk-cmd !" && exit 1; }
 
 if [ "x$1" = "xinit" ]; then
 	init_config $2 || return 1
-elif [ "x$1" == "xreload" ]; then
+elif [ "x$1" = "xreload" ]; then
 	sleep 1
 	init_config $2 || return 1
 	lbk-notify LBPanel SETTINGS_UPDATED || return 1
