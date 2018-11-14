@@ -21,7 +21,7 @@ msgstr "屏幕自动关闭超时秒数"
 msgid "0 to disable, minimum value: 10."
 msgstr "填 0 禁止自动关闭屏幕，最小有效值为 10 秒。"
 
-msgid "24 Hours"
+msgid "24 hours"
 msgstr "24 小时"
 
 msgid "Show seconds"
@@ -30,8 +30,11 @@ msgstr "显示秒数"
 msgid "LCD style"
 msgstr "LCD 数字样式"
 
+msgid "Custom menu"
+msgstr "自定功能菜单"
+
 msgid "Item title"
-msgstr "菜单项文字"
+msgstr "标题文字"
 
 msgid "Title to show on custom menu"
 msgstr "显示在菜单上的标题"
