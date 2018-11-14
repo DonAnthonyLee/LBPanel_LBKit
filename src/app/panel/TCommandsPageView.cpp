@@ -198,6 +198,7 @@ TCommandsPageView::ExecCommand(const char *command, const char *args)
 		}
 		else
 		{
+			Invalidate(); // redraw
 			return B_OK;
 		}
 	}
