@@ -198,6 +198,9 @@ TCommandsPageView::ExecCommand(const char *command, const char *args)
 		}
 		else
 		{
+			// FIXME: problem still there even it seemed should be working ...
+			// NOTE: MAYBE I SHOULD DIG DEEPER, EVEN etkxx & OLED driver !!!
+
 			Invalidate(); // redraw
 			return B_OK;
 		}
