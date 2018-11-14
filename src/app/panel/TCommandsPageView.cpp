@@ -163,7 +163,12 @@ TCommandsPageView::ExecCommand(const char *command, const char *args)
 {
 	BEntry entry(command);
 
-	if(entry.Exists() == false)
+	if(IsActivated() == false)
+	{
+		// should never happened here, just in case.
+		return B_ERROR;
+	}
+	else if(entry.Exists() == false)
 	{
 		LBView *alertView = new LBAlertView("错误", "文件不存在!",
 						    LBK_ICON_NONE, LBK_ICON_OK, LBK_ICON_NONE,
@@ -198,10 +203,12 @@ TCommandsPageView::ExecCommand(const char *command, const char *args)
 		}
 		else
 		{
-			// FIXME: problem still there even it seemed should be working ...
-			// NOTE: MAYBE I SHOULD DIG DEEPER, EVEN etkxx & OLED driver !!!
+			// NOTE: Things have been changed since we changed the path of updating
+			LBView *currView = this;
+			while(currView->StandingInView() != NULL)
+				currView = currView->StandingInView();
+			currView->Invalidate();
 
-			Invalidate(); // redraw
 			return B_OK;
 		}
 	}
