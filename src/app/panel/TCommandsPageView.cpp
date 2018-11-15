@@ -74,7 +74,7 @@ TListView::Invoke(const BMessage *msg)
 {
 	do
 	{
-		if(msg != NULL && Message() == NULL) break;
+		if(msg != NULL || Message() == NULL) break;
 
 		TListItem *item = e_cast_as(CurrentSelection(), TListItem);
 		if(item == NULL || item->Message() == NULL) break;
