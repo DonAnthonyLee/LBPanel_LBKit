@@ -1185,21 +1185,19 @@ TMainPageView::GetInterfaceName(BString &ifname, int32 id) const
 		offset = found + 1;
 		lines++;
 
-		if(lines < 2 + id) continue;
+		if(lines < 2) continue;
+
 		found = str.FindFirst(": ", offset);
 		if(found <= offset) break;
 
-		str.Remove(0, offset);
-		str.Truncate(found - offset);
-		str.RemoveAll(" ");
-		if(str.Length() == 0) break;
-		if(str == "lo" || str == "ifb0" || str == "ifb1") // ignore "local" or "ifb"
-		{
-			id++;
-			continue;
-		}
+		BString name(str.String() + offset, found - offset);
+		name.RemoveAll(" ");
 
-		ifname = str;
+		if(name.Length() == 0) break;
+		if(name == "lo" || name == "ifb0" || name == "ifb1") continue; // ignore "local" or "ifb"
+		if(id-- > 0) continue;
+
+		ifname = name;
 		return true;
 	}
 #else
