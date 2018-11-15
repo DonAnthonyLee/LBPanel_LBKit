@@ -11,7 +11,7 @@ LBPanel 初始界面通过左右键（K1/K3）双击跳转左右页视图，按�
 ![LBPanel界面汇总](images/LBPanel/interfaces.png)
 
 * 主页：日期时间显示；主机信息显示；CPU 温度及核心负荷信息显示；网卡接口信息显示；
-* 左页：OTG 设备功能设置；覆盖文件分区切换；自定命令菜单；
+* 左页：OTG 设备功能设置；[覆盖文件分区切换](./howto/LBPanel/OverlaySwitch.md)；自定命令菜单；
 * 右页：关闭屏幕；重启系统；关闭设备等。
 
 即使不关心开发方面，搭配 OpenWrt，这套工具依然具有较强可玩性。OpenWrt 本来应用范围大多是无线路由方面，而将开发板接上 USB 无线网卡，加上 USB OTG 虚拟网卡接口及开发板自身网卡接口，尽可享 OpenWrt 带来的便捷。OpenWrt 同时是 Linux 核心，和其它同源系统无本质区别，开发板上引出的各种接口应用与诸如 Debian/Ubuntu Linux 等基本无异。
