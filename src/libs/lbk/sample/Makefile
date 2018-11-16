@@ -14,15 +14,6 @@ TARGET_1 =
 TARGET_2 =
 TARGET_3 =
 
-IS_BEOS_PLATFORM = 0
-ifeq ($(shell uname),Haiku)
-IS_BEOS_PLATFORM = 1
-else
-ifeq ($(shell uname),BeOS)
-IS_BEOS_PLATFORM = 1
-endif
-endif
-
 OBJECTS_1 =
 OBJECTS_2 =
 OBJECTS_3 =
@@ -38,24 +29,18 @@ CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
 CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
 LDFLAGS = -L$(DEBUG_LIBS_DIR)
 
-ifeq ($(IS_BEOS_PLATFORM),0)
-	LITE_BEAPI_CFLAGS = $(shell lite-beapi-config --cflags)
-	LITE_BEAPI_LIBS = $(shell lite-beapi-config --libs)
+LITE_BEAPI_CFLAGS = $(shell lite-beapi-config --cflags)
+LITE_BEAPI_LIBS = $(shell lite-beapi-config --libs)
 
-	CFLAGS += $(LITE_BEAPI_CFLAGS)
-	CXXFLAGS += $(LITE_BEAPI_CFLAGS)
+CFLAGS += $(LITE_BEAPI_CFLAGS)
+CXXFLAGS += $(LITE_BEAPI_CFLAGS)
 
-	# It's no need to "-lrt -pthread" on OpenWrt
-	OPENWRT_FOUND = $(shell uname -a | grep OpenWrt )
-	ifneq ($(OPENWRT_FOUND), )
-		LDFLAGS += $(shell echo $(LITE_BEAPI_LIBS) | sed 's/ -lrt/ /' | sed 's/ -pthread/ /')
-	else
-		LDFLAGS += $(LITE_BEAPI_LIBS)
-	endif
+# It's no need to link with "-lrt -pthread" on OpenWrt
+OPENWRT_FOUND = $(shell uname -a | grep OpenWrt )
+ifneq ($(OPENWRT_FOUND), )
+	LDFLAGS += $(shell echo $(LITE_BEAPI_LIBS) | sed 's/ -lrt/ /' | sed 's/ -pthread/ /')
 else
-	# BeOS/HaikuOS
-	CXXFLAGS += -Wno-multichar
-	LDFLAGS += -lbe -lroot
+	LDFLAGS += $(LITE_BEAPI_LIBS)
 endif
 
 CXXFLAGS += $(UCLIBCXX_INCLUDES)
@@ -87,19 +72,12 @@ $(TARGET_3): $(OBJECTS_3)
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
 clean:
-	for f in $(ADD_ONS_DIRS) .none; do \
-		(test $$f = .none || $(MAKE) clean -C add-ons/$$f -f Makefile.alone) \
-	done
 	for f in $(TARGET) $(OBJECTS) .none; do \
 		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
 	done
 	for f in $(SINGLE_FILE_PROGRAMS) $(TARGET) .none; do \
 		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
 		(test $$f = .none || test ! -e "$$f.o" || rm -f $$f.o); \
-		(test $$f = .none || test ! -e "$$f.obj" || rm -f $$f.obj); \
-		(test $$f = .none || test ! -e "$$f.exe" || rm -f $$f.exe); \
-		(test $$f = .none || test ! -e "$$f.exe.stackdump" || rm -f $$f.exe.stackdump); \
-		(test $$f = .none || test ! -e "$$f.exe.so" || rm -f $$f.exe.so); \
 	done
 
 .SUFFIXES: .c .cpp .cxx .cc .o

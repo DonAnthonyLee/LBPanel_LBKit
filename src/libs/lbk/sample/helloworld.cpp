@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Commands using Little Board Application Kit
+ * Sample codes for LBKit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -28,14 +28,12 @@
  *
  * --------------------------------------------------------------------------*/
 
-#include <stdio.h>
 #include <lbk/LBKit.h>
 
 
 class TView : public LBView {
 public:
 	TView();
-	virtual ~TView();
 
 	virtual void		Draw(BRect r);
 	virtual void		KeyUp(uint8 key, uint8 clicks);
@@ -47,10 +45,6 @@ TView::TView()
 {
 }
 
-
-TView::~TView()
-{
-}
 
 void
 TView::Draw(BRect r)
@@ -81,8 +75,7 @@ int main(int argc, char **argv)
 {
 	LBApplication *app = new LBApplication(NULL);
 
-	app->AddPageView(new TView());
-	app->ActivatePageView(0);
+	app->AddPageView(new TView(), false);
 
 	app->Go();
 
