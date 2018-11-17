@@ -1,0 +1,18 @@
+--- a/usr/bin/lite-beapi-config	2018-11-14 00:58:18.746976445 +0800
++++ b/usr/bin/lite-beapi-config	2018-11-17 19:50:19.502151124 +0800
+@@ -27,7 +27,14 @@
+ 	;;
+ 
+ --libs)
+-	lite_beapi_config_output="$lite_beapi_config_output `$etkxx_config --libs`"
++	openwrt_found=`uname -a | grep OpenWrt`
++	if test "x$openwrt_found" != "x"; then
++		# No need to link with "-lrt -pthread" on OpenWrt
++		etkxx_libs=`etkxx-config --libs | sed 's/ -lrt/ /' | sed 's/ -pthread/ /'`
++	else
++		etkxx_libs=`etkxx-config --libs`
++	fi
++	lite_beapi_config_output="$lite_beapi_config_output $etkxx_libs"
+ 	;;
+ --version)
+ 	echo $lite_beapi_version

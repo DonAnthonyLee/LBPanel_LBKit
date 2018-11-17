@@ -33,18 +33,8 @@ LITE_BEAPI_CFLAGS = $(shell lite-beapi-config --cflags)
 LITE_BEAPI_LIBS = $(shell lite-beapi-config --libs)
 
 CFLAGS += $(LITE_BEAPI_CFLAGS)
-CXXFLAGS += $(LITE_BEAPI_CFLAGS)
-
-# It's no need to link with "-lrt -pthread" on OpenWrt
-OPENWRT_FOUND = $(shell uname -a | grep OpenWrt )
-ifneq ($(OPENWRT_FOUND), )
-	LDFLAGS += $(shell echo $(LITE_BEAPI_LIBS) | sed 's/ -lrt/ /' | sed 's/ -pthread/ /')
-else
-	LDFLAGS += $(LITE_BEAPI_LIBS)
-endif
-
-CXXFLAGS += $(UCLIBCXX_INCLUDES)
-LDFLAGS += -llbk
+CXXFLAGS += $(LITE_BEAPI_CFLAGS) $(UCLIBCXX_INCLUDES)
+LDFLAGS += $(LITE_BEAPI_LIBS) -llbk
 
 all: targets $(TARGET)
 
