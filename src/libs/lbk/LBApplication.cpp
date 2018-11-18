@@ -721,7 +721,7 @@ LBApplication::MessageReceived(BMessage *msg)
 				if(write(fPipes[1], &byte, 1) <= 0)
 				{
 					DBGOUT("[LBApplication]: Failed to notice the main thread.\n");
-					PostMessage(B_PULSE, this); // try again
+					PostMessage(LBK_EVENT_PENDING, this); // try again
 				}
 			}
 			break;
