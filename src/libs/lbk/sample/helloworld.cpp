@@ -34,6 +34,7 @@
 class TView : public LBView {
 public:
 	TView();
+	virtual ~TView(); // just for the sample codes
 
 	virtual void		Draw(BRect r);
 	virtual void		KeyUp(uint8 key, uint8 clicks);
@@ -42,6 +43,11 @@ public:
 
 TView::TView()
 	: LBView(NULL)
+{
+}
+
+
+TView::~TView()
 {
 }
 
