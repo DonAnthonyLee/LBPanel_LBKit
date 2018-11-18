@@ -37,7 +37,8 @@
 
 #include <lbk/add-ons/LBPanelDevice.h>
 
-#if (0)
+//#define LBK_APP_DEBUG
+#ifdef LBK_APP_DEBUG
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
 #else
 #define DBGOUT(msg...)		do {} while (0)
@@ -546,6 +547,27 @@ LBApplication::Go()
 				uint8 byte = 0x00;
 				if(read(ipc->fd, &byte, 1) == 1)
 				{
+#ifdef LBK_APP_DEBUG
+					if(byte >= 0x00 && byte <= 0x04)
+					{
+						Lock();
+						LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, (int32)byte);
+						if(dev != NULL)
+						{
+							printf("--- Key state of device (id = %u) ---\n", byte);
+							printf("Current time = %lld\n", system_time());
+							printf("keyState = 0x%02x\n", dev->keyState);
+							for(int k = 0; k < 8; k++)
+							{
+								printf("keyClicks[%d] = %u\n", k, dev->keyClicks[k]);
+								printf("keyTimestamps[%d] = %lld\n", k, dev->keyTimestamps[k]);
+							}
+							printf("----------------------------------\n");
+						}
+						Unlock();
+					}
+					else
+#endif // LBK_APP_DEBUG
 					switch(byte)
 					{
 						case 0xfe:
