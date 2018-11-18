@@ -1,9 +1,9 @@
 DEBUG_OPTIONS = -g -Wall
 OPTIMIZE = -O3
 
-DEBUG_LIBS_DIR = ../debug/libs-debug/usr/lib
-
 UCLIBCXX_INCLUDES = -I../include/uClibc\+\+
+
+# run "ln -sf /usr/lib/libuClibc++.so.0 /usr/lib/libuClibc++.so" to make this work
 UCLIBCXX_LIBS = -luClibc\+\+
 
 SINGLE_C_FILE_PROGRAMS =
@@ -27,7 +27,7 @@ LD = ${CROSS_COMPILE}ld
 
 CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
 CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
-LDFLAGS = -L$(DEBUG_LIBS_DIR)
+LDFLAGS =
 
 LITE_BEAPI_CFLAGS = $(shell lite-beapi-config --cflags)
 LITE_BEAPI_LIBS = $(shell lite-beapi-config --libs)
