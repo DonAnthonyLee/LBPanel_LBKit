@@ -811,6 +811,8 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 {
 	LBPageView::KeyDown(key, clicks);
 
+	int32 saveIndex = fTabIndex;
+
 	if(clicks == 0xff) switch(key)
 	{
 		case 1: // K2 long press
@@ -832,6 +834,7 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 			break;
 
 		case 2: // K3 long press
+			CheckInterfaces(true);
 			fTabIndex = fInterfacesCount;
 			break;
 
@@ -849,6 +852,12 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 		ShowNavButton(2);
 	else
 		HideNavButton(2);
+
+	if(saveIndex != fTabIndex)
+	{
+		UpdatePulseRate(fTabIndex != 0 ? (bigtime_t)-1 : 500000);
+		Invalidate();
+	}
 }
 
 
