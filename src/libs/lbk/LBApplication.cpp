@@ -548,7 +548,7 @@ LBApplication::Go()
 				if(read(ipc->fd, &byte, 1) == 1)
 				{
 #ifdef LBK_APP_DEBUG
-					if(byte >= 0x00 && byte <= 0x04)
+					if(byte <= 0x04)
 					{
 						Lock();
 						LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, (int32)byte);
@@ -564,6 +564,14 @@ LBApplication::Go()
 							}
 							printf("----------------------------------\n");
 						}
+						Unlock();
+					}
+					else if(byte <= 0x09)
+					{
+						Lock();
+						LBPanelDevice *dev = lbk_app_get_panel_device(fAddOnsList, (int32)(byte - 0x05));
+						if(dev != NULL)
+							dev->SetLogLevel(dev->LogLevel() == 0 ? 1 : 0);
 						Unlock();
 					}
 					else
@@ -647,14 +655,28 @@ LBApplication::MessageReceived(BMessage *msg)
 				{
 					// auto-repeat (event.value = 2) event
 					if(when < dev->keyTimestamps[key]) break;
-					if(when - dev->keyTimestamps[key] < (bigtime_t)600000) break; // 0.6s
-					if(dev->keyClicks[key] == 0xff) break;
+					if(dev->keyClicks[key] == 0xff)
+					{
+						dev->keyTimestamps[key] = when;
+						break;
+					}
+					if(when - dev->keyTimestamps[key] < (bigtime_t)LBK_KEY_INTERVAL_MAX) break;
 					dev->keyClicks[key] = 0xff; // long press
 				}
 				else
 				{
 					if(dev->keyClicks[key] > 0 && when < dev->keyTimestamps[key]) break;
 					if(dev->keyClicks[key] < 0xff) dev->keyClicks[key]++;
+					if(dev->keyClicks[key] == 0x01) // first
+					{
+						uint8 byte = 0xab;
+						if(write(fPipes[1], &byte, 1) <= 0)
+						{
+							DBGOUT("[LBApplication]: Failed to notify the main thread. (line=%d)\n", __LINE__);
+							dev->keyClicks[key] = 0;
+							break;
+						}
+					}
 				}
 				dev->keyTimestamps[key] = when;
 
@@ -668,28 +690,10 @@ LBApplication::MessageReceived(BMessage *msg)
 			}
 			else
 			{
-				uint8 byte = 0xab;
-
 				if((dev->keyState & (0x01 << key)) == 0) break; // already UP
 				if(when < dev->keyTimestamps[key]) break;
-				if(write(fPipes[1], &byte, 1) <= 0)
-				{
-					DBGOUT("[LBApplication]: Failed to notice the main thread.\n");
-					BMessage aMsg(B_KEY_UP);
-					aMsg.AddInt8("key", *((int8*)&key));
-					aMsg.AddInt8("clicks", *((int8*)&dev->keyClicks[key]));
-					aMsg.AddInt64("when", when);
-					PostMessage(&aMsg, dev->preferHandler);
-
-					dev->keyState &= ~(0x01 << key);
-					dev->keyClicks[key] = 0;
-					dev->keyTimestamps[key] = 0;
-				}
-				else
-				{
-					dev->keyState &= ~(0x01 << key);
-					dev->keyTimestamps[key] = when;
-				}
+				dev->keyState &= ~(0x01 << key);
+				dev->keyTimestamps[key] = when;
 			}
 			break;
 
@@ -713,13 +717,26 @@ LBApplication::MessageReceived(BMessage *msg)
 				uint8 nKeys = CountPanelKeys(id);
 				for(uint8 k = 0; k < nKeys; k++)
 				{
-					if((dev->keyState & (0x01 << k)) != 0) continue; // DOWN, no need
-					if(dev->keyClicks[k] == 0 || dev->keyTimestamps[k] == 0) continue; // no UP before
 					if(when < dev->keyTimestamps[k]) continue; // should never happen
-					if(when - dev->keyTimestamps[k] < (bigtime_t)LBK_KEY_INTERVAL)
+
+					if((dev->keyState & (0x01 << k)) != 0) // already DOWN
 					{
-						stopRunner = false;
-						continue;
+						// in case that no B_KEY_UP event received any more
+						if(when - dev->keyTimestamps[k] < (bigtime_t)(2 * LBK_KEY_INTERVAL_MAX))
+						{
+							stopRunner = false;
+							continue;
+						}
+						DBGOUT("[LBApplication]: B_KEY_DOWN over time.");
+					}
+					else
+					{
+						if(dev->keyClicks[k] == 0 || dev->keyTimestamps[k] == 0) continue; // no UP before
+						if(when - dev->keyTimestamps[k] < (bigtime_t)LBK_KEY_INTERVAL)
+						{
+							stopRunner = false;
+							continue;
+						}
 					}
 
 					if(dev->preferHandler != NULL)
@@ -742,7 +759,7 @@ LBApplication::MessageReceived(BMessage *msg)
 				uint8 byte = 0xab;
 				if(write(fPipes[1], &byte, 1) <= 0)
 				{
-					DBGOUT("[LBApplication]: Failed to notice the main thread.\n");
+					DBGOUT("[LBApplication]: Failed to notify the main thread. (line=%d)\n", __LINE__);
 					PostMessage(LBK_EVENT_PENDING, this); // try again
 				}
 			}
