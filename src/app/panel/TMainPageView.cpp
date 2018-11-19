@@ -811,18 +811,32 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 {
 	LBPageView::KeyDown(key, clicks);
 
-	if(clicks == 0xff && key == 1) // K2 long press
+	if(clicks == 0xff) switch(key)
 	{
-		LBAlertView *view = new LBAlertView("关闭机器",
-						    "是否确定\n进行关机操作?",
-						    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
-						    B_WARNING_ALERT);
-		view->SetInvoker(new BInvoker(new BMessage(MSG_POWER_REQUESTED_CONFIRM), this));
-		view->SetName("PowerOffRequested");
-		AddStickView(view);
-		view->StandIn();
-
+		case 1: // K2 long press
+		{
+			LBAlertView *view = new LBAlertView("关闭机器",
+							    "是否确定\n进行关机操作?",
+							    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
+							    B_WARNING_ALERT);
+			view->SetInvoker(new BInvoker(new BMessage(MSG_POWER_REQUESTED_CONFIRM), this));
+			view->SetName("PowerOffRequested");
+			AddStickView(view);
+			view->StandIn();
+		}
 		printf("[TMainPageView]: Power off requested.\n");
+		return;
+
+		case 0: // K1 long press
+			fTabIndex = -2;
+			break;
+
+		case 2: // K3 long press
+			fTabIndex = fInterfacesCount;
+			break;
+
+		defualt:
+			break;
 	}
 
 	fShowTimestamp = system_time();
