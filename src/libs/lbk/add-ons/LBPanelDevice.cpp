@@ -34,7 +34,7 @@
 
 
 LBPanelDevice::LBPanelDevice()
-	: BLocker(), fID(-1)
+	: BLocker(), fID(-1), fLogLevel(0)
 {
 }
 
@@ -78,5 +78,32 @@ LBPanelDevice::SendMessageToApp(uint32 command)
 {
 	BMessage msg(command);
 	return SendMessageToApp(&msg);
+}
+
+
+void
+LBPanelDevice::SetLogLevel(uint32 level)
+{
+	Lock();
+	if(fLogLevel != level)
+	{
+		uint32 old = fLogLevel;
+		fLogLevel = level;
+		LogLevelChanged(level, old);
+	}
+	Unlock();
+}
+
+
+uint32
+LBPanelDevice::LogLevel() const
+{
+	return fLogLevel;
+}
+
+
+void
+LBPanelDevice::LogLevelChanged(uint32 new_level, uint32 old_level)
+{
 }
 
