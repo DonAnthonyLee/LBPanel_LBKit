@@ -34,7 +34,7 @@
 
 
 LBPanelDevice::LBPanelDevice()
-	: BLocker(), fID(-1)
+	: BLocker(), fID(-1), fLogLevel(0)
 {
 }
 
@@ -44,10 +44,10 @@ LBPanelDevice::~LBPanelDevice()
 }
 
 
-void
+status_t
 LBPanelDevice::SendMessageToApp(const BMessage *msg)
 {
-	if(msg == NULL || fID < 0) return;
+	if(msg == NULL || fID < 0) return B_BAD_VALUE;
 
 #ifdef ETK_MAJOR_VERSION
 	if(IsLockedByCurrentThread())
@@ -58,7 +58,7 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 		fprintf(stderr,
 			"[LBPanelDevice]: %s --- Can't call this function by locking itself !\n",
 			__func__);
-		return;
+		return B_ERROR;
 	}
 
 	BMessage aMsg(*msg);
@@ -68,14 +68,42 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 	aMsg.RemoveName("panel_id");
 #endif
 	aMsg.AddInt32("panel_id", fID);
-	fMsgr.SendMessage(&aMsg);
+
+	return fMsgr.SendMessage(&aMsg);
+}
+
+
+status_t
+LBPanelDevice::SendMessageToApp(uint32 command)
+{
+	BMessage msg(command);
+	return SendMessageToApp(&msg);
 }
 
 
 void
-LBPanelDevice::SendMessageToApp(uint32 command)
+LBPanelDevice::SetLogLevel(uint32 level)
 {
-	BMessage msg(command);
-	SendMessageToApp(&msg);
+	Lock();
+	if(fLogLevel != level)
+	{
+		uint32 old = fLogLevel;
+		fLogLevel = level;
+		LogLevelChanged(level, old);
+	}
+	Unlock();
+}
+
+
+uint32
+LBPanelDevice::LogLevel() const
+{
+	return fLogLevel;
+}
+
+
+void
+LBPanelDevice::LogLevelChanged(uint32 new_level, uint32 old_level)
+{
 }
 
