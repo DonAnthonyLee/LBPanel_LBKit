@@ -8,7 +8,7 @@ local m, s, c
 -- BEGIN Map
 m = Map("lbpanel_conf", translate("LBPanel"), translate("Little board panel application"))
 function m.on_commit(self)
-    sys.exec("/etc/init.d/lbpanel reload")
+    sys.exec("sleep 3 && /etc/init.d/lbpanel reload &")
 end
 -- END Map
 
