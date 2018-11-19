@@ -6,7 +6,7 @@ local sys = require "luci.sys"
 -- BEGIN Map
 m = Map("usb_gadget", translate("USB Gadget"), translate("Specify the function of USB gadget."))
 function m.on_commit(self)
-    sys.exec("/etc/init.d/usb_gadget reload")
+    sys.exec("sleep 3 && /etc/init.d/usb_gadget reload &")
 end
 -- END Map
 
