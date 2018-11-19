@@ -101,8 +101,8 @@ public:
 						      uint16 &OffsetRightBottom) = 0;
 #endif
 
-	void			SendMessageToApp(const BMessage *msg);
-	void			SendMessageToApp(uint32 command);
+	status_t		SendMessageToApp(const BMessage *msg);
+	status_t		SendMessageToApp(uint32 command);
 
 private:
 	friend class LBApplication;
