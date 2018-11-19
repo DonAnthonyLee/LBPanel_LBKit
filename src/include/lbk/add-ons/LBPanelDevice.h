@@ -104,11 +104,17 @@ public:
 	status_t		SendMessageToApp(const BMessage *msg);
 	status_t		SendMessageToApp(uint32 command);
 
+protected:
+	uint32			LogLevel() const;
+	void			SetLogLevel(uint32 level);
+	virtual void		LogLevelChanged(uint32 new_level, uint32 old_level);
+
 private:
 	friend class LBApplication;
 
 	int32 fID;
 	BMessenger fMsgr;
+	uint32 fLogLevel;
 };
 
 #endif /* __cplusplus */
