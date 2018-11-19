@@ -37,6 +37,7 @@
 #include <linux/input.h>
 #include <sys/select.h>
 #include <sys/mman.h>
+#include <time.h>
 
 #include <stdint.h>
 #include <oled_ssd1306_ioctl.h>
@@ -521,6 +522,22 @@ NPIHat::BlockKeyEvents(bool state)
 }
 
 
+// ETK++'s etk_system_boot_time() BUGGY when real time of system changed
+static bigtime_t system_boot_time(void)
+{
+	bigtime_t t = 0;
+	struct timespec ts;
+
+	if(clock_gettime(CLOCK_BOOTTIME, &ts) == 0)
+	{
+		bigtime_t up_time = (bigtime_t)ts.tv_sec * (bigtime_t)(1000000) + (bigtime_t)((ts.tv_nsec + 500) / 1000);
+		t = real_time_clock_usecs() - up_time;
+	}
+
+	return t;
+}
+
+
 int32
 NPIHat::InputEventsObserver(void *arg)
 {
@@ -576,7 +593,7 @@ NPIHat::InputEventsObserver(void *arg)
 		}
 
 		bigtime_t when = (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) +
-				 (bigtime_t)event.time.tv_usec - etk_system_boot_time();
+				 (bigtime_t)event.time.tv_usec - system_boot_time();
 
 		if(self->Lock() == false) continue;
 		if(self->fBlockKeyEvents || self->fBlockTimestamp > when)
