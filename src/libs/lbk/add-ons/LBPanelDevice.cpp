@@ -44,10 +44,10 @@ LBPanelDevice::~LBPanelDevice()
 }
 
 
-void
+status_t
 LBPanelDevice::SendMessageToApp(const BMessage *msg)
 {
-	if(msg == NULL || fID < 0) return;
+	if(msg == NULL || fID < 0) return B_BAD_VALUE;
 
 #ifdef ETK_MAJOR_VERSION
 	if(IsLockedByCurrentThread())
@@ -58,7 +58,7 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 		fprintf(stderr,
 			"[LBPanelDevice]: %s --- Can't call this function by locking itself !\n",
 			__func__);
-		return;
+		return B_ERROR;
 	}
 
 	BMessage aMsg(*msg);
@@ -68,14 +68,15 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 	aMsg.RemoveName("panel_id");
 #endif
 	aMsg.AddInt32("panel_id", fID);
-	fMsgr.SendMessage(&aMsg);
+
+	return fMsgr.SendMessage(&aMsg);
 }
 
 
-void
+status_t
 LBPanelDevice::SendMessageToApp(uint32 command)
 {
 	BMessage msg(command);
-	SendMessageToApp(&msg);
+	return SendMessageToApp(&msg);
 }
 
