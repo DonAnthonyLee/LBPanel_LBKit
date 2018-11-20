@@ -8,7 +8,7 @@
 
 1. LBKit 最新源码已针对该情况进行适当考虑及调整，可使用 0.1.3 或再高版本固件。
 
-+ 执行以下指令重启 LBPanel
+2. 执行以下指令重启 LBPanel
 
     /etc/init.d/lbpanel restart
 
