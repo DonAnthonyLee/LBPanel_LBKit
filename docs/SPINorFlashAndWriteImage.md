@@ -17,6 +17,12 @@ NanoPi NEO/NEO2 本身不带 SPI Nor Flash，需要自行添加，现项目要�
 
 烧写固件前需要清空整片 SPI Nor Flash，再用刷写工具把固件包里 images/openwrt-xxx-oled-spi.bin 刷写到 SPI Nor Flash 的起始位置处（偏移为 0）。
 
+* 如果已烧写过之前任意版本的固件，将上述 bin 文件通过 sftp 或其它方式上传至开发板（以下假设文件路径为 /tmp/openwrt.bin），则可在 shell 下运行以下指令直接烧写并重启。
+
+        mtd erase /dev/mtd0
+        dd if=/tmp/openwrt.bin of=/dev/mtd0
+        reboot
+
 * 如果开发板此前曾刷写过项目提供的 U-Boot，可以先接上 USB 键盘，在启动时按住 K2 键，并在屏幕出现 U-Boot 的调试信息时，按键盘上 CTRL+C 键组合中断启动，然后输入以下指令清空 SPI Nor Flash（以下均以 8MB 容量为例）。
 
         sf probe 0
