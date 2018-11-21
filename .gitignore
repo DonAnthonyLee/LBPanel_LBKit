@@ -22,3 +22,6 @@ src/libs/lbk/add-ons/npi-oled-hat/Makefile.in
 src/libs/lbk/add-ons/vpd/Makefile.in
 src/ltmain.sh
 src/missing
+*.o
+*.so
+.*.swp
