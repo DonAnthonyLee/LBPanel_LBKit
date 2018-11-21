@@ -80,7 +80,7 @@ TMainPageView::TMainPageView(const char *name)
 		bzero(fCPUTime, sizeof(bigtime_t) * fCPUSCount * 2);
 	}
 
-	CheckInterfaces();
+	CheckInterfaces(true);
 }
 
 
@@ -942,7 +942,12 @@ TMainPageView::Set24Hours(bool state)
 	{
 		f24Hours = state;
 		GetTime(&fDate, &fTime, &fWeek);
-		if(fTabIndex == 0) Invalidate();
+		if(fTabIndex == 0)
+		{
+			if(fShowTimestamp == 0)
+				UpdatePulseRate();
+			Invalidate();
+		}
 	}
 }
 
@@ -954,7 +959,12 @@ TMainPageView::ShowSeconds(bool state)
 	{
 		fShowSeconds = state;
 		GetTime(&fDate, &fTime, &fWeek);
-		if(fTabIndex == 0) Invalidate();
+		if(fTabIndex == 0)
+		{
+			if(fShowTimestamp == 0)
+				UpdatePulseRate();
+			Invalidate();
+		}
 	}
 }
 
@@ -965,7 +975,12 @@ TMainPageView::SetLCDStyle(bool state)
 	if(fLCDStyle != state)
 	{
 		fLCDStyle = state;
-		if(fTabIndex == 0) Invalidate();
+		if(fTabIndex == 0)
+		{
+			if(fShowTimestamp == 0)
+				UpdatePulseRate();
+			Invalidate();
+		}
 	}
 }
 
