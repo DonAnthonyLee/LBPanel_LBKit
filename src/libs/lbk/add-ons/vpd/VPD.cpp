@@ -82,7 +82,6 @@ LBVPD::LBVPD()
 		ETK_WARNING("[VPD]: Unable to create thread !\n");
 	}
 #else
-
 	thread_id tid = spawn_thread(this->RunBeApp, "lbk_vpd_app", B_NORMAL_PRIORITY, NULL);
 	if(tid < 0 || resume_thread(tid) != B_OK)
 	{
@@ -90,7 +89,7 @@ LBVPD::LBVPD()
 	}
 	else
 	{
-		fThread = reinterpret_cast<void*>((int)tid);
+		fThread = reinterpret_cast<void*>((long)tid);
 	}
 #endif
 }
@@ -130,7 +129,7 @@ LBVPD::~LBVPD()
 		etk_delete_thread(fThread);
 	}
 #else
-	thread_id tid = (fThread == NULL ? 0 : (thread_id)reinterpret_cast<int>(fThread));
+	thread_id tid = (fThread == NULL ? 0 : (thread_id)reinterpret_cast<long>(fThread));
 	if(tid > 0 && be_app != NULL)
 	{
 		be_app->PostMessage(B_QUIT_REQUESTED);

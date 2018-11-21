@@ -31,7 +31,13 @@
 #ifndef __LBK_APP_DEFS_H__
 #define __LBK_APP_DEFS_H__
 
+#ifdef __cplusplus
 #include <be/Be.h>
+#else // for using C on HaikuOS
+#include <stdlib.h>
+#include <string.h>
+#include <be/support/SupportDefs.h>
+#endif // __cplusplus
 
 #define LBK_EVENT_PENDING		'lBKe'
 #define LBK_QUIT_REQUESTED		'lBKq'
