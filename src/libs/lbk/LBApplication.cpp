@@ -649,6 +649,8 @@ LBApplication::MessageReceived(BMessage *msg)
 			if(dev->preferHandler == NULL) break;
 			if(msg->FindInt8("key", (int8*)&key) != B_OK || key >= 8) break;
 			if(msg->FindInt64("when", &when) != B_OK) break;
+			if(when > system_time()) // should never happen, just in case
+				when = system_time();
 			if(msg->what == B_KEY_DOWN)
 			{
 				if((dev->keyState & (0x01 << key)) != 0) // already DOWN
