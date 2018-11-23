@@ -1,0 +1,111 @@
+diff -Nur a/src/app/panel/Makefile.alone b/src/app/panel/Makefile.alone
+--- a/src/app/panel/Makefile.alone	2018-11-13 12:52:08.000000000 +0800
++++ b/src/app/panel/Makefile.alone	2018-11-23 14:13:10.000000000 +0800
+@@ -1,6 +1,9 @@
+ DEBUG_OPTIONS = -g -Wall
+ OPTIMIZE = -O3
+ 
++UCLIBCXX_INCLUDES = -I/root/include/uClibc\+\+
++UCLIBCXX_LIBS = -luClibc\+\+
++
+ SINGLE_C_FILE_PROGRAMS =
+ SINGLE_CXX_FILE_PROGRAMS =
+ SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
+@@ -30,8 +33,8 @@
+ LD = ${CROSS_COMPILE}ld
+ 
+ CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+-LDFLAGS =
++CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(UCLIBCXX_INCLUDES)
++LDFLAGS = $(UCLIBCXX_LIBS)
+ 
+ ifeq ($(IS_BEOS_PLATFORM),0)
+ 	CFLAGS += $(shell lite-beapi-config --cflags)
+diff -Nur a/src/cmd/lbk/Makefile.alone b/src/cmd/lbk/Makefile.alone
+--- a/src/cmd/lbk/Makefile.alone	2018-11-14 02:06:16.000000000 +0800
++++ b/src/cmd/lbk/Makefile.alone	2018-11-23 14:23:05.000000000 +0800
+@@ -1,6 +1,9 @@
+ DEBUG_OPTIONS = -g -Wall
+ OPTIMIZE = -O3
+ 
++UCLIBCXX_INCLUDES = -I/root/include/uClibc\+\+
++UCLIBCXX_LIBS = -luClibc\+\+
++
+ C_PROGRAM := 
+ CXX_PROGRAM := 
+ 
+@@ -52,8 +55,8 @@
+ endif
+ 
+ CFLAGS += -I../../include -I../../libs/include
+-CXXFLAGS += -I../../include -I../../libs/include
+-LDFLAGS += -L../../libs/lbk -llbk
++CXXFLAGS += -I../../include -I../../libs/include $(UCLIBCXX_INCLUDES)
++LDFLAGS += -L../../libs/lbk -llbk $(UCLIBCXX_LIBS)
+ 
+ ifeq ($(C_PROGRAM), )
+ CFLAGS += -DCMD_ALL_IN_ONE
+diff -Nur a/src/libs/lbk/Makefile.alone b/src/libs/lbk/Makefile.alone
+--- a/src/libs/lbk/Makefile.alone	2018-11-08 21:26:10.000000000 +0800
++++ b/src/libs/lbk/Makefile.alone	2018-11-23 14:20:33.000000000 +0800
+@@ -1,6 +1,9 @@
+ DEBUG_OPTIONS = -g -Wall
+ OPTIMIZE = -O3
+ 
++UCLIBCXX_INCLUDES = -I/root/include/uClibc\+\+
++UCLIBCXX_LIBS = -luClibc\+\+
++
+ SINGLE_C_FILE_PROGRAMS =
+ SINGLE_CXX_FILE_PROGRAMS =
+ SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
+@@ -18,8 +21,13 @@
+ endif
+ endif
+ 
+-ADD_ONS_DIRS = \
++ADD_ONS_DIRS =
++
++OPENWRT_FOUND = $(shell uname -a | grep 'OpenWrt')
++ifeq ($(OPENWRT_FOUND), )
++ADD_ONS_DIRS += \
+ 	vpd
++endif
+ 
+ ifeq ($(shell uname),Linux)
+ ADD_ONS_DIRS += \
+@@ -53,8 +61,8 @@
+ LD = ${CROSS_COMPILE}ld
+ 
+ CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+-LDFLAGS =
++CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(UCLIBCXX_INCLUDES)
++LDFLAGS = $(UCLIBCXX_LIBS)
+ 
+ SO_CFLAGS = -fPIC
+ SO_LDFLAGS =
+diff -Nur a/src/libs/lbk/add-ons/npi-oled-hat/Makefile.alone b/src/libs/lbk/add-ons/npi-oled-hat/Makefile.alone
+--- a/src/libs/lbk/add-ons/npi-oled-hat/Makefile.alone	2018-11-09 15:37:25.000000000 +0800
++++ b/src/libs/lbk/add-ons/npi-oled-hat/Makefile.alone	2018-11-23 14:17:10.000000000 +0800
+@@ -1,6 +1,9 @@
+ DEBUG_OPTIONS = -g -Wall
+ OPTIMIZE = -O3
+ 
++UCLIBCXX_INCLUDES = -I/root/include/uClibc\+\+
++UCLIBCXX_LIBS = -luClibc\+\+
++
+ SINGLE_C_FILE_PROGRAMS =
+ SINGLE_CXX_FILE_PROGRAMS =
+ SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
+@@ -20,8 +23,8 @@
+ CXX = ${CROSS_COMPILE}g++
+ LD = ${CROSS_COMPILE}ld
+ CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include
+-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include
+-LDFLAGS =  $(shell lite-beapi-config --libs) -L../.. -llbk
++CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include $(UCLIBCXX_INCLUDES)
++LDFLAGS =  $(shell lite-beapi-config --libs) -L../.. -llbk $(UCLIBCXX_LIBS)
+ 
+ all: targets $(TARGET)
+ 
