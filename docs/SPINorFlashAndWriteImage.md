@@ -19,6 +19,8 @@ NanoPi NEO/NEO2 本身不带 SPI Nor Flash，需要自行添加，现项目要�
 
 * 如果已烧写过之前任意版本的固件，将上述 bin 文件通过 sftp 或其它方式上传至开发板（以下假设文件路径为 /tmp/openwrt.bin），则可在 shell 下运行以下指令直接烧写并重启。
 
+	切记: 若 overlay 分区是 SPI Nor Flash 上原始分区，reboot 指令前不要进行任何其它操作！！！
+
         mtd erase /dev/mtd0
         dd if=/tmp/openwrt.bin of=/dev/mtd0
         reboot
