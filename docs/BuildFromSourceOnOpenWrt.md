@@ -35,8 +35,8 @@
 
 ## 主要文件替换
 
-1. /root/src/libs/lbk/liblbk.so 替换 /usr/lib/liblbk.so
-+ /root/src/libs/lbk/add-ons/npi-oled-hat/npi-oled-hat.so 替换 /usr/lib/add-ons/lbk/npi-oled-hat.so
-+ /root/src/app/panel/LBPanel 替换 /usr/bin/LBPanel
+* /root/src/libs/lbk/liblbk.so 替换 /usr/lib/liblbk.so
+* /root/src/libs/lbk/add-ons/npi-oled-hat/npi-oled-hat.so 替换 /usr/lib/add-ons/lbk/npi-oled-hat.so
+* /root/src/app/panel/LBPanel 替换 /usr/bin/LBPanel
 
 
