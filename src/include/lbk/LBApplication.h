@@ -55,8 +55,9 @@ public:
 
 	void		Go();
 
-	bigtime_t	PulseRate() const;
-	virtual void	SetPulseRate(bigtime_t rate);
+	status_t	GetLooperOfPanel(int32 panel_index, BMessenger &msgr) const;
+	bigtime_t	PulseRate(int32 panel_index = 0) const;
+	virtual void	SetPulseRate(bigtime_t rate, int32 panel_index = 0);
 
 	virtual bool	QuitRequested();
 	virtual void	MessageReceived(BMessage *msg);
@@ -65,6 +66,7 @@ protected:
 	int32		CountPanels() const;
 	LBPanelDevice*	PanelAt(int32 index) const;
 	uint8		CountPanelKeys(int32 index) const;
+	status_t	ClosePanel(int32 index);
 
 private:
 	bool fQuitLooper;
@@ -73,6 +75,7 @@ private:
 	bigtime_t fPulseRate;
 	int32 fPanelsCount;
 	void *fIPC;
+	BList fMsgrsList;
 };
 
 #endif /* __cplusplus */
