@@ -55,6 +55,7 @@ start(){
 				init_config
 				uci set network.usb_gadget.auto=1
 				/etc/init.d/network restart > /dev/null 2>&1 &
+				/etc/init.d/dnsmasq restart > /dev/null 2>&1 &
 			fi
 			echo "usb_gadget: started."
 		else
