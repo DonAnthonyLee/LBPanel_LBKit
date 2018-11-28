@@ -21,7 +21,7 @@ init_config(){
 		uci commit network
 
 		uci set dhcp.usb_gadget=dhcp
-		uci set dhcp.usb_gadget.interface="${IFNAME_FOUND}"
+		uci set dhcp.usb_gadget.interface="usb_gadget"
 		uci set dhcp.usb_gadget.start=100
 		uci set dhcp.usb_gadget.limit=150
 		uci set dhcp.usb_gadget.leasetime="12h"
