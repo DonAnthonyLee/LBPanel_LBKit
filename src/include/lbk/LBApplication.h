@@ -73,6 +73,7 @@ private:
 	bigtime_t fPulseRate;
 	int32 fPanelsCount;
 	void *fIPC;
+	bigtime_t fKeyInterval;
 };
 
 #endif /* __cplusplus */
