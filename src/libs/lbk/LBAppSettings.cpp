@@ -266,3 +266,39 @@ LBAppSettings::CountItems() const
 	return fSettings.CountItems();
 }
 
+
+BMessage*
+LBAppSettings::ConvertToMessage() const
+{
+	BMessage *msg = new BMessage();
+
+	for(int32 k = 0; k < CountItems(); k++)
+	{
+		BString name, value, opt;
+
+		if(GetItemAt(k, &name, &value, &opt) != B_OK) continue;
+		if(msg->HasString(name.String())) continue;
+
+		msg->AddString(name.String(), value);
+		while(opt.Length() > 0)
+		{
+			int32 found = opt.FindFirst(',');
+			if(found < 0) found = opt.Length();
+
+			BString item(opt.String(), found);
+			opt.Remove(0, found + 1);
+
+			if(item.Length() <= 0) continue;
+			msg->AddString(name.String(), item);
+		}
+	}
+
+	if(msg->IsEmpty())
+	{
+		delete msg;
+		msg = NULL;
+	}
+
+	return msg;
+}
+
