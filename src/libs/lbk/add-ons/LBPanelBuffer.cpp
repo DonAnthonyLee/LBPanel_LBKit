@@ -31,6 +31,16 @@
 #include <lbk/LBAppDefs.h>
 #include <lbk/add-ons/LBPanelBuffer.h>
 
+#ifdef ETK_MAJOR_VERSION
+	#ifdef ETK_BIG_ENDIAN
+		#define B_HOST_IS_BENDIAN	1
+	#else
+		#define B_HOST_IS_BENDIAN	0
+	#endif
+	#define B_SWAP_INT16(v)			E_SWAP_INT16(v)
+	#define B_SWAP_INT32(v)			E_SWAP_INT32(v)
+#endif
+
 
 LBPanelBuffer::LBPanelBuffer()
 	: fWidth(0),
@@ -102,6 +112,10 @@ LBPanelBuffer::ResizeTo(uint16 w, uint16 h, lbk_color_space cspace)
 			s = (size_t)(h >> 3);
 			if((h & 0x07) != 0) s++;
 			s *= (size_t)w;
+			break;
+
+		case LBK_CS_RGB565_BIG:
+			s = 2 * w * h;
 			break;
 
 		default:
@@ -189,11 +203,11 @@ LBPanelBuffer::Depth() const
 			depth = 1;
 			break;
 
-		case LBK_CS_RGB8:
+		case LBK_CS_RGB332:
 			depth = 8;
 			break;
 
-		case LBK_CS_RGB16:
+		case LBK_CS_RGB565_BIG:
 			depth = 16;
 			break;
 
@@ -221,6 +235,7 @@ LBPanelBuffer::GetPixel(uint16 x, uint16 y) const
 {
 	rgb_color c = LowColor();
 	uint32 offset;
+	uint32 v;
 
 	if(x < fWidth && y < fHeight && fBits != NULL)
 	{
@@ -228,8 +243,20 @@ LBPanelBuffer::GetPixel(uint16 x, uint16 y) const
 		{
 			case LBK_CS_MONO_Y:
 				offset = (uint32)x + (uint32)fWidth * (uint32)(y >> 3);
-				if((*(((uint8*)fBits) + offset) & (0x01 << (y & 0x07))) != 0)
+				if((*((uint8*)fBits + offset) & (0x01 << (y & 0x07))) != 0)
 					c = HighColor();
+				break;
+
+			case LBK_CS_RGB565_BIG:
+				offset = (uint32)x + (uint32)fWidth * (uint32)y;
+#if B_HOST_IS_BENDIAN
+				v = (uint32)(*((uint16*)fBits + offset));
+#else
+				v = (uint32)B_SWAP_INT16(*((uint16*)fBits + offset));
+#endif
+				c.set_to(((v & 0xf800) >> 8) | 0x0007,
+					 ((v & 0x07e0) >> 3) | 0x0003,
+					 ((v & 0x001f) << 3) | 0x0007);
 				break;
 
 			default:
@@ -254,9 +281,23 @@ LBPanelBuffer::SetPixel(uint16 x, uint16 y, rgb_color c)
 		case LBK_CS_MONO_Y:
 			offset = (uint32)x + (uint32)fWidth * (uint32)(y >> 3);
 			if(c.red > 150 && c.green > 150 && c.blue > 150)
-				*(((uint8*)fBits) + offset) |= (0x01 << (y & 0x07));
+				*((uint8*)fBits + offset) |= (0x01 << (y & 0x07));
 			else
-				*(((uint8*)fBits) + offset) &= ~(0x01 << (y & 0x07));
+				*((uint8*)fBits + offset) &= ~(0x01 << (y & 0x07));
+			break;
+
+		case LBK_CS_RGB565_BIG:
+			offset = (uint32)x + (uint32)fWidth * (uint32)y;
+#if B_HOST_IS_BENDIAN
+			*((uint16*)fBits + offset) = ((uint16)(c.red >> 3) << 11) |
+						     ((uint16)(c.green >> 2) << 5) |
+						     (uint16)(c.blue >> 3);
+#else
+			*((uint16*)fBits + offset) = ((uint16)(c.red >> 3) << 3) |
+						     ((uint16)((c.green >> 2) & 0x03) << 13) |
+						     (uint16)(c.green >> 5) |
+						     (uint16)((c.blue >> 3) << 8);
+#endif
 			break;
 
 		default:
@@ -316,6 +357,9 @@ LBPanelBuffer::SetLowColor(uint8 r, uint8 g, uint8 b, uint8 a)
 void
 LBPanelBuffer::FillRect(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool patternVertical)
 {
+	uint16 k, m;
+	uint8 patterns[8];
+
 	if(fBits == NULL || x >= fWidth || y >= fHeight || w == 0 || h == 0) return;
 
 	if(w > fWidth - x)
@@ -323,23 +367,20 @@ LBPanelBuffer::FillRect(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool 
 	if(h > fHeight - y)
 		h = fHeight - y;
 
+	if(patternVertical)
+	{
+		memcpy(patterns, p.data, sizeof(patterns));
+	}
+	else for(k = 0; k < 8; k++)
+	{
+		if(p.data[k] == 0x00 || p.data[k] == 0xff)
+			patterns[k] = p.data[k];
+		else for(m = 0, patterns[k] = 0; m < 8; m++)
+			patterns[k] |= ((p.data[m] >> (7 - k + m)) & (0x01 << m));
+	}
+
 	if(fColorSpace == LBK_CS_MONO_Y)
 	{
-		uint16 k, m;
-
-		uint8 patterns[8];
-		if(patternVertical)
-		{
-			memcpy(patterns, p.data, sizeof(patterns));
-		}
-		else for(k = 0; k < 8; k++)
-		{
-			if(p.data[k] == 0x00 || p.data[k] == 0xff)
-				patterns[k] = p.data[k];
-			else for(m = 0, patterns[k] = 0; m < 8; m++)
-				patterns[k] |= ((p.data[m] >> (7 - k + m)) & (0x01 << m));
-		}
-
 		uint8 offset = (y & 0x07);
 		uint8 pat, mask;
 		uint16 cy;
@@ -375,6 +416,38 @@ LBPanelBuffer::FillRect(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool 
 
 				*data &= ~mask;
 				*data |= (pat & mask);
+			}
+		}
+	}
+	else if(fColorSpace == LBK_CS_RGB565_BIG)
+	{
+		for(m = 0; m < h; m++)
+		{
+			uint16 *data = (uint16*)fBits + (uint32)x + (uint32)fWidth * (uint32)(y + m);
+			for(k = 0; k < w; k++)
+			{
+				rgb_color c = ((patterns[k & 0x07] & (0x01 << (m & 0x07))) == 0) ? LowColor() : HighColor();
+#if 1
+#if B_HOST_IS_BENDIAN
+				*data++ = ((uint16)(c.red >> 3) << 11) |
+					  ((uint16)(c.green >> 2) << 5) |
+					  (uint16)(c.blue >> 3);
+#else
+				*data++ = ((uint16)(c.red >> 3) << 3) |
+					  ((uint16)((c.green >> 2) & 0x03) << 13) |
+					  (uint16)(c.green >> 5) |
+					  (uint16)((c.blue >> 3) << 8);
+#endif
+#else
+				uint16 v = ((uint16)(c.red >> 3) << 11) |
+					  ((uint16)(c.green >> 2) << 5) |
+					  (uint16)(c.blue >> 3);
+#if B_HOST_IS_BENDIAN
+				*data++ = v;
+#else
+				*data++ = B_SWAP_INT16(v);
+#endif
+#endif
 			}
 		}
 	}
@@ -428,6 +501,16 @@ LBPanelBuffer::InvertRect(uint16 x, uint16 y, uint16 w, uint16 h)
 				*data &= ~mask;
 				*data |= (~v & mask);
 			}
+		}
+	}
+	else if(fColorSpace == LBK_CS_RGB565_BIG)
+	{
+		uint16 k, m;
+
+		for(m = 0; m < h; m++)
+		{
+			uint16 *data = (uint16*)fBits + (uint32)x + (uint32)fWidth * (uint32)(y + m);
+			for(k = 0; k < w; k++, data++) *data = (uint16)~(*data);
 		}
 	}
 	else

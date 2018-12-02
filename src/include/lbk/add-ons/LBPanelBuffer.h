@@ -39,8 +39,8 @@ enum {
 	LBK_CS_MONO_Y = 0,
 	LBK_CS_MONO_X,
 
-	LBK_CS_RGB8,		// BGR(2:3:3)
-	LBK_CS_RGB16,		// BGR(4:6:6)
+	LBK_CS_RGB332,		// RGB(3:3:2)
+	LBK_CS_RGB565_BIG,	// RGB(5:6:5)
 	LBK_CS_RGB32,		// BGRx(8:8:8:8)
 };
 
