@@ -427,7 +427,6 @@ LBPanelBuffer::FillRect(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool 
 			for(k = 0; k < w; k++)
 			{
 				rgb_color c = ((patterns[k & 0x07] & (0x01 << (m & 0x07))) == 0) ? LowColor() : HighColor();
-#if 1
 #if B_HOST_IS_BENDIAN
 				*data++ = ((uint16)(c.red >> 3) << 11) |
 					  ((uint16)(c.green >> 2) << 5) |
@@ -437,16 +436,6 @@ LBPanelBuffer::FillRect(uint16 x, uint16 y, uint16 w, uint16 h, pattern p, bool 
 					  ((uint16)((c.green >> 2) & 0x03) << 13) |
 					  (uint16)(c.green >> 5) |
 					  (uint16)((c.blue >> 3) << 8);
-#endif
-#else
-				uint16 v = ((uint16)(c.red >> 3) << 11) |
-					  ((uint16)(c.green >> 2) << 5) |
-					  (uint16)(c.blue >> 3);
-#if B_HOST_IS_BENDIAN
-				*data++ = v;
-#else
-				*data++ = B_SWAP_INT16(v);
-#endif
 #endif
 			}
 		}
