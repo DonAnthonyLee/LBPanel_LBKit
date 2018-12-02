@@ -191,6 +191,8 @@ VPDWindow::MessageReceived(BMessage *msg)
 		case VPD_MSG_SET_BUFFER:
 		case VPD_MSG_SYNC:
 		case VPD_MSG_SET_CLIPPING:
+		case VPD_MSG_SET_HIGH_COLOR:
+		case VPD_MSG_SET_LOW_COLOR:
 			if((view = e_cast_as(FindView("screen"), VPDView)) == NULL)
 			{
 				if(msg->IsSourceWaiting())

@@ -61,6 +61,8 @@ public:
 #define VPD_MSG_SET_BUFFER	'vmgb'
 #define VPD_MSG_SYNC		'vmgy'
 #define VPD_MSG_SET_CLIPPING	'vmgl'
+#define VPD_MSG_SET_HIGH_COLOR	'vmgh'
+#define VPD_MSG_SET_LOW_COLOR	'vmgj'
 
 
 class VPDWindow : public BWindow {
