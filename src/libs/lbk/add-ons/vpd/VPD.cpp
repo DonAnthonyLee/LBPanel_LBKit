@@ -230,11 +230,11 @@ LBVPD::InitCheck(const char *options)
 		else if(item == "depth")
 		{
 			int v = atoi(value.String());
-			if(v == 8 || v == 16 || v == 24 || v == 32) fDepth = (uint8)v;
-		}
-		else if(item == "color_space")
-		{
-			// TODO
+			if(v == 16)
+			{
+				fDepth = 16;
+				cspace = LBK_CS_RGB565_BIG;
+			}
 		}
 		else if(item == "keys_RB")
 		{
@@ -301,16 +301,20 @@ LBVPD::ScreenColorSpace()
 status_t
 LBVPD::SetHighColor(rgb_color c)
 {
-	// TODO
-	return B_ERROR;
+	BMessage msg(VPD_MSG_SET_HIGH_COLOR);
+	msg.AddInt32("color", *((int32*)&c));
+
+	return fMsgr.SendMessage(&msg);
 }
 
 
 status_t
 LBVPD::SetLowColor(rgb_color c)
 {
-	// TODO
-	return B_ERROR;
+	BMessage msg(VPD_MSG_SET_LOW_COLOR);
+	msg.AddInt32("color", *((int32*)&c));
+
+	return fMsgr.SendMessage(&msg);
 }
 #endif
 
@@ -648,7 +652,7 @@ LBVPD::GetSideOfKeys(bool &right_or_bottom)
 
 status_t
 LBVPD::GetScreenOffsetOfKeys(uint16 &offsetLeftTop,
-			     uint16 &OffsetRightBottom)
+			     uint16 &offsetRightBottom)
 {
 	offsetLeftTop = fKeysOffset[0];
 	offsetRightBottom = fKeysOffset[1];

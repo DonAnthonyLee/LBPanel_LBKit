@@ -193,9 +193,7 @@ VPDView::Draw(BRect updateRect)
 	BRect r;
 	uint16 space = (fPointSize < 2) ? 0 : ((fPointSize < 4) ? 1 : 2);
 
-#if 1
-	if(fBuffer.Depth() != 1) return;
-#endif
+	if(fBuffer.Bits() == NULL) return;
 
 	r.Set(0, 0, fPointSize - 1, fPointSize - 1);
 	for(uint16 y = 0; y < fBuffer.Height(); y++)
@@ -219,7 +217,12 @@ VPDView::Draw(BRect updateRect)
 						break;
 
 					default:
-						// TODO
+						if(fPowerState == false)
+						{
+							c.red >>= 1;
+							c.green >>= 1;
+							c.blue >>= 1;
+						}
 						break;
 				}
 				SetHighColor(c);
@@ -358,6 +361,8 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 
 					default:
 						// TODO
+						if(c.red > 150 && c.green > 150 && c.blue > 150) break;
+						fBuffer.FillRect(x + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
 						break;
 				}
 			}
@@ -552,6 +557,19 @@ VPDView::MessageReceived(BMessage *msg)
 			}
 			break;
 
+		case VPD_MSG_SET_HIGH_COLOR:
+		case VPD_MSG_SET_LOW_COLOR:
+			{
+				rgb_color c;
+
+				if(msg->FindInt32("color", (int32*)&c) != B_OK) break;
+				if(msg->what == VPD_MSG_SET_HIGH_COLOR)
+					fBuffer.SetHighColor(c);
+				else
+					fBuffer.SetLowColor(c);
+			}
+			break;
+
 		default:
 			BView::MessageReceived(msg);
 	}
@@ -670,17 +688,8 @@ VPDView::DrawStringOnBuffer_h8(const char *str, uint16 x, uint16 y, bool erase_m
 					uint8 v = *bits++;
 					v = ((v >> yy) & 0x01);
 
-					switch(fBuffer.Depth())
-					{
-						case 1:
-							if(v == 0) break;
-							fBuffer.FillRect(x + w + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
-							break;
-
-						default:
-							// TODO
-							break;
-					}
+					if(v != 0)
+						fBuffer.FillRect(x + w + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
 				}
 			}
 		}
