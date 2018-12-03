@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Simple MPD client using LBK
+ * Simple MPD client using LBKit
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to

@@ -23,15 +23,47 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: IconDefs.h
+ * File: MPDClient.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#include <lbk/LBIconDefs.h>
+#include "MPDClient.h"
 
-extern const lbk_icon icon_play;
-extern const lbk_icon icon_pause;
-extern const lbk_icon icon_next;
-extern const lbk_icon icon_prev;
+MPDClient::MPDClient()
+{
+}
+
+
+MPDClient::~MPDClient()
+{
+}
+
+
+status_t
+MPDClient::Connect(const char *address, uint16 port)
+{
+	status_t st = fEndPoint.Connect(address, port);
+
+	if(st == B_OK)
+	{
+		// TODO
+	}
+
+	return st;
+}
+
+
+void
+MPDClient::KeepAlive()
+{
+	// TODO
+}
+
+
+const char*
+MPDClient::GetMPDVersion() const
+{
+	return fMPDVersion.String();
+}
 
