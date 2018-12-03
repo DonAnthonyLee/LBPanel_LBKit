@@ -33,6 +33,8 @@
 
 #include <lbk/LBKit.h>
 
+#include "MPDClient.h"
+
 #ifdef __cplusplus /* Just for C++ */
 
 class TMainPageView : public LBPageView {
@@ -51,6 +53,7 @@ public:
 	virtual void	DrawNavButtonIcon(lbk_icon_id idIcon, BPoint location);
 
 private:
+	MPDClient fClient;
 };
 
 #endif /* __cplusplus */

@@ -42,6 +42,24 @@ TMainPageView::TMainPageView(const char *name)
 	ShowNavButton(0);
 	ShowNavButton(1);
 	ShowNavButton(2);
+
+#if 0
+	if(fClient.Connect("localhost", 6600) == B_OK)
+	{
+		uint8 a, b, c;
+		if(fClient.GetMPDVersion(&a, &b, &c) != NULL)
+			ETK_WARNING("MPD Version = %u.%u.%u", a, b, c);
+		else
+			ETK_WARNING("GetMPDVersion() failed");
+
+		BMessage msg;
+		if(fClient.GetStatus(&msg) == B_OK) msg.PrintToStream();
+	}
+	else
+	{
+		ETK_WARNING("Connect() failed");
+	}
+#endif
 }
 
 

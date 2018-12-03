@@ -30,40 +30,209 @@
 
 #include "MPDClient.h"
 
+#define MPD_RECV_TIMEOUT	500000
+
+
 MPDClient::MPDClient()
 {
+	// TODO
 }
 
 
 MPDClient::~MPDClient()
 {
+	// TODO
 }
 
 
 status_t
 MPDClient::Connect(const char *address, uint16 port)
 {
-	status_t st = fEndPoint.Connect(address, port);
+	status_t st = fEndpoint.Connect(address, port);
 
-	if(st == B_OK)
+	if(st == B_OK && SendCommand(NULL, &fMPDVersion) == B_OK)
 	{
-		// TODO
+		if(fMPDVersion.FindFirst("OK MPD ") != 0)
+		{
+			fMPDVersion.Truncate(0);
+			fEndpoint.Close();
+			st = B_ERROR;
+		}
+		else
+		{
+			int32 found = fMPDVersion.FindFirst("\n");
+			if(found > 0) fMPDVersion.Truncate(found);
+			fMPDVersion.Remove(0, 7);
+		}
+	}
+	else
+	{
+		fEndpoint.Close();
+		st = B_ERROR;
 	}
 
 	return st;
 }
 
 
-void
-MPDClient::KeepAlive()
+status_t
+MPDClient::GetStatus(BMessage *msg)
 {
+	BString buf;
+
+	if(SendCommand("status\n", &buf) != B_OK) return B_ERROR;
+	if(msg == NULL) return B_BAD_VALUE;
+
+	msg->MakeEmpty();
+
+	while(buf.Length() > 1)
+	{
+		BString str, value;
+
+		int32 found = buf.FindFirst("\n");
+		if(found < 0)
+			found = buf.Length();
+
+		str.SetTo(buf.String(), found);
+		buf.Remove(0, min_c(buf.Length(), found + 1));
+
+		if((found = str.FindFirst(": ")) <= 0) continue;
+		value.SetTo(str.String() + found + 2);
+		if(value.Length() == 0) continue;
+		str.Truncate(found);
+		msg->AddString(str.String(), value);
+	}
+
+	return B_OK;
+}
+
+
+void
+MPDClient::NextSong()
+{
+	BString buf;
+	SendCommand("next\n", &buf);
+
+	// TODO
+}
+
+
+void
+MPDClient::PrevSong()
+{
+	BString buf;
+	SendCommand("previous\n", &buf);
+
+	// TODO
+}
+
+
+void
+MPDClient::Pause(bool pause)
+{
+	BString cmd, buf;
+	cmd << "pause" << (pause ? "1" : "0") << "\n";
+
+	SendCommand(cmd.String(), &buf);
+
+	// TODO
+}
+
+
+void
+MPDClient::Play()
+{
+	BString buf;
+	SendCommand("play\n", &buf);
+
+	// TODO
+}
+
+
+void
+MPDClient::Stop()
+{
+	BString buf;
+	SendCommand("stop\n", &buf);
+
 	// TODO
 }
 
 
 const char*
-MPDClient::GetMPDVersion() const
+MPDClient::GetMPDVersion(uint8 *major, uint8 *minor, uint8 *micro) const
 {
+	if(fEndpoint.InitCheck() != B_OK) return NULL;
+
+	if(major != NULL || minor != NULL || micro != NULL)
+	{
+		uint8 ver[3] = {0, 0, 0};
+
+		int32 offset = 0;
+		for(int k = 0; k < 3 && offset < fMPDVersion.Length(); k++)
+		{
+			int32 found = fMPDVersion.FindFirst(".", offset);
+			if(found < 0) found = fMPDVersion.Length();
+
+			BString str(fMPDVersion.String() + offset, found - offset);
+			ver[k] = (uint8)atoi(str.String());
+
+			offset = found + 1;
+		}
+
+		if(major != NULL) *major = ver[0];
+		if(minor != NULL) *minor = ver[1];
+		if(micro != NULL) *micro = ver[2];
+
+	}
+
 	return fMPDVersion.String();
+}
+
+
+status_t
+MPDClient::SendCommand(const char *cmd, BString *recvBuf)
+{
+	status_t retVal = B_OK;
+	char buf[1024];
+
+	if(fEndpoint.InitCheck() != B_OK) return B_ERROR;
+	if(cmd == NULL && recvBuf == NULL) return B_BAD_VALUE;
+
+	if(cmd != NULL)
+	{
+		if(*cmd == 0) return B_BAD_VALUE;
+
+		while(fEndpoint.IsDataPending(0)) // clear data
+			fEndpoint.Receive(buf, sizeof(buf));
+
+		size_t len = strlen(cmd);
+		if(fEndpoint.Send(cmd, len) != (int32)len) return B_ERROR;
+	}
+
+	if(recvBuf != NULL)
+	{
+		recvBuf->Truncate(0);
+		while(fEndpoint.IsDataPending((recvBuf->Length() == 0) ? MPD_RECV_TIMEOUT : 0))
+		{
+			if(recvBuf->Length() >= 65535) // 64kB
+			{
+				retVal = B_WOULD_BLOCK;
+				break;
+			}
+
+			bzero(buf, sizeof(buf));
+			fEndpoint.Receive(buf, sizeof(buf));
+
+			recvBuf->Append(buf);
+		}
+
+		if(recvBuf->Length() == 0)
+			retVal = B_TIMED_OUT;
+		else
+			ETK_WARNING("recvBuf->Length() = %d", recvBuf->Length());
+	}
+
+	return retVal;
 }
 

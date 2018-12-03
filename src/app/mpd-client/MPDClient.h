@@ -42,13 +42,30 @@ public:
 
 	status_t	Connect(const char *address, uint16 port);
 
+	status_t	GetStatus(BMessage *msg);
+	void		NextSong();
+	void		PrevSong();
+	void		Pause(bool pause = true);
+	void		Play();
+	void		Stop();
+
 	void		KeepAlive();
-	const char*	GetMPDVersion() const;
+	const char*	GetMPDVersion(uint8 *major = NULL,
+				      uint8 *minor = NULL,
+				      uint8 *micro = NULL) const;
 
 private:
-	BNetEndpoint fEndPoint;
+	BNetEndpoint fEndpoint;
 	BString fMPDVersion;
+
+	status_t	SendCommand(const char *cmd,
+				    BString *recvBuf = NULL);
 };
+
+inline void MPDClient::KeepAlive()
+{
+	GetStatus(NULL);
+}
 
 #endif /* __cplusplus */
 
