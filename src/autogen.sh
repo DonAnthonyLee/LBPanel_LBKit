@@ -1,13 +1,33 @@
 #!/bin/sh
 
 # clean
-if test -f Makefile && test "X$1" = X--clean; then
+if test -L Makefile && test "X$1" = X--clean; then
+	make clean
+	FILES=`find ./ -name "Makefile"`
+	for f in $FILES; do
+		test ! -L $f || rm -f $f
+	done
+	exit 0
+elif test -f Makefile && test "X$1" = X--clean; then
 	make distclean
+	exit 0
+fi
+
+# link
+if test ! -e Makefile && test "X$1" = X--link; then
+	FILES=`find ./ -name "Makefile.alone"`
+	for f in $FILES; do
+		ln -sf ./Makefile.alone `dirname $f`/Makefile
+	done
 	exit 0
 fi
 
 # config
 if test ! -f configure && test "X$1" = X--config; then
+	FILES=`find ./ -name "Makefile"`
+	for f in $FILES; do
+		test ! -L $f || rm -f $f
+	done
 	if test "X$OSTYPE" = Xmsys; then
 		${ACLOCAL-aclocal} -I ${ACDIR-/MinGW/share/aclocal}
 	elif test "X$BE_HOST_CPU" != X; then
@@ -44,5 +64,5 @@ echo ""
 echo "Option:"
 echo "    --config        generate the configure script"
 echo "    --clean         clean the script files"
-
+echo "    --link          link Makefile.alone to Makefile"
 
