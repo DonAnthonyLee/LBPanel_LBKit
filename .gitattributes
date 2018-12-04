@@ -2,3 +2,5 @@
 *.xz filter=lfs diff=lfs merge=lfs -text
 *.gz filter=lfs diff=lfs merge=lfs -text
 *.bin filter=lfs diff=lfs merge=lfs -text
+screenshot/LBKit/* filter=lfs diff=lfs merge=lfs -text
+screenshot/U-Boot/* filter=lfs diff=lfs merge=lfs -text
