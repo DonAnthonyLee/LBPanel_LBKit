@@ -28,20 +28,29 @@
  *
  * --------------------------------------------------------------------------*/
 
-#include "MPDClient.h"
+#include <string.h>
 
-#define MPD_RECV_TIMEOUT	500000
+#include "MPDClient.h"
 
 
 MPDClient::MPDClient()
+	: fTimeout(500000)
 {
 	// TODO
+	fEndpoint.SetTimeout(0);
 }
 
 
 MPDClient::~MPDClient()
 {
 	// TODO
+}
+
+
+void
+MPDClient::SetTimeout(bigtime_t t)
+{
+	fTimeout = t;
 }
 
 
@@ -75,15 +84,13 @@ MPDClient::Connect(const char *address, uint16 port)
 }
 
 
-status_t
-MPDClient::GetStatus(BMessage *msg)
+void
+MPDClient::ConvertToMessage(const BString *recvBuf, BMessage *msg)
 {
 	BString buf;
 
-	if(SendCommand("status\n", &buf) != B_OK) return B_ERROR;
-	if(msg == NULL) return B_BAD_VALUE;
-
-	msg->MakeEmpty();
+	if(msg == NULL) return;
+	if(recvBuf != NULL) buf.SetTo(recvBuf->String());
 
 	while(buf.Length() > 1)
 	{
@@ -102,6 +109,33 @@ MPDClient::GetStatus(BMessage *msg)
 		str.Truncate(found);
 		msg->AddString(str.String(), value);
 	}
+}
+
+
+status_t
+MPDClient::GetCurrentSongInfo(BMessage *msg)
+{
+	BString buf;
+
+	if(SendCommand("currentsong\n", &buf) != B_OK) return B_ERROR;
+	if(msg == NULL) return B_BAD_VALUE;
+
+	ConvertToMessage(&buf, msg);
+
+	return B_OK;
+}
+
+
+status_t
+MPDClient::GetStatus(BMessage *msg)
+{
+	BString buf;
+
+	if(SendCommand("status\n", &buf) != B_OK) return B_ERROR;
+	if(msg == NULL) return B_BAD_VALUE;
+
+	ConvertToMessage(&buf, msg);
+	if(msg->HasString("songid")) GetCurrentSongInfo(msg);
 
 	return B_OK;
 }
@@ -131,7 +165,7 @@ void
 MPDClient::Pause(bool pause)
 {
 	BString cmd, buf;
-	cmd << "pause" << (pause ? "1" : "0") << "\n";
+	cmd << "pause " << (pause ? "1" : "0") << "\n";
 
 	SendCommand(cmd.String(), &buf);
 
@@ -203,8 +237,10 @@ MPDClient::SendCommand(const char *cmd, BString *recvBuf)
 	{
 		if(*cmd == 0) return B_BAD_VALUE;
 
+		fEndpoint.SetNonBlocking(true);
 		while(fEndpoint.IsDataPending(0)) // clear data
 			fEndpoint.Receive(buf, sizeof(buf));
+		fEndpoint.SetNonBlocking(false);
 
 		size_t len = strlen(cmd);
 		if(fEndpoint.Send(cmd, len) != (int32)len) return B_ERROR;
@@ -213,7 +249,11 @@ MPDClient::SendCommand(const char *cmd, BString *recvBuf)
 	if(recvBuf != NULL)
 	{
 		recvBuf->Truncate(0);
-		while(fEndpoint.IsDataPending((recvBuf->Length() == 0) ? MPD_RECV_TIMEOUT : 0))
+
+		bigtime_t when = system_time() + fTimeout;
+		bigtime_t t = (fTimeout > 0) ? fTimeout : 0;
+
+		while(t >= 0 && fEndpoint.IsDataPending(t))
 		{
 			if(recvBuf->Length() >= 65535) // 64kB
 			{
@@ -222,15 +262,19 @@ MPDClient::SendCommand(const char *cmd, BString *recvBuf)
 			}
 
 			bzero(buf, sizeof(buf));
-			fEndpoint.Receive(buf, sizeof(buf));
+			fEndpoint.SetNonBlocking(true);
+			if(fEndpoint.Receive(buf, sizeof(buf)) < 0) break;
 
-			recvBuf->Append(buf);
+			if(buf[0] != 0)
+				recvBuf->Append(buf);
+
+			t = when - system_time();
 		}
 
 		if(recvBuf->Length() == 0)
 			retVal = B_TIMED_OUT;
-		else
-			ETK_WARNING("recvBuf->Length() = %d", recvBuf->Length());
+
+		fEndpoint.SetNonBlocking(false);
 	}
 
 	return retVal;

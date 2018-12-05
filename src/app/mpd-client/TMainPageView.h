@@ -54,6 +54,14 @@ public:
 
 private:
 	MPDClient fClient;
+	BString fSongName;
+	int16 fSongNamePos;
+	uint32 fSongTime;
+	uint32 fCurrSongTime;
+	uint8 fPlayState;
+
+	void		UpdatePlayState();
+	void		UpdateSongNamePosIfNeeded();
 };
 
 #endif /* __cplusplus */

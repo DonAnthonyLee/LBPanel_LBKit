@@ -1,5 +1,6 @@
 SUB_DIRS =		\
-	panel
+	panel		\
+	mpd-client
 
 all:
 	for f in $(SUB_DIRS) .none; do \

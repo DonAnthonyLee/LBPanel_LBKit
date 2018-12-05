@@ -43,6 +43,7 @@ public:
 	status_t	Connect(const char *address, uint16 port);
 
 	status_t	GetStatus(BMessage *msg);
+	status_t	GetCurrentSongInfo(BMessage *msg);
 	void		NextSong();
 	void		PrevSong();
 	void		Pause(bool pause = true);
@@ -54,12 +55,15 @@ public:
 				      uint8 *minor = NULL,
 				      uint8 *micro = NULL) const;
 
+	void		SetTimeout(bigtime_t t);
+
 private:
 	BNetEndpoint fEndpoint;
 	BString fMPDVersion;
+	bigtime_t fTimeout;
 
-	status_t	SendCommand(const char *cmd,
-				    BString *recvBuf = NULL);
+	status_t	SendCommand(const char *cmd, BString *recvBuf = NULL);
+	void		ConvertToMessage(const BString *recvBuf, BMessage *msg);
 };
 
 inline void MPDClient::KeepAlive()
