@@ -122,6 +122,8 @@ protected:
 	LBPanelDevice*	PanelDevice() const;
 	uint8		CountPanelKeys() const;
 
+	void		SetPanelDeviceTimestamp(bigtime_t t);
+
 private:
 	friend class LBApplication;
 

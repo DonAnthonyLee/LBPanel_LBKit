@@ -941,3 +941,22 @@ LBView::Clear(BRect r)
 #endif
 }
 
+
+void
+LBView::SetPanelDeviceTimestamp(bigtime_t t)
+{
+	if(fMasterView != NULL)
+	{
+		if(fMasterView->fStandingInView == this)
+			fMasterView->SetPanelDeviceTimestamp(t);
+		return;
+	}
+
+	if(fDev == NULL || fActivated == false) return;
+
+	bigtime_t ts = 0;
+	fDev->GetTimestamp(ts);
+	if (t > ts || t < fTimestamp) return;
+	fTimestamp = t;
+}
+
