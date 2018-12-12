@@ -222,6 +222,7 @@ TMainPageView::Draw(BRect updateRect)
 		PanelDevice()->ConstrainClipping(r.InsetByCopy(2, 2), ts);
 		DrawString(fSongName.String(), pt);
 		PanelDevice()->ConstrainClipping(BRect(), ts);
+		SetPanelDeviceTimestamp(ts); // avoid whole updateing
 	}
 
 	// Song time
