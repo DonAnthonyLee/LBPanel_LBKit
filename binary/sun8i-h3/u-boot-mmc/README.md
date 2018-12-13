@@ -6,7 +6,7 @@
 
 内建 oled_show, oled_clear, oled_update 等指令。
 
-* SST7735S RGB LCD 显示
+* ST7735S RGB LCD 显示
 
 内建 lcd_show, lcd_clear, lcd_update 等指令。
 
