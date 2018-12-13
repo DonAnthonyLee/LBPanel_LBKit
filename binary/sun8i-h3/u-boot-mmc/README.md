@@ -6,9 +6,13 @@
 
 内建 oled_show, oled_clear, oled_update 等指令。
 
-注意：
+* SST7735S RGB LCD 显示
 
-初始化后将使用 0x4b060000~0x4b1fffff 区域内存（约1.7MB）作为存储解压后字库及数据缓冲区，该内存区域数据将保留至 Linux Kernel 的 OLED 驱动加载后才释放，因此内核映像加载等需确保不影响该区域。
+内建 lcd_show, lcd_clear, lcd_update 等指令。
+
+* 中文字库
+
+初始化后将使用 0x4b060000~0x4b1fffff 区域内存（约1.7MB）作为存储解压后字库及数据缓冲区，该内存区域数据将保留至 Linux Kernel 的相关驱动加载后才释放，因此内核映像加载等需确保不影响该区域。
 
 * 检测 OLED Hat 按键状态
 
@@ -39,5 +43,5 @@
 
 ## 其它
 
-更多使用帮助详细见 [HOWTO](https://github.com/DonAnthonyLee/LBPanel_LBKit/tree/master/docs/howto/u-boot)
+彩色面板相关详细见 [RGBPanel](https://github.com/DonAnthonyLee/LBPanel_LBKit/tree/rgb-panel/docs/RGBPanel.md)，更多使用帮助详细见 [HOWTO](https://github.com/DonAnthonyLee/LBPanel_LBKit/tree/master/docs/howto/u-boot)
 
