@@ -91,6 +91,8 @@ public:
 	virtual status_t	Flush(bigtime_t &ts) = 0;
 	virtual void		Sync() = 0;
 
+	virtual status_t	SetPowerOffTimeout(bigtime_t t) = 0;
+
 	/* keys */
 	virtual status_t	GetCountOfKeys(uint8 &count) = 0;
 	virtual status_t	BlockKeyEvents(bool state) = 0;

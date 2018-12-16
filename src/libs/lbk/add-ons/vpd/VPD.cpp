@@ -619,6 +619,14 @@ LBVPD::Sync()
 
 
 status_t
+LBVPD::SetPowerOffTimeout(bigtime_t t)
+{
+	// TODO
+	return B_ERROR;
+}
+
+
+status_t
 LBVPD::GetCountOfKeys(uint8 &count)
 {
 	count = fKeysCount;
