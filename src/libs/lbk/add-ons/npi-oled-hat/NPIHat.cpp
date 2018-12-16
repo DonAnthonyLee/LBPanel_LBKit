@@ -316,7 +316,7 @@ NPIHat::SetPowerState(bool state, bigtime_t &ts)
 status_t
 NPIHat::GetTimestamp(bigtime_t &ts)
 {
-	_oled_ssd1306_get_ts_t data;
+	_oled_ssd1306_ts_t data;
 	bzero(&data, sizeof(data));
 
 	data.last_action = 0;
@@ -330,7 +330,7 @@ NPIHat::GetTimestamp(bigtime_t &ts)
 status_t
 NPIHat::SetTimestampNow(bigtime_t &tsRet)
 {
-	_oled_ssd1306_get_ts_t data;
+	_oled_ssd1306_ts_t data;
 	bzero(&data, sizeof(data));
 
 	data.last_action = 1;
@@ -460,6 +460,16 @@ void
 NPIHat::Sync()
 {
 	// Because it's not client/server mode, we don't need to sync
+}
+
+
+status_t
+NPIHat::SetPowerOffTimeout(bigtime_t t)
+{
+	uint64_t data = (t > 0 ? (uint64_t)t : 0);
+
+	if(ioctl(fOLEDFD, OLED_SSD1306_IOC_SET_OFF_TIMEOUT, &data) != 0) return B_ERROR;
+	return B_OK;
 }
 
 
@@ -594,6 +604,7 @@ NPIHat::InputEventsObserver(void *arg)
 
 		bigtime_t when = (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) +
 				 (bigtime_t)event.time.tv_usec - system_boot_time();
+		bigtime_t t;
 
 		if(self->Lock() == false) continue;
 		if(self->fBlockKeyEvents || self->fBlockTimestamp > when)
@@ -601,6 +612,7 @@ NPIHat::InputEventsObserver(void *arg)
 			self->Unlock();
 			continue;
 		}
+		self->SetTimestampNow(t); // update screen's timestamp
 		self->Unlock();
 
 		uint8 nKey;
