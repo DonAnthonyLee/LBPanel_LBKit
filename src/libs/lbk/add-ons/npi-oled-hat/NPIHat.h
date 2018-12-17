@@ -94,6 +94,8 @@ public:
 	int			InputHandle() const;
 	int			PipeHandle() const;
 
+	status_t		SetTimestampNow(bigtime_t &tsRet, bool update);
+
 private:
 	int fOLEDFD;
 	int fInputFD;

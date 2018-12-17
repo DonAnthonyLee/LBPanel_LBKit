@@ -328,18 +328,23 @@ NPIHat::GetTimestamp(bigtime_t &ts)
 
 
 status_t
-NPIHat::SetTimestampNow(bigtime_t &tsRet)
+NPIHat::SetTimestampNow(bigtime_t &tsRet, bool update)
 {
 	_oled_ssd1306_ts_t data;
 	bzero(&data, sizeof(data));
 
-	data.last_action = 1;
+	data.last_action = update ? 1 : 2;
 
 	if(ioctl(fOLEDFD, OLED_SSD1306_IOC_TIMESTAMP, &data) != 0) return B_ERROR;
 	tsRet = data.ts;
 	return B_OK;
 }
 
+status_t
+NPIHat::SetTimestampNow(bigtime_t &tsRet)
+{
+	return SetTimestampNow(tsRet, true);
+}
 
 status_t
 NPIHat::DisableUpdate()
@@ -612,7 +617,7 @@ NPIHat::InputEventsObserver(void *arg)
 			self->Unlock();
 			continue;
 		}
-		self->SetTimestampNow(t); // update screen's timestamp
+		self->SetTimestampNow(t, false); // update screen's timestamp
 		self->Unlock();
 
 		uint8 nKey;
