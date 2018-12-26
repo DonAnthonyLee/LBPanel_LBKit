@@ -102,6 +102,7 @@ libs/lbk/add-ons/npi-oled-hat/Makefile
 libs/lbk/add-ons/vpd/Makefile
 cmd/Makefile
 cmd/npi-oled-hat/Makefile
+cmd/lcd-st7735s/Makefile
 cmd/lbk/Makefile
 cmd/scripts/Makefile
 app/Makefile
