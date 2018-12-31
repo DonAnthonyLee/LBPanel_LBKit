@@ -838,7 +838,7 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 			fTabIndex = fInterfacesCount;
 			break;
 
-		defualt:
+		default:
 			break;
 	}
 

@@ -79,6 +79,8 @@ public:
 	virtual status_t	Flush(bigtime_t &ts);
 	virtual void		Sync();
 
+	virtual status_t	SetPowerOffTimeout(bigtime_t t);
+
 	/* keys */
 	virtual status_t	GetCountOfKeys(uint8 &count);
 	virtual status_t	BlockKeyEvents(bool state);
@@ -91,6 +93,8 @@ public:
 
 	int			InputHandle() const;
 	int			PipeHandle() const;
+
+	status_t		SetTimestampNow(bigtime_t &tsRet, bool update);
 
 private:
 	int fOLEDFD;

@@ -40,8 +40,7 @@
 #define LBK_KEY_TYPICAL_NUMBER		3
 #define LBK_KEY_ID_MAX			7
 
-// TODO: Specified by config file
-#define LBK_KEY_INTERVAL		125000	/* 125ms */
+#define LBK_KEY_INTERVAL_DEFAULT	130000	/* 130ms */
 #define LBK_KEY_INTERVAL_MAX		600000	/* 600ms */
 
 #endif /* __LBK_BUILD_CONFIG_H__ */

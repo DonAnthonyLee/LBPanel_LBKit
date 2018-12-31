@@ -56,6 +56,8 @@ public:
 					  BString *options = NULL) const;
 	int32			CountItems() const;
 
+	BMessage*		ConvertToMessage() const;
+
 private:
 	BList fSettings;
 };

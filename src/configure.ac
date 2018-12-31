@@ -48,7 +48,7 @@ fi
 if test "$spec_lite_beapi_cflags" = "no" -o "$spec_lite_beapi_libs" = "no"; then
 	have_lite_beapi=no
 	if test x$LITE_BEAPI_CONFIG != xno ; then
-		if $LITE_BEAPI_CONFIG --atleast-version 0.0.1 ; then
+		if $LITE_BEAPI_CONFIG --atleast-version 0.0.3 ; then
 			LITE_BEAPI_CFLAGS="`$LITE_BEAPI_CONFIG --cflags`"
 			LITE_BEAPI_LIBS="`$LITE_BEAPI_CONFIG --libs`"
 			have_lite_beapi=yes

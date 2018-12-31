@@ -5,7 +5,9 @@ LIBDIR="../../libs/lbk"
 fi
 
 if [ "x$PROG" = "x" ]; then
-	if [ -x "./lb_panel" ]; then
+	if [ -x "./_APP_" ]; then
+		PROG="./_APP_"
+	elif [ -x "./lb_panel" ]; then
 		# for autoconf environment
 		PROG="./lb_panel"
 	elif [ -x "./LBPanel" ]; then

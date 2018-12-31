@@ -189,7 +189,8 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 	  fQuitLooper(false),
 	  fPulseRate(0),
 	  fPanelsCount(0),
-	  fIPC(NULL)
+	  fIPC(NULL),
+	  fKeyInterval(LBK_KEY_INTERVAL_DEFAULT)
 {
 	fPipes[0] = fPipes[1] = -1;
 
@@ -267,6 +268,12 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 #else
 			// TODO: other way
 #endif
+		}
+		else if(name == "KeyInterval")
+		{
+			int v = atoi(value.String());
+			if(v >= 100 && v <= LBK_KEY_INTERVAL_MAX)
+				fKeyInterval = (bigtime_t)v;
 		}
 
 		// TODO: others
@@ -487,8 +494,8 @@ LBApplication::Go()
 #endif
 	{
 		timeout.tv_usec = (pulse_rate > 0 && pulse_rate < (bigtime_t)500000) ? pulse_rate : 500000;
-		if(count > 0 && timeout.tv_usec > LBK_KEY_INTERVAL / 3)
-			timeout.tv_usec = LBK_KEY_INTERVAL / 3;
+		if(count > 0 && timeout.tv_usec > fKeyInterval / 3)
+			timeout.tv_usec = fKeyInterval / 3;
 
 		int fdMax = fPipes[0];
 		FD_ZERO(&rset);
@@ -526,7 +533,7 @@ LBApplication::Go()
 			}
 		}
 
-		if(count > 0 && system_time() - pulse_sent_time[0] >= (bigtime_t)(LBK_KEY_INTERVAL / 2))
+		if(count > 0 && system_time() - pulse_sent_time[0] >= (bigtime_t)(fKeyInterval / 2))
 		{
 			count--;
 			PostMessage(LBK_EVENT_PENDING, this);
@@ -734,7 +741,7 @@ LBApplication::MessageReceived(BMessage *msg)
 					else
 					{
 						if(dev->keyClicks[k] == 0 || dev->keyTimestamps[k] == 0) continue; // no UP before
-						if(when - dev->keyTimestamps[k] < (bigtime_t)LBK_KEY_INTERVAL)
+						if(when - dev->keyTimestamps[k] < (bigtime_t)fKeyInterval)
 						{
 							stopRunner = false;
 							continue;
