@@ -72,6 +72,18 @@ define Package/lbk-npi_oled_hat/description
   Commands and library for NanoPi OLED hat using LBKit
 endef
 
+define Package/lbk-lcd_st7735s
+  SECTION:=utils
+  CATEGORY:=Utilities
+  DEPENDS:=+lbk $(CXX_DEPENDS) +kmod-lcd_st7735s
+  TITLE:=Commands for LCD ST7735S using LBKit
+  MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
+endef
+
+define Package/lbk-lcd_st7735s/description
+  Commands for LCD ST7735S using LBKit
+endef
+
 CONFIGURE_ARGS+= \
 	--prefix=/usr \
 	--mandir=/usr/share/man \
@@ -174,8 +186,18 @@ if [ -z "$$FOUND" ]; then
 fi
 endef
 
+define Package/lbk-lcd_st7735s/install
+	$(INSTALL_DIR) $(1)/bin
+	$(CP) $(PKG_INSTALL_DIR)/usr/bin/lcd_cmd $(1)/bin/lcd_cmd
+	ln -sf ./lcd_cmd $(1)/bin/lcd_power
+	ln -sf ./lcd_cmd $(1)/bin/lcd_update
+	ln -sf ./lcd_cmd $(1)/bin/lcd_clear
+	ln -sf ./lcd_cmd $(1)/bin/lcd_show
+endef
+
 $(eval $(call BuildPackage,lbk))
 $(eval $(call BuildPackage,lbk-cmd))
 $(eval $(call BuildPackage,lbk-dev))
 $(eval $(call BuildPackage,lbk-npi_oled_hat))
+$(eval $(call BuildPackage,lbk-lcd_st7735s))
 $(eval $(call BuildPackage,lbpanel))
