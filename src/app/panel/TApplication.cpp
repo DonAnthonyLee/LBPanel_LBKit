@@ -38,8 +38,7 @@
 
 TApplication::TApplication(const LBAppSettings *settings)
 	: LBApplication(settings),
-	  fScreenOffTimeout(0),
-	  fPulseNeeded(false)
+	  fScreenOffTimeout(-1)
 {
 	if(CountPanels() == 0) return;
 
@@ -48,8 +47,6 @@ TApplication::TApplication(const LBAppSettings *settings)
 	AddPageView(new TMenuPageView(), false);
 
 	LoadConfig(settings);
-
-	fLastKeyTimestamp = system_time();
 }
 
 
@@ -91,23 +88,13 @@ TApplication::CustomMenuItemAt(int32 index) const
 
 
 void
-TApplication::SetPulseRate(bigtime_t rate)
-{
-	fPulseNeeded = (rate > 0);
-	if(fPulseNeeded == false && fScreenOffTimeout > 0)
-		rate = 10000000; // max rate of LBApplication
-
-	LBApplication::SetPulseRate(rate);
-}
-
-
-void
 TApplication::LoadConfig(const LBAppSettings *cfg)
 {
 	bool use24Hours = false;
 	bool showSeconds = false;
 	int32 thermalZone = 0;
 	bool useLCDStyle = false;
+	int32 screenOffTimeout = fScreenOffTimeout;
 
 	EmptyCustomMenu();
 
@@ -146,7 +133,7 @@ TApplication::LoadConfig(const LBAppSettings *cfg)
 
 		if(name == "ScreenOffTimeout")
 		{
-			fScreenOffTimeout = (int32)atoi(value.String());
+			screenOffTimeout = (int32)atoi(value.String());
 		}
 		else if(name == "24Hours")
 		{
@@ -178,6 +165,18 @@ TApplication::LoadConfig(const LBAppSettings *cfg)
 		mainPageView->SetLCDStyle(useLCDStyle);
 		mainPageView->SetThermalZone(thermalZone);
 	}
+
+	if(screenOffTimeout != fScreenOffTimeout)
+	{
+		fScreenOffTimeout = max_c(screenOffTimeout, 0);
+
+		for(int32 k = 0; k < CountPanels(); k++)
+		{
+			LBPanelDevice *dev = PanelAt(k);
+			if(dev != NULL)
+				dev->SetPowerOffTimeout((bigtime_t)fScreenOffTimeout * (bigtime_t)1000000);
+		}
+	}
 }
 
 
@@ -186,35 +185,6 @@ TApplication::MessageReceived(BMessage *msg)
 {
 	switch(msg->what)
 	{
-		case B_KEY_DOWN:
-		case B_KEY_UP:
-			LBApplication::MessageReceived(msg);
-			fLastKeyTimestamp = system_time();
-			break;
-
-		case B_PULSE:
-			if(fScreenOffTimeout > 0 && fLastKeyTimestamp > 0) do
-			{
-				LBPanelDevice *dev = PanelAt(0);
-				bool state;
-
-				if(dev == NULL) break;
-				if(dev->GetPowerState(state) != B_OK || state == false) break;
-
-				if(system_time() - fLastKeyTimestamp > (bigtime_t)fScreenOffTimeout * 1000000)
-				{
-					bigtime_t ts;
-					dev->SetPowerState(false, ts);
-
-					if(fPulseNeeded == false)
-						LBApplication::SetPulseRate(0);
-				}
-			} while(false);
-
-			if(fPulseNeeded)
-				LBApplication::MessageReceived(msg);
-			break;
-
 		case LBK_APP_SETTINGS_UPDATED:
 			if(fConfigPath.Path() != NULL)
 			{

@@ -46,18 +46,15 @@ public:
 	TApplication(const LBAppSettings *settings);
 	virtual ~TApplication();
 
-	virtual void		SetPulseRate(bigtime_t rate);
 	virtual void		MessageReceived(BMessage *msg);
 
 	int32			CountCustomMenuItems() const;
 	const t_menu_item*	CustomMenuItemAt(int32 index) const;
 
 private:
-	uint32 fScreenOffTimeout;
+	int32 fScreenOffTimeout;
 	BList fCustomMenu;
 	BPath fConfigPath;
-	bool fPulseNeeded;
-	bigtime_t fLastKeyTimestamp;
 
 	void EmptyCustomMenu();
 	void LoadConfig(const LBAppSettings *cfg);
