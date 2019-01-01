@@ -23,13 +23,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBPanelDevice.h
+ * File: LBPanelScreen.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __LBK_PANEL_DEVICE_H__
-#define __LBK_PANEL_DEVICE_H__
+#ifndef __LBK_PANEL_DEVICE_SCREEN_H__
+#define __LBK_PANEL_DEVICE_SCREEN_H__
 
 #include <lbk/LBKConfig.h>
 
@@ -38,29 +38,22 @@
 // NOTE:
 // 	Addon must have C function like below and all the null virtual functions
 // 	of class must be implemented.
-// 		extern "C" _EXPORT LBPanelDevice* instantiate_panel_device();
+// 		extern "C" _EXPORT LBPanelScreen* instantiate_panel_screen();
 
-class LBApplication;
 class LBPanelCombiner;
 
-class _EXPORT LBPanelDevice : public BLocker {
+class _EXPORT LBPanelScreen {
 public:
-	LBPanelDevice();
-	virtual ~LBPanelDevice();
+	LBPanelScreen();
+	virtual ~LBPanelScreen();
 
 	virtual status_t	InitCheck(const char *options) = 0;
 
-	/*
-	 * NOTE:
-	 *	All virtual functions below are MT-Safe.
-	 */
-
-	/* screen */
-	virtual uint16		ScreenWidth() = 0;
-	virtual uint16		ScreenHeight() = 0;
+	virtual uint16		Width() = 0;
+	virtual uint16		Height() = 0;
 #ifdef LBK_ENABLE_MORE_FEATURES
-	virtual uint8		ScreenDepth() = 0;
-	virtual color_space	ScreenColorSpace() = 0;
+	virtual uint8		Depth() = 0;
+	virtual color_space	ColorSpace() = 0;
 	virtual status_t	SetHighColor(rgb_color c) = 0;
 	virtual status_t	SetLowColor(rgb_color c) = 0;
 #endif
@@ -94,34 +87,16 @@ public:
 
 	virtual status_t	SetPowerOffTimeout(bigtime_t t) = 0;
 
-	/* keys */
-	virtual status_t	GetCountOfKeys(uint8 &count) = 0;
-	virtual status_t	BlockKeyEvents(bool state) = 0;
-#ifdef LBK_ENABLE_MORE_FEATURES
-	virtual status_t	GetOrientationOfKeys(orientation &o) = 0;
-	virtual status_t	GetSideOfKeys(bool &right_or_bottom) = 0;
-	virtual status_t	GetScreenOffsetOfKeys(uint16 &offsetLeftTop,
-						      uint16 &OffsetRightBottom) = 0;
-#endif
-
 	status_t		SendMessageToApp(const BMessage *msg);
 	status_t		SendMessageToApp(uint32 command);
 
-protected:
-	uint32			LogLevel() const;
-	void			SetLogLevel(uint32 level);
-	virtual void		LogLevelChanged(uint32 new_level, uint32 old_level);
-
 private:
-	friend class LBApplication;
 	friend class LBPanelCombiner;
 
-	int32 fID;
 	BMessenger fMsgr;
-	uint32 fLogLevel;
 };
 
 #endif /* __cplusplus */
 
-#endif /* __LBK_PANEL_DEVICE_H__ */
+#endif /* __LBK_PANEL_DEVICE_SCREEN_H__ */
 
