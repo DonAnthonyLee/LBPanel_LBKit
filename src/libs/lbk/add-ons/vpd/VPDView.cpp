@@ -342,6 +342,8 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 			{
 				rgb_color c;
 				uint32 v = *bits++;
+				uint8 ave;
+
 #if B_HOST_IS_BENDIAN
 				c.red = (v >> 8) & 0xff;
 				c.green = (v >> 16) & 0xff;
@@ -352,16 +354,38 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 				c.blue = v & 0xff;
 #endif
 
+				ave = (uint8)(((uint16)c.red + (uint16)c.green + (uint16)c.blue) / 3);
 				switch(fBuffer.Depth())
 				{
-					case 1:
-						if(c.red > 150 && c.green > 150 && c.blue > 150) break;
-						fBuffer.FillRect(x + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
+#if defined(ETK_MAJOR_VERSION) || defined(B_BEOS_VERSION_DANO) || defined(B_HAIKU_VERSION)
+					case 16:
+					case 24:
+					case 32:
+						if(ave < 120)
+						{
+							fBuffer.FillRect(x + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
+						}
+						else if(ave < 200)
+						{
+							rgb_color cPen = (erase_mode ? fBuffer.LowColor() : fBuffer.HighColor());
+							c = fBuffer.GetPixel(x + xx, y + yy);
+#ifdef ETK_MAJOR_VERSION
+							c.alpha = 0x80;
+							cPen.mix(c);
+#else
+							cPen = mix_color(c, cPen, 0x80);
+#endif
+
+							c = fBuffer.HighColor();
+							fBuffer.SetHighColor(cPen);
+							fBuffer.FillRect(x + xx, y + yy, 1, 1, B_SOLID_HIGH, true);
+							fBuffer.SetHighColor(c);
+						}
 						break;
+#endif
 
 					default:
-						// TODO
-						if(c.red > 150 && c.green > 150 && c.blue > 150) break;
+						if(ave > 200) break;
 						fBuffer.FillRect(x + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
 						break;
 				}
