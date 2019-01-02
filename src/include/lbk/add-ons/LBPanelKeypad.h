@@ -31,7 +31,7 @@
 #ifndef __LBK_PANEL_DEVICE_KEYPAD_H__
 #define __LBK_PANEL_DEVICE_KEYPAD_H__
 
-#include <lbk/LBKConfig.h>
+#include <lbk/add-ons/LBPanelDevice.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -54,11 +54,13 @@ public:
 
 	status_t		SendMessageToApp(const BMessage *msg);
 	status_t		SendMessageToApp(uint32 command);
+	LBPanelDevice*		Panel() const;
 
 private:
 	friend class LBPanelCombiner;
 
-	BMessenger fMsgr;
+	int32 fID;
+	LBPanelDevice *fDev;
 };
 
 #endif /* __cplusplus */

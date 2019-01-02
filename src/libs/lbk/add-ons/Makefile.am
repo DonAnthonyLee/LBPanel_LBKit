@@ -13,7 +13,9 @@ noinst_LTLIBRARIES = liblbk_add-ons.la
 
 liblbk_add_ons_la_SOURCES =	\
 	LBPanelDevice.cpp	\
-	LBPanelBuffer.cpp
+	LBPanelBuffer.cpp	\
+	LBPanelKeypad.o		\
+	LBPanelKeypadGeneric.o
 
 DISTCLEANFILES = Makefile.in
 

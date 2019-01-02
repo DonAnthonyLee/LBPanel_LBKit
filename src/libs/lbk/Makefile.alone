@@ -29,6 +29,8 @@ endif
 OBJECTS_1 = \
 	add-ons/LBPanelDevice.o \
 	add-ons/LBPanelBuffer.o \
+	add-ons/LBPanelKeypad.o \
+	add-ons/LBPanelKeypadGeneric.o \
 	LBView.o \
 	LBPageView.o \
 	LBAppSettings.o \

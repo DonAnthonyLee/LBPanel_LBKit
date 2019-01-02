@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
  *
  * Little Board Application Kit
- * Copyright (C) 2018-2019, Anthony Lee, All Rights Reserved
+ * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
  * the terms of The MIT License.
@@ -23,42 +23,55 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBPanelKeypadGeneric.h
+ * File: LBPanelKeypad.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __LBK_PANEL_DEVICE_KEYPAD_GENERIC_H__
-#define __LBK_PANEL_DEVICE_KEYPAD_GENERIC_H__
-
 #include <lbk/add-ons/LBPanelKeypad.h>
 
-#ifdef __cplusplus /* Just for C++ */
 
-class _EXPORT LBPanelKeypadGeneric : public LBPanelKeypad {
-public:
-	LBPanelKeypadGeneric(const char *dev);
-	virtual ~LBPanelKeypadGeneric();
+LBPanelKeypad::LBPanelKeypad()
+	: fID(-1), fDev(NULL)
+{
+	// TODO
+}
 
-	virtual status_t	InitCheck(const char *options);
 
-	void			SetKeycode(int32 id, uint16 keycode);
-	virtual status_t	GetCountOfKeys(uint8 &count);
+LBPanelKeypad::~LBPanelKeypad()
+{
+	// TODO
+}
 
-	virtual status_t	BlockKeyEvents(bool state);
 
-private:
-	int fFD;
-	int fPipes[2];
-	void *fThread;
-	bool fBlockKeyEvents;
-	bigtime_t fBlockTimestamp;
-	uint16 fKeycodes[LBK_KEY_MAXIMUM_NUMBER];
+status_t
+LBPanelKeypad::SendMessageToApp(const BMessage *msg)
+{
+	if(msg == NULL || fID < 0 || fDev == NULL) return B_BAD_VALUE;
 
-	static int32		InputEventsObserver(void*);
-};
+	BMessage aMsg(*msg);
+#ifdef ETK_MAJOR_VERSION
+	aMsg.RemoveData("keypad_id");
+#else
+	aMsg.RemoveName("keypad_id");
+#endif
+	aMsg.AddInt32("keypad_id", fID);
 
-#endif /* __cplusplus */
+	return fDev->SendMessageToApp(&aMsg);
+}
 
-#endif /* __LBK_PANEL_DEVICE_KEYPAD_GENERIC_H__ */
+
+status_t
+LBPanelKeypad::SendMessageToApp(uint32 command)
+{
+	BMessage msg(command);
+	return SendMessageToApp(&msg);
+}
+
+
+LBPanelDevice*
+LBPanelKeypad::Panel() const
+{
+	return((fID < 0) ? NULL : fDev);
+}
 
