@@ -43,7 +43,7 @@
 
 #include <lbk/add-ons/LBPanelKeypadGeneric.h>
 
-#if (0)
+#if 0
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
 #else
 #define DBGOUT(msg...)		do {} while (0)
@@ -75,7 +75,7 @@ LBPanelKeypadGeneric::LBPanelKeypadGeneric(const char *dev)
 #else
 	// TODO
 	fprintf(stderr, "[LBPanelKeypadGeneric]: No implementation of device !");
-	return
+	return;
 #endif // ETK_OS_LINUX
 
 #ifdef ETK_MAJOR_VERSION
@@ -97,14 +97,11 @@ LBPanelKeypadGeneric::LBPanelKeypadGeneric(const char *dev)
 				     "lbk_keypad_generic",
 				     B_URGENT_DISPLAY_PRIORITY,
 				     reinterpret_cast<void*>(this));
+
 	if(tid < 0 || resume_thread(tid) != B_OK)
-	{
 		fprintf(stderr, "[LBPanelKeypadGeneric]: Unable to spawn thread !\n");
-	}
 	else
-	{
 		fThread = reinterpret_cast<void*>((long)tid);
-	}
 #endif // ETK_MAJOR_VERSION
 }
 
@@ -150,6 +147,7 @@ LBPanelKeypadGeneric::~LBPanelKeypadGeneric()
 status_t
 LBPanelKeypadGeneric::InitCheck(const char *options)
 {
+	// TODO
 	return((fFD < 0 || fPipes[0] < 0 || fThread == NULL) ? B_ERROR : B_OK);
 }
 
@@ -199,6 +197,7 @@ LBPanelKeypadGeneric::BlockKeyEvents(bool state)
 
 	return B_OK;
 }
+
 
 #ifdef ETK_OS_LINUX
 int32
