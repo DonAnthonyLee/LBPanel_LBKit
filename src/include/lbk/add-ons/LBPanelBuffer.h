@@ -42,6 +42,8 @@ enum {
 	LBK_CS_RGB332,		// RGB(3:3:2)
 	LBK_CS_RGB565_BIG,	// RGB(5:6:5)
 	LBK_CS_RGB32,		// BGRx(8:8:8:8)
+
+	LBK_CS_UNKNOWN = 0xff,
 };
 
 typedef uint8	lbk_color_space;

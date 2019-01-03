@@ -32,6 +32,8 @@
 #define __LBK_PANEL_DEVICE_H__
 
 #include <lbk/LBKConfig.h>
+#include <lbk/LBAppDefs.h>
+#include <lbk/add-ons/LBPanelBuffer.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -60,7 +62,7 @@ public:
 	virtual uint16		ScreenHeight() = 0;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual uint8		ScreenDepth() = 0;
-	virtual color_space	ScreenColorSpace() = 0;
+	virtual lbk_color_space	ScreenColorSpace() = 0;
 	virtual status_t	SetHighColor(rgb_color c) = 0;
 	virtual status_t	SetLowColor(rgb_color c) = 0;
 #endif

@@ -383,10 +383,10 @@ NPIHat::ScreenDepth()
 }
 
 
-color_space
+lbk_color_space
 NPIHat::ScreenColorSpace()
 {
-	return (color_space)-1;
+	return LBK_CS_MONO_Y;
 }
 
 

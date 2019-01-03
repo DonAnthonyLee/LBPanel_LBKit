@@ -59,7 +59,7 @@ LBVPD::LBVPD()
 {
 #ifdef LBK_ENABLE_MORE_FEATURES
 	fDepth = 1;
-	fColorSpace = (color_space)-1;
+	fColorSpace = LBK_CS_MONO_Y;
 	fOrientation = B_HORIZONTAL;
 	fKeysRB = true;
 	fKeysOffset[0] = fKeysOffset[1] = 0;
@@ -233,7 +233,7 @@ LBVPD::InitCheck(const char *options)
 			if(v == 16)
 			{
 				fDepth = 16;
-				cspace = LBK_CS_RGB565_BIG;
+				fColorSpace = LBK_CS_RGB565_BIG;
 			}
 		}
 		else if(item == "keys_RB")
@@ -256,6 +256,10 @@ LBVPD::InitCheck(const char *options)
 		}
 #endif
 	}
+
+#ifdef LBK_ENABLE_MORE_FEATURES
+	cspace = fColorSpace;
+#endif
 
 	BRect r(pt, pt + BPoint(200, 200));
 	VPDWindow *win = new VPDWindow(r, title.String(), fWidth, fHeight, fKeysCount, point_size, id, cspace, this);
@@ -291,7 +295,7 @@ LBVPD::ScreenDepth()
 }
 
 
-color_space
+lbk_color_space
 LBVPD::ScreenColorSpace()
 {
 	return fColorSpace;
