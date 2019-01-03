@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
  *
  * Little Board Application Kit
- * Copyright (C) 2018, Anthony Lee, All Rights Reserved
+ * Copyright (C) 2018-2019, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
  * the terms of The MIT License.
@@ -31,7 +31,7 @@
 #ifndef __LBK_PANEL_DEVICE_SCREEN_H__
 #define __LBK_PANEL_DEVICE_SCREEN_H__
 
-#include <lbk/LBKConfig.h>
+#include <lbk/add-ons/LBPanelDeviceAddOn.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -40,9 +40,8 @@
 // 	of class must be implemented.
 // 		extern "C" _EXPORT LBPanelScreen* instantiate_panel_screen();
 
-class LBPanelCombiner;
 
-class _EXPORT LBPanelScreen {
+class _EXPORT LBPanelScreen : public LBPanelDeviceAddOn {
 public:
 	LBPanelScreen();
 	virtual ~LBPanelScreen();
@@ -53,7 +52,7 @@ public:
 	virtual uint16		Height() = 0;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual uint8		Depth() = 0;
-	virtual color_space	ColorSpace() = 0;
+	virtual lbk_color_space	ColorSpace() = 0;
 	virtual status_t	SetHighColor(rgb_color c) = 0;
 	virtual status_t	SetLowColor(rgb_color c) = 0;
 #endif
@@ -87,13 +86,7 @@ public:
 
 	virtual status_t	SetPowerOffTimeout(bigtime_t t) = 0;
 
-	status_t		SendMessageToApp(const BMessage *msg);
-	status_t		SendMessageToApp(uint32 command);
-
-private:
-	friend class LBPanelCombiner;
-
-	BMessenger fMsgr;
+	virtual status_t	SendMessage(const BMessage *msg);
 };
 
 #endif /* __cplusplus */

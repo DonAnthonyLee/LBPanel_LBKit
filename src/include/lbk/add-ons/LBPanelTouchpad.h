@@ -31,7 +31,7 @@
 #ifndef __LBK_PANEL_DEVICE_TOUCHPAD_H__
 #define __LBK_PANEL_DEVICE_TOUCHPAD_H__
 
-#include <lbk/LBKConfig.h>
+#include <lbk/add-ons/LBPanelDeviceAddOn.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -40,9 +40,7 @@
 // 	of class must be implemented.
 // 		extern "C" _EXPORT LBPanelTouchpad* instantiate_panel_touchpad();
 
-class LBPanelCombiner;
-
-class _EXPORT LBPanelTouchpad {
+class _EXPORT LBPanelTouchpad : public LBPanelDeviceAddOn {
 public:
 	LBPanelTouchpad();
 	virtual ~LBPanelTouchpad();
@@ -51,13 +49,7 @@ public:
 
 	// TODO
 
-	status_t		SendMessageToApp(const BMessage *msg);
-	status_t		SendMessageToApp(uint32 command);
-
-private:
-	friend class LBPanelCombiner;
-
-	BMessenger fMsgr;
+	virtual status_t	SendMessage(const BMessage *msg);
 };
 
 #endif /* __cplusplus */

@@ -47,7 +47,7 @@ public:
 	virtual uint16		ScreenHeight();
 #ifdef LBK_ENABLE_MORE_FEATURES
 	virtual uint8		ScreenDepth();
-	virtual color_space	ScreenColorSpace();
+	virtual lbk_color_space	ScreenColorSpace();
 	virtual status_t	SetHighColor(rgb_color c);
 	virtual status_t	SetLowColor(rgb_color c);
 #endif

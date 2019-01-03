@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
  *
  * Little Board Application Kit
- * Copyright (C) 2018, Anthony Lee, All Rights Reserved
+ * Copyright (C) 2018-2019, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
  * the terms of The MIT License.
@@ -23,38 +23,41 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBPanelKeypad.h
+ * File: LBPanelDeviceAddOn.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __LBK_PANEL_DEVICE_KEYPAD_H__
-#define __LBK_PANEL_DEVICE_KEYPAD_H__
+#ifndef __LBK_PANEL_DEVICE_ADD_ON_H__
+#define __LBK_PANEL_DEVICE_ADD_ON_H__
 
-#include <lbk/add-ons/LBPanelDeviceAddOn.h>
+#include <lbk/add-ons/LBPanelDevice.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-// NOTE:
-// 	Addon must have C function like below and all the null virtual functions
-// 	of class must be implemented.
-// 		extern "C" _EXPORT LBPanelKeypad* instantiate_panel_keypad();
+class LBPanelCombiner;
 
-
-class _EXPORT LBPanelKeypad : public LBPanelDeviceAddOn {
+class _EXPORT LBPanelDeviceAddOn {
 public:
-	LBPanelKeypad();
-	virtual ~LBPanelKeypad();
-
-	virtual status_t	InitCheck(const char *options) = 0;
-
-	virtual status_t	GetCountOfKeys(uint8 &count) = 0;
-	virtual status_t	BlockKeyEvents(bool state) = 0;
+	LBPanelDeviceAddOn();
+	virtual ~LBPanelDeviceAddOn();
 
 	virtual status_t	SendMessage(const BMessage *msg);
+	status_t		SendMessage(uint32 command);
+
+	int32			Index() const;
+	LBPanelDevice*		Panel() const;
+
+private:
+	friend class LBPanelDevice;
+	friend class LBPanelCombiner;
+
+	int32 fID;
+	LBPanelDevice *fDev;
+	void *fAddOn;
 };
 
 #endif /* __cplusplus */
 
-#endif /* __LBK_PANEL_DEVICE_KEYPAD_H__ */
+#endif /* __LBK_PANEL_DEVICE_ADD_ON_H__ */
 
