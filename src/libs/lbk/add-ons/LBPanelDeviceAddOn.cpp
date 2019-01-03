@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
  *
  * Little Board Application Kit
- * Copyright (C) 2018, Anthony Lee, All Rights Reserved
+ * Copyright (C) 2018-2019, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
  * the terms of The MIT License.
@@ -23,40 +23,53 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBPanelKeypad.cpp
+ * File: LBPanelDeviceAddOn.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#include <lbk/add-ons/LBPanelKeypad.h>
+#include <lbk/add-ons/LBPanelDeviceAddOn.h>
 
 
-LBPanelKeypad::LBPanelKeypad()
-	: LBPanelDeviceAddOn()
+LBPanelDeviceAddOn::LBPanelDeviceAddOn()
+	: fID(-1), fDev(NULL), fAddOn(NULL)
 {
 	// TODO
 }
 
 
-LBPanelKeypad::~LBPanelKeypad()
+LBPanelDeviceAddOn::~LBPanelDeviceAddOn()
 {
 	// TODO
 }
 
 
 status_t
-LBPanelKeypad::SendMessage(const BMessage *msg)
+LBPanelDeviceAddOn::SendMessage(const BMessage *msg)
 {
-	if(msg == NULL) return B_BAD_VALUE;
+	if(msg == NULL || fID < 0 || fDev == NULL) return B_BAD_VALUE;
+	return fDev->SendMessageToApp(msg);
+}
 
-	BMessage aMsg(*msg);
-#ifdef ETK_MAJOR_VERSION
-	aMsg.RemoveData("keypad_id");
-#else
-	aMsg.RemoveName("keypad_id");
-#endif
-	aMsg.AddInt32("keypad_id", Index());
 
-	return LBPanelDeviceAddOn::SendMessage(&aMsg);
+status_t
+LBPanelDeviceAddOn::SendMessage(uint32 command)
+{
+	BMessage msg(command);
+	return SendMessage(&msg);
+}
+
+
+int32
+LBPanelDeviceAddOn::Index() const
+{
+	return fID;
+}
+
+
+LBPanelDevice*
+LBPanelDeviceAddOn::Panel() const
+{
+	return((fID < 0) ? NULL : fDev);
 }
 

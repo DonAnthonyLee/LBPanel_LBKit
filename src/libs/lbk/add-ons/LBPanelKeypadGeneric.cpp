@@ -284,10 +284,10 @@ LBPanelKeypadGeneric::InputEventsObserver(void *arg)
 		msg.AddInt8("key", *((int8*)&nKey));
 		msg.AddInt64("when", when);
 
-		self->SendMessageToApp(&msg);
+		self->SendMessage(&msg);
 	}
 
-	self->SendMessageToApp(LBK_QUIT_REQUESTED);
+	self->LBPanelDeviceAddOn::SendMessage(LBK_QUIT_REQUESTED);
 	return 0;
 }
 #else
