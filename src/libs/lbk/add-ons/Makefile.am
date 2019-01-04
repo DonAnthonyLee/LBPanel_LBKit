@@ -2,9 +2,10 @@ AM_CFLAGS = -I../../../include -I../../include
 AM_CXXFLAGS = -I../../../include -I../../include
 
 if OPENWRT_BUILD
-SUBDIRS = npi-oled-hat
+SUBDIRS = oled-ssd1306 npi-oled-hat
 else
 SUBDIRS =		\
+	oled-ssd1306	\
 	npi-oled-hat	\
 	vpd
 endif

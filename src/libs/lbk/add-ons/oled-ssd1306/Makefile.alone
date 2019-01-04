@@ -5,49 +5,11 @@ SINGLE_C_FILE_PROGRAMS =
 SINGLE_CXX_FILE_PROGRAMS =
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
 
-TARGET_1 = liblbk.so
+TARGET_1 = oled-ssd1306.so
 TARGET_2 =
 TARGET_3 =
 
-IS_BEOS_PLATFORM = 0
-ifeq ($(shell uname),Haiku)
-IS_BEOS_PLATFORM = 1
-else
-ifeq ($(shell uname),BeOS)
-IS_BEOS_PLATFORM = 1
-endif
-endif
-
-ADD_ONS_DIRS = \
-	vpd
-
-ifeq ($(shell uname),Linux)
-ADD_ONS_DIRS += \
-	oled-ssd1306 \
-	npi-oled-hat
-endif
-
-OBJECTS_1 = \
-	add-ons/LBPanelDevice.o \
-	add-ons/LBPanelBuffer.o \
-	add-ons/LBPanelDeviceAddOn.o \
-	add-ons/LBPanelKeypad.o \
-	add-ons/LBPanelKeypadGeneric.o \
-	add-ons/LBPanelTouchpad.o \
-	add-ons/LBPanelScreen.o \
-	LBView.o \
-	LBPageView.o \
-	LBAppSettings.o \
-	LBApplication.o \
-	LBIconData.o \
-	LBScopeItem.o \
-	LBScopeHandler.o \
-	LBAlertView.o \
-	LBListItem.o \
-	LBListView.o \
-	LBMenuItem.o \
-	LBMenuView.o
-
+OBJECTS_1 = OLEDScreen.o
 OBJECTS_2 =
 OBJECTS_3 =
 
@@ -57,39 +19,11 @@ OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
-
-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
-LDFLAGS =
-
-SO_CFLAGS = -fPIC
-SO_LDFLAGS =
-SO_NAME = liblbk.so
-
-ifeq ($(IS_BEOS_PLATFORM),0)
-	CFLAGS += $(shell lite-beapi-config --cflags)
-	CXXFLAGS += $(shell lite-beapi-config --cflags)
-	LDFLAGS += $(shell lite-beapi-config --libs)
-	SO_LDFLAGS += -shared
-else
-	# BeOS/HaikuOS
-	CXXFLAGS += -Wno-multichar
-	LDFLAGS += -lbe -lroot
-	SO_LDFLAGS += -Xlinker --soname=$(SO_NAME)
-
-ifeq ($(shell uname),BeOS)
-	SO_LDFLAGS += -nostart
-else
-	SO_LDFLAGS += -shared
-endif
-
-endif
-
-CFLAGS += $(SO_CFLAGS) -I../../include -I../include
-CXXFLAGS += $(SO_CFLAGS) -I../../include -I../include
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include
+LDFLAGS =  $(shell lite-beapi-config --libs) -L../.. -llbk
 
 all: targets $(TARGET)
-	$(MAKE) addons -f Makefile.alone
 
 $(C_PROGRAM): $(C_PROGRAM).o
 	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
@@ -105,13 +39,8 @@ targets:
 		(test $$f = .none || CXX=$(CXX) $(MAKE) -f Makefile.alone CXX_PROGRAM=$$f $$f) \
 	done
 
-addons:
-	for f in $(ADD_ONS_DIRS) .none; do \
-		(test $$f = .none || $(MAKE) -C add-ons/$$f -f Makefile.alone) \
-	done
-
 $(TARGET_1): $(OBJECTS_1)
-	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $(SO_LDFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) -shared $^ -o $@ $(LDFLAGS)
 
 $(TARGET_2): $(OBJECTS_2)
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
@@ -120,9 +49,6 @@ $(TARGET_3): $(OBJECTS_3)
 	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
 clean:
-	for f in $(ADD_ONS_DIRS) .none; do \
-		(test $$f = .none || $(MAKE) clean -C add-ons/$$f -f Makefile.alone) \
-	done
 	for f in $(TARGET) $(OBJECTS) .none; do \
 		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
 	done
