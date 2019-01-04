@@ -50,7 +50,10 @@ LBPanelDeviceAddOn::SendMessage(const BMessage *msg)
 {
 	if(msg == NULL || fID < 0 || fDev == NULL) return B_BAD_VALUE;
 
-	return fMsgr.SendMessage(msg);
+	if(fDev == NULL || cast_as(fDev, LBPanelDeviceAddOn) == this)
+		return fMsgr.SendMessage(msg);
+	else
+		return fDev->SendMessage(msg);
 }
 
 
