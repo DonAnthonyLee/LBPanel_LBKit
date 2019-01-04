@@ -280,7 +280,7 @@ LBPanelBuffer::SetPixel(uint16 x, uint16 y, rgb_color c)
 	{
 		case LBK_CS_MONO_Y:
 			offset = (uint32)x + (uint32)fWidth * (uint32)(y >> 3);
-			if(c.red > 150 && c.green > 150 && c.blue > 150)
+			if(c.red > 150 || c.green > 150 || c.blue > 150) // V > 150
 				*((uint8*)fBits + offset) |= (0x01 << (y & 0x07));
 			else
 				*((uint8*)fBits + offset) &= ~(0x01 << (y & 0x07));
