@@ -34,6 +34,7 @@
 #include <lbk/LBKConfig.h>
 #include <lbk/LBAppDefs.h>
 #include <lbk/add-ons/LBPanelBuffer.h>
+#include <lbk/add-ons/LBPanelDeviceAddOn.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -45,7 +46,7 @@
 class LBApplication;
 class LBPanelCombiner;
 
-class _EXPORT LBPanelDevice : public BLocker {
+class _EXPORT LBPanelDevice : public BLocker, public LBPanelDeviceAddOn {
 public:
 	LBPanelDevice();
 	virtual ~LBPanelDevice();
@@ -106,8 +107,7 @@ public:
 						      uint16 &OffsetRightBottom) = 0;
 #endif
 
-	status_t		SendMessageToApp(const BMessage *msg);
-	status_t		SendMessageToApp(uint32 command);
+	virtual status_t	SendMessage(const BMessage *msg);
 
 protected:
 	uint32			LogLevel() const;
@@ -118,9 +118,8 @@ private:
 	friend class LBApplication;
 	friend class LBPanelCombiner;
 
-	int32 fID;
-	BMessenger fMsgr;
 	uint32 fLogLevel;
+	void			Init(int32 id, const BMessenger &msgr);
 };
 
 #endif /* __cplusplus */

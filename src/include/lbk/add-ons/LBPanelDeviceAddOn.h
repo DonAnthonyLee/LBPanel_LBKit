@@ -31,10 +31,12 @@
 #ifndef __LBK_PANEL_DEVICE_ADD_ON_H__
 #define __LBK_PANEL_DEVICE_ADD_ON_H__
 
-#include <lbk/add-ons/LBPanelDevice.h>
+#include <lbk/LBKConfig.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
+class LBApplication;
+class LBPanelDevice;
 class LBPanelCombiner;
 
 class _EXPORT LBPanelDeviceAddOn {
@@ -49,10 +51,13 @@ public:
 	LBPanelDevice*		Panel() const;
 
 private:
+	friend class LBPanelApplication;
 	friend class LBPanelDevice;
 	friend class LBPanelCombiner;
 
 	int32 fID;
+	BMessenger fMsgr;
+
 	LBPanelDevice *fDev;
 	void *fAddOn;
 };

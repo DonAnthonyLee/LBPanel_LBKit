@@ -726,7 +726,7 @@ LBVPD::KeyDown(uint8 key, bigtime_t when)
 	msg.AddInt8("key", *((int8*)&key));
 	msg.AddInt64("when", when);
 
-	SendMessageToApp(&msg);
+	SendMessage(&msg);
 }
 
 
@@ -739,13 +739,13 @@ LBVPD::KeyUp(uint8 key, bigtime_t when)
 	msg.AddInt8("key", *((int8*)&key));
 	msg.AddInt64("when", when);
 
-	SendMessageToApp(&msg);
+	SendMessage(&msg);
 }
 
 
 void
 LBVPD::QuitRequested()
 {
-	SendMessageToApp(LBK_QUIT_REQUESTED);
+	LBPanelDeviceAddOn::SendMessage(LBK_QUIT_REQUESTED);
 }
 

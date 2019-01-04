@@ -29,6 +29,7 @@
  * --------------------------------------------------------------------------*/
 
 #include <lbk/add-ons/LBPanelDeviceAddOn.h>
+#include <lbk/add-ons/LBPanelDevice.h>
 
 
 LBPanelDeviceAddOn::LBPanelDeviceAddOn()
@@ -48,7 +49,8 @@ status_t
 LBPanelDeviceAddOn::SendMessage(const BMessage *msg)
 {
 	if(msg == NULL || fID < 0 || fDev == NULL) return B_BAD_VALUE;
-	return fDev->SendMessageToApp(msg);
+
+	return fMsgr.SendMessage(msg);
 }
 
 

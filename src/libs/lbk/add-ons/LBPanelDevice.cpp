@@ -34,8 +34,9 @@
 
 
 LBPanelDevice::LBPanelDevice()
-	: BLocker(), fID(-1), fLogLevel(0)
+	: BLocker(), LBPanelDeviceAddOn(), fLogLevel(0)
 {
+	LBPanelDeviceAddOn::fDev = this;
 }
 
 
@@ -45,9 +46,9 @@ LBPanelDevice::~LBPanelDevice()
 
 
 status_t
-LBPanelDevice::SendMessageToApp(const BMessage *msg)
+LBPanelDevice::SendMessage(const BMessage *msg)
 {
-	if(msg == NULL || fID < 0) return B_BAD_VALUE;
+	if(msg == NULL || Index() < 0) return B_BAD_VALUE;
 
 #ifdef ETK_MAJOR_VERSION
 	if(IsLockedByCurrentThread())
@@ -67,17 +68,9 @@ LBPanelDevice::SendMessageToApp(const BMessage *msg)
 #else
 	aMsg.RemoveName("panel_id");
 #endif
-	aMsg.AddInt32("panel_id", fID);
+	aMsg.AddInt32("panel_id", Index());
 
-	return fMsgr.SendMessage(&aMsg);
-}
-
-
-status_t
-LBPanelDevice::SendMessageToApp(uint32 command)
-{
-	BMessage msg(command);
-	return SendMessageToApp(&msg);
+	return LBPanelDeviceAddOn::SendMessage(&aMsg);
 }
 
 
@@ -105,5 +98,14 @@ LBPanelDevice::LogLevel() const
 void
 LBPanelDevice::LogLevelChanged(uint32 new_level, uint32 old_level)
 {
+}
+
+
+void
+LBPanelDevice::Init(int32 id, const BMessenger &msgr)
+{
+	// WARNING: DO NOT CHANGE THE SEQUENCE OF FOLLOWING 2 LINES !!!
+	LBPanelDeviceAddOn::fMsgr = msgr;
+	LBPanelDeviceAddOn::fID = id;
 }
 

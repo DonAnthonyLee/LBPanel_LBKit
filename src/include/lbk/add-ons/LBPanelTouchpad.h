@@ -32,6 +32,7 @@
 #define __LBK_PANEL_DEVICE_TOUCHPAD_H__
 
 #include <lbk/add-ons/LBPanelDeviceAddOn.h>
+#include <lbk/add-ons/LBPanelDevice.h>
 
 #ifdef __cplusplus /* Just for C++ */
 

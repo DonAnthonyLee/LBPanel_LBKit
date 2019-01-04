@@ -348,7 +348,7 @@ LBApplication::RemovePageView(LBView *view)
 {
 	if(view == NULL || view->fDev == NULL || view->Looper() != this || view->MasterView() != NULL) return false;
 
-	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, view->fDev->fID);
+	LBPanelDeviceAddOnData *dev = lbk_app_get_panel_device_data(fAddOnsList, view->fDev->Index());
 
 	view->Detached();
 	RemoveHandler(view);
@@ -470,10 +470,7 @@ LBApplication::Go()
 	for(int32 k = 0; k < CountPanels(); k++)
 	{
 		LBPanelDevice* dev = PanelAt(k);
-
-		// WARNING: DO NOT CHANGE THE SEQUENCE OF FOLLOWING 2 LINES !!!
-		dev->fMsgr = BMessenger(this, this);
-		dev->fID = k;
+		dev->Init(k, BMessenger(this, this));
 
 		ActivatePageView(0, false, k);
 	}
