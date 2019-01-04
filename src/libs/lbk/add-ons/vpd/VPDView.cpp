@@ -383,7 +383,7 @@ VPDView::DrawStringOnBuffer(const char *str, uint16 x, uint16 y, bool erase_mode
 
 					default:
 						if(ave > 200) break;
-						fBuffer.FillRect(x + xx, y + yy, 1, 1, erase_mode ? B_SOLID_LOW : B_SOLID_HIGH, true);
+						fBuffer.SetPixel(x + xx, y + yy, erase_mode ? fBuffer.LowColor() : fBuffer.HighColor());
 						break;
 				}
 			}
