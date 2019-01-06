@@ -61,11 +61,11 @@ OLEDScreen::OLEDScreen()
 
 OLEDScreen::~OLEDScreen()
 {
-	if(fFD >= 0)
-		close(fFD);
-
 	if(fBuffer != NULL)
 		munmap(fBuffer, OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3));
+
+	if(fFD >= 0)
+		close(fFD);
 }
 
 
@@ -138,9 +138,9 @@ OLEDScreen::ConstrainClipping(BRect r, bigtime_t &ts)
 
 status_t
 OLEDScreen::FillRect(BRect r,
-		 pattern p,
-		 bool patternVertical,
-		 bigtime_t &ts)
+		     pattern p,
+		     bool patternVertical,
+		     bigtime_t &ts)
 {
 	_oled_ssd1306_clear_t data;
 
@@ -184,10 +184,10 @@ OLEDScreen::IsFontHeightSupported(uint8 size)
 
 status_t
 OLEDScreen::DrawString(const char *str,
-		   BPoint pt,
-		   uint8 fontHeight,
-		   bool erase,
-		   bigtime_t &ts)
+		       BPoint pt,
+		       uint8 fontHeight,
+		       bool erase,
+		       bigtime_t &ts)
 {
 	_oled_ssd1306_show_t data;
 
@@ -209,8 +209,8 @@ OLEDScreen::DrawString(const char *str,
 
 status_t
 OLEDScreen::MeasureStringWidth(const char *str,
-			   uint8 fontHeight,
-			   uint16 &width)
+			       uint8 fontHeight,
+			       uint16 &width)
 {
 	_oled_ssd1306_string_width_t data;
 
@@ -229,7 +229,7 @@ OLEDScreen::MeasureStringWidth(const char *str,
 
 status_t
 OLEDScreen::InvertRect(BRect r,
-		   bigtime_t &ts)
+		       bigtime_t &ts)
 {
 	_oled_ssd1306_invert_t data;
 
