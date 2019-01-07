@@ -31,13 +31,58 @@
 #include <lbk/add-ons/LBPanelCombiner.h>
 
 LBPanelCombiner::LBPanelCombiner()
-	: LBPanelDevice()
+	: LBPanelDevice(),
+	  fCombineStyle(LBK_SCREEN_COMBINE_BY_SINGLE),
+	  fWidth(0),
+	  fHeight(0),
+	  fKeysCount(0),
+	  fState(true),
+	  fBlockKeyEvents(false),
+	  fBlockTimestamp(0)
 {
+#ifdef LBK_ENABLE_MORE_FEATURES
+	fDepth = 0;
+	fColorSpace = LBK_CS_UNKNOWN;
+	fOrientation = B_HORIZONTAL;
+	fKeysRB = true;
+	fKeysOffset[0] = fKeysOffset[1] = 0;
+#endif
 }
 
 
 LBPanelCombiner::~LBPanelCombiner()
 {
+	// TODO: messenger, etc.
+
+	for(int k = 0; k < fScreens.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
+		void *image = item->fAddOn;
+		LBPanelScreen *screen = cast_as(item, LBPanelScreen);
+
+		delete screen;
+		if(image != NULL) LBPanelDeviceAddOn::UnloadAddOn(image);
+	}
+
+	for(int k = 0; k < fKeypads.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fKeypads.ItemAt(k);
+		void *image = item->fAddOn;
+		LBPanelKeypad *keypad = cast_as(item, LBPanelKeypad);
+
+		delete keypad;
+		if(image != NULL) LBPanelDeviceAddOn::UnloadAddOn(image);
+	}
+
+	for(int k = 0; k < fTouchpads.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fTouchpads.ItemAt(k);
+		void *image = item->fAddOn;
+		LBPanelTouchpad *touchpad = cast_as(item, LBPanelTouchpad);
+
+		delete touchpad;
+		if(image != NULL) LBPanelDeviceAddOn::UnloadAddOn(image);
+	}
 }
 
 
@@ -52,16 +97,14 @@ LBPanelCombiner::InitCheck(const char *options)
 uint16
 LBPanelCombiner::ScreenWidth()
 {
-	// TODO
-	return 0;
+	return fWidth;
 }
 
 
 uint16
 LBPanelCombiner::ScreenHeight()
 {
-	// TODO
-	return 0;
+	return fHeight;
 }
 
 
@@ -182,16 +225,14 @@ LBPanelCombiner::GetCountOfKeys(uint8 &count)
 uint8
 LBPanelCombiner::ScreenDepth()
 {
-	// TODO
-	return 0;
+	return fDepth;
 }
 
 
 lbk_color_space
 LBPanelCombiner::ScreenColorSpace()
 {
-	// TODO
-	return LBK_CS_UNKNOWN;
+	return fColorSpace;
 }
 
 
@@ -255,25 +296,35 @@ LBPanelCombiner::SetPowerOffTimeout(bigtime_t t)
 status_t
 LBPanelCombiner::GetOrientationOfKeys(orientation &o)
 {
-	// TODO
-	return B_ERROR;
+	o = fOrientation;
+
+	return B_OK;
 }
 
 
 status_t
 LBPanelCombiner::GetSideOfKeys(bool &right_or_bottom)
 {
-	// TODO
-	return B_ERROR;
+	right_or_bottom = fKeysRB;
+
+	return B_OK;
 }
 
 
 status_t
 LBPanelCombiner::GetScreenOffsetOfKeys(uint16 &offsetLeftTop,
-			      uint16 &offsetRightBottom)
+				       uint16 &offsetRightBottom)
 {
-	// TODO
-	return B_ERROR;
+	offsetLeftTop = fKeysOffset[0];
+	offsetRightBottom = fKeysOffset[1];
+
+	if(offsetLeftTop > ((fOrientation == B_HORIZONTAL) ? fWidth : fHeight))
+		offsetLeftTop = ((fOrientation == B_HORIZONTAL) ? fWidth : fHeight);
+
+	if(offsetRightBottom > ((fOrientation == B_HORIZONTAL) ? fWidth : fHeight) - offsetLeftTop)
+		offsetRightBottom = ((fOrientation == B_HORIZONTAL) ? fWidth : fHeight) - offsetLeftTop;
+
+	return B_OK;
 }
 #endif
 
@@ -281,32 +332,118 @@ LBPanelCombiner::GetScreenOffsetOfKeys(uint16 &offsetLeftTop,
 status_t
 LBPanelCombiner::BlockKeyEvents(bool state)
 {
-	// TODO
-	return B_ERROR;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false) return B_ERROR;
+
+	if(fBlockKeyEvents != state)
+	{
+		// TODO: block events by SendMessage()
+		fBlockKeyEvents = state;
+
+		if(fBlockKeyEvents == false)
+			fBlockTimestamp = system_time();
+	}
+
+	return B_OK;
 }
 
 
 status_t
-LBPanelCombiner::AddScreen(const char *add_on)
+LBPanelCombiner::SetCombineStyle(uint32 style)
 {
+	if(fCombineStyle == style) return B_OK;
+
+	if((style & 0xff) != LBK_SCREEN_COMBINE_BY_SINGLE)
+	{
+		// TODO
+		return B_ERROR;
+	}
+
 	// TODO
-	return B_ERROR;
+
+	fCombineStyle = style;
+	return B_OK;
 }
 
 
 status_t
-LBPanelCombiner::AddScreen(LBPanelScreen *screen)
+LBPanelCombiner::AddScreen(const char *add_on, BPoint location)
 {
-	// TODO
-	return B_ERROR;
+	LBPanelScreen* (*func)(void) = NULL;
+	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)func, "instantiate_panel_screen");
+	if(image == NULL) return B_ERROR;
+
+	LBPanelScreen *screen = (*func)();
+	if(screen == NULL || AddScreen(screen, location) != B_OK)
+	{
+		LBPanelDeviceAddOn::UnloadAddOn(image);
+		return B_ERROR;
+	}
+
+	screen->LBPanelDeviceAddOn::fAddOn = image;
+	return B_OK;
+}
+
+
+status_t
+LBPanelCombiner::AddScreen(LBPanelScreen *screen, BPoint location)
+{
+	LBPanelDeviceAddOn *add_on = e_cast_as(screen, LBPanelDeviceAddOn);
+	if(add_on == NULL || fScreens.AddItem(add_on) == false) return B_ERROR;
+
+	if((fCombineStyle & 0x000000ff) == LBK_SCREEN_COMBINE_BY_SINGLE)
+	{
+		BPoint loc = screen->Location();
+		uint16 w = (uint16)(loc.x + (float)screen->Width());
+		uint16 h = (uint16)(loc.y + (float)screen->Height());
+
+		fWidth = max_c(fWidth, w);
+		fHeight = max_c(fHeight, h);
+
+#ifdef LBK_ENABLE_MORE_FEATURES
+		if(fScreens.CountItems() == 1)
+		{
+			fDepth = screen->Depth();
+			fColorSpace = screen->ColorSpace();
+		}
+		else if(fDepth != screen->Depth() || fColorSpace != screen->ColorSpace())
+		{
+			fDepth = 32;
+			fColorSpace = LBK_CS_RGB32;
+		}
+#endif
+
+		// TODO: messenger, ID, etc.
+	}
+	else
+	{
+		// TODO
+	}
+
+	return B_OK;
 }
 
 
 status_t
 LBPanelCombiner::AddKeypad(const char *add_on)
 {
-	// TODO
-	return B_ERROR;
+	LBPanelKeypad* (*func)(void) = NULL;
+	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)func, "instantiate_panel_keypad");
+	if(image == NULL) return B_ERROR;
+
+	LBPanelKeypad *keypad = (*func)();
+	if(keypad == NULL || AddKeypad(keypad) != B_OK)
+	{
+		LBPanelDeviceAddOn::UnloadAddOn(image);
+		return B_ERROR;
+	}
+
+	keypad->LBPanelDeviceAddOn::fAddOn = image;
+	return B_OK;
 }
 
 
@@ -321,8 +458,19 @@ LBPanelCombiner::AddKeypad(LBPanelKeypad *keypad)
 status_t
 LBPanelCombiner::AddTouchpad(const char *add_on)
 {
-	// TODO
-	return B_ERROR;
+	LBPanelTouchpad* (*func)(void) = NULL;
+	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)func, "instantiate_panel_touchpad");
+	if(image == NULL) return B_ERROR;
+
+	LBPanelTouchpad *touchpad = (*func)();
+	if(touchpad == NULL || AddTouchpad(touchpad) != B_OK)
+	{
+		LBPanelDeviceAddOn::UnloadAddOn(image);
+		return B_ERROR;
+	}
+
+	touchpad->LBPanelDeviceAddOn::fAddOn = image;
+	return B_OK;
 }
 
 
@@ -331,5 +479,16 @@ LBPanelCombiner::AddTouchpad(LBPanelTouchpad *touchpad)
 {
 	// TODO
 	return B_ERROR;
+}
+
+
+void
+LBPanelCombiner::Init(int32 id, const BMessenger &msgr)
+{
+	// TODO: screens, keypads, touchpads
+
+	// WARNING: DO NOT CHANGE THE SEQUENCE OF FOLLOWING 2 LINES !!!
+	LBPanelDeviceAddOn::fMsgr = msgr;
+	LBPanelDeviceAddOn::fID = id;
 }
 

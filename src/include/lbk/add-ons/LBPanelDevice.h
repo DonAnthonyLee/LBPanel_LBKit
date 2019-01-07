@@ -119,7 +119,7 @@ private:
 	friend class LBPanelCombiner;
 
 	uint32 fLogLevel;
-	void			Init(int32 id, const BMessenger &msgr);
+	virtual void		Init(int32 id, const BMessenger &msgr);
 };
 
 #endif /* __cplusplus */

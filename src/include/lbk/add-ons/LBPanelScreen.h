@@ -45,6 +45,7 @@
 class _EXPORT LBPanelScreen : public LBPanelDeviceAddOn {
 public:
 	LBPanelScreen();
+	LBPanelScreen(BPoint location);
 	virtual ~LBPanelScreen();
 
 	virtual status_t	InitCheck(const char *options) = 0;
@@ -88,6 +89,11 @@ public:
 	virtual status_t	SetPowerOffTimeout(bigtime_t t) = 0;
 
 	virtual status_t	SendMessage(const BMessage *msg);
+
+	BPoint			Location() const;
+
+private:
+	BPoint fLocation;
 };
 
 #endif /* __cplusplus */

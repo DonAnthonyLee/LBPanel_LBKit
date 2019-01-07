@@ -31,6 +31,19 @@
 #include <lbk/add-ons/LBPanelDeviceAddOn.h>
 #include <lbk/add-ons/LBPanelDevice.h>
 
+// use ETK++'s functions for no implementation in Lite BeAPI
+#ifdef ETK_MAJOR_VERSION
+	#define B_SYMBOL_TYPE_TEXT				0x02
+
+	typedef void*	image_id;
+	#define load_add_on(path)				etk_load_addon(path)
+	#define unload_add_on(image)				etk_unload_addon(image)
+	#define get_image_symbol(image, name, sclass, ptr)	etk_get_image_symbol(image, name, ptr)
+	#define IMAGE_IS_VALID(image)				(image != NULL)
+#else
+	#define IMAGE_IS_VALID(image)				(image > 0)
+#endif
+
 
 LBPanelDeviceAddOn::LBPanelDeviceAddOn()
 	: fID(-1), fDev(NULL), fAddOn(NULL)
@@ -82,17 +95,44 @@ LBPanelDeviceAddOn::Panel() const
 void*
 LBPanelDeviceAddOn::LoadAddOn(const char *add_on,
 			      void **ptr,
-			      const char *name)
+			      const char *name) const
 {
-	// TODO
-	return NULL;
+	void *retVal;
+	image_id image;
+	BPath pth(add_on, NULL, true);
+
+	if(pth.Path() == NULL || ptr == NULL || name == NULL) return NULL;
+
+	image = load_add_on(pth.Path());
+	if(!IMAGE_IS_VALID(image)) return NULL;
+
+	if(get_image_symbol(image, name, B_SYMBOL_TYPE_TEXT, ptr) != B_OK)
+	{
+		unload_add_on(image);
+		return NULL;
+	}
+
+#ifdef ETK_MAJOR_VERSION
+	retVal = image;
+#else
+	retVal = reinterpret_cast<void*>((long)image);
+#endif
+
+	return retVal;
 }
 
 
 status_t
-LBPanelDeviceAddOn::UnloadAddOn(void *image)
+LBPanelDeviceAddOn::UnloadAddOn(void *m) const
 {
-	// TODO
-	return B_ERROR;
+	image_id image;
+
+#ifdef ETK_MAJOR_VERSION
+	image = m;
+#else
+	image = (image_id)reinterpret_cast<long>(m);
+#endif
+
+	return(IMAGE_IS_VALID(image) ? unload_add_on(image) : B_BAD_VALUE);
 }
 

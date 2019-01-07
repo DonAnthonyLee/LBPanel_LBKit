@@ -50,11 +50,6 @@ public:
 	int32			Index() const;
 	LBPanelDevice*		Panel() const;
 
-	static void*		LoadAddOn(const char *add_on,
-					  void **ptr,
-					  const char *name);
-	static status_t		UnloadAddOn(void *image);
-
 private:
 	friend class LBPanelApplication;
 	friend class LBPanelDevice;
@@ -65,6 +60,11 @@ private:
 
 	LBPanelDevice *fDev;
 	void *fAddOn;
+
+	void*			LoadAddOn(const char *add_on,
+					  void **ptr,
+					  const char *name) const;
+	status_t		UnloadAddOn(void *image) const;
 };
 
 #endif /* __cplusplus */

@@ -37,15 +37,24 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
+enum {
+	LBK_SCREEN_COMBINE_BY_SINGLE = 0x00000000,
+	LBK_SCREEN_COMBINE_BY_JOIN_TOGETHER,
+};
+
 class _EXPORT LBPanelCombiner : public LBPanelDevice {
 public:
 	LBPanelCombiner();
 	virtual ~LBPanelCombiner();
 
-	status_t		AddScreen(const char *add_on);
-	status_t		AddScreen(LBPanelScreen *screen);
+	status_t		SetCombineStyle(uint32 style);
+
+	status_t		AddScreen(const char *add_on, BPoint location);
+	status_t		AddScreen(LBPanelScreen *screen, BPoint location);
+
 	status_t		AddKeypad(const char *add_on);
 	status_t		AddKeypad(LBPanelKeypad *keypad);
+
 	status_t		AddTouchpad(const char *add_on);
 	status_t		AddTouchpad(LBPanelTouchpad *touchpad);
 
@@ -104,6 +113,24 @@ private:
 	BList fScreens;
 	BList fKeypads;
 	BList fTouchpads;
+
+	uint32 fCombineStyle;
+
+	uint16 fWidth;
+	uint16 fHeight;
+	uint8 fKeysCount;
+	bool fState;
+	bool fBlockKeyEvents;
+	bigtime_t fBlockTimestamp;
+#ifdef LBK_ENABLE_MORE_FEATURES
+	uint8 fDepth;
+	lbk_color_space fColorSpace;
+	orientation fOrientation;
+	bool fKeysRB;
+	uint16 fKeysOffset[2];
+#endif
+
+	virtual void		Init(int32 id, const BMessenger &msgr);
 };
 
 #endif /* __cplusplus */
