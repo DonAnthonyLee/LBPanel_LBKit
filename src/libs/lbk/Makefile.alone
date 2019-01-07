@@ -32,6 +32,7 @@ OBJECTS_1 = \
 	add-ons/LBPanelDevice.o \
 	add-ons/LBPanelBuffer.o \
 	add-ons/LBPanelDeviceAddOn.o \
+	add-ons/LBPanelCombiner.o \
 	add-ons/LBPanelKeypad.o \
 	add-ons/LBPanelKeypadGeneric.o \
 	add-ons/LBPanelTouchpad.o \

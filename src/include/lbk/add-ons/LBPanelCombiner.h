@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
  *
  * Little Board Application Kit
- * Copyright (C) 2018, Anthony Lee, All Rights Reserved
+ * Copyright (C) 2018-2019, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
  * the terms of The MIT License.
@@ -31,7 +31,9 @@
 #ifndef __LBK_PANEL_DEVICE_COMBINER_H__
 #define __LBK_PANEL_DEVICE_COMBINER_H__
 
-#include <lbk/add-ons/LBPanelDevice.h>
+#include <lbk/add-ons/LBPanelScreen.h>
+#include <lbk/add-ons/LBPanelKeypad.h>
+#include <lbk/add-ons/LBPanelTouchpad.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -39,6 +41,13 @@ class _EXPORT LBPanelCombiner : public LBPanelDevice {
 public:
 	LBPanelCombiner();
 	virtual ~LBPanelCombiner();
+
+	status_t		AddScreen(const char *add_on);
+	status_t		AddScreen(LBPanelScreen *screen);
+	status_t		AddKeypad(const char *add_on);
+	status_t		AddKeypad(LBPanelKeypad *keypad);
+	status_t		AddTouchpad(const char *add_on);
+	status_t		AddTouchpad(LBPanelTouchpad *touchpad);
 
 	virtual status_t	InitCheck(const char *options);
 

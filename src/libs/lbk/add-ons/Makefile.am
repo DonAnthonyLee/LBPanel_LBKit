@@ -17,6 +17,7 @@ liblbk_add_ons_la_SOURCES =		\
 	LBPanelDevice.cpp		\
 	LBPanelBuffer.cpp		\
 	LBPanelDeviceAddOn.cpp		\
+	LBPanelCombiner.cpp		\
 	LBPanelKeypad.cpp		\
 	LBPanelKeypadGeneric.cpp	\
 	LBPanelTouchpad.cpp		\

@@ -78,3 +78,21 @@ LBPanelDeviceAddOn::Panel() const
 	return((fID < 0) ? NULL : fDev);
 }
 
+
+void*
+LBPanelDeviceAddOn::LoadAddOn(const char *add_on,
+			      void **ptr,
+			      const char *name)
+{
+	// TODO
+	return NULL;
+}
+
+
+status_t
+LBPanelDeviceAddOn::UnloadAddOn(void *image)
+{
+	// TODO
+	return B_ERROR;
+}
+
