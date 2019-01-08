@@ -41,11 +41,11 @@
 // 	of class must be implemented.
 // 		extern "C" _EXPORT LBPanelScreen* instantiate_panel_screen();
 
+class LBPanelCombiner;
 
 class _EXPORT LBPanelScreen : public LBPanelDeviceAddOn {
 public:
 	LBPanelScreen();
-	LBPanelScreen(BPoint location);
 	virtual ~LBPanelScreen();
 
 	virtual status_t	InitCheck(const char *options) = 0;
@@ -90,9 +90,9 @@ public:
 
 	virtual status_t	SendMessage(const BMessage *msg);
 
-	BPoint			Location() const;
-
 private:
+	friend class LBPanelCombiner;
+
 	BPoint fLocation;
 };
 

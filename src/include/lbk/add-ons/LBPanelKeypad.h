@@ -50,7 +50,6 @@ public:
 	virtual status_t	InitCheck(const char *options) = 0;
 
 	virtual status_t	GetCountOfKeys(uint8 &count) = 0;
-	virtual status_t	BlockKeyEvents(bool state) = 0;
 
 	virtual status_t	SendMessage(const BMessage *msg);
 };

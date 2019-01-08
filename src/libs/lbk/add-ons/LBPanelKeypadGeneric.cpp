@@ -53,9 +53,7 @@
 LBPanelKeypadGeneric::LBPanelKeypadGeneric(const char *dev)
 	: LBPanelKeypad(),
 	  fFD(-1),
-	  fThread(NULL),
-	  fBlockKeyEvents(false),
-	  fBlockTimestamp(0)
+	  fThread(NULL)
 {
 	bzero(&fKeycodes, sizeof(fKeycodes));
 	fPipes[0] = fPipes[1] = -1;
@@ -175,30 +173,6 @@ LBPanelKeypadGeneric::GetCountOfKeys(uint8 &count)
 }
 
 
-status_t
-LBPanelKeypadGeneric::BlockKeyEvents(bool state)
-{
-	if(Panel() == NULL) return B_ERROR;
-
-#ifdef ETK_MAJOR_VERSION
-	EAutolock <LBPanelDevice>autolock(Panel());
-#else
-	BAutolock autolock(Panel());
-#endif
-	if(autolock.IsLocked() == false) return B_ERROR;
-
-	if(fBlockKeyEvents != state)
-	{
-		fBlockKeyEvents = state;
-
-		if(fBlockKeyEvents == false)
-			fBlockTimestamp = system_time();
-	}
-
-	return B_OK;
-}
-
-
 #ifdef ETK_OS_LINUX
 int32
 LBPanelKeypadGeneric::InputEventsObserver(void *arg)
@@ -258,17 +232,10 @@ LBPanelKeypadGeneric::InputEventsObserver(void *arg)
 		bigtime_t when = (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) +
 				 (bigtime_t)event.time.tv_usec - etk_system_boot_time();
 
-		if(self->Panel() == NULL || self->Panel()->Lock() == false) continue;
-		if(self->fBlockKeyEvents || self->fBlockTimestamp > when)
-		{
-			self->Panel()->Unlock();
-			continue;
-		}
 #if 0
 		bigtime_t t;
 		self->SetTimestampNow(t, false); // update screen's timestamp
 #endif
-		self->Panel()->Unlock();
 
 		uint8 nKey = 0xff;
 		for(size_t k = 0; k < sizeof(fKeycodes) / sizeof(fKeycodes[0]); k++)

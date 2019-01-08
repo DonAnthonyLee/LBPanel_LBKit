@@ -39,14 +39,6 @@ LBPanelScreen::LBPanelScreen()
 }
 
 
-LBPanelScreen::LBPanelScreen(BPoint location)
-	: LBPanelDeviceAddOn(),
-	  fLocation(location)
-{
-	// TODO
-}
-
-
 LBPanelScreen::~LBPanelScreen()
 {
 	// TODO
@@ -67,12 +59,5 @@ LBPanelScreen::SendMessage(const BMessage *msg)
 	aMsg.AddInt32("screen_id", Index());
 
 	return LBPanelDeviceAddOn::SendMessage(&aMsg);
-}
-
-
-BPoint
-LBPanelScreen::Location() const
-{
-	return fLocation;
 }
 

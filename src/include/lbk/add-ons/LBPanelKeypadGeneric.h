@@ -43,16 +43,13 @@ public:
 	virtual status_t	InitCheck(const char *options);
 
 	void			SetKeycode(int32 id, uint16 keycode);
-	virtual status_t	GetCountOfKeys(uint8 &count);
 
-	virtual status_t	BlockKeyEvents(bool state);
+	virtual status_t	GetCountOfKeys(uint8 &count);
 
 private:
 	int fFD;
 	int fPipes[2];
 	void *fThread;
-	bool fBlockKeyEvents;
-	bigtime_t fBlockTimestamp;
 	uint16 fKeycodes[LBK_KEY_MAXIMUM_NUMBER];
 
 	static int32		InputEventsObserver(void*);

@@ -109,6 +109,8 @@ public:
 						      uint16 &OffsetRightBottom);
 #endif
 
+	virtual status_t	SendMessage(const BMessage *msg);
+
 private:
 	BList fScreens;
 	BList fKeypads;
@@ -122,6 +124,7 @@ private:
 	bool fState;
 	bool fBlockKeyEvents;
 	bigtime_t fBlockTimestamp;
+	bigtime_t fTimestamp;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	uint8 fDepth;
 	lbk_color_space fColorSpace;
