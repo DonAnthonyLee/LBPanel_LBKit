@@ -746,6 +746,6 @@ LBVPD::KeyUp(uint8 key, bigtime_t when)
 void
 LBVPD::QuitRequested()
 {
-	LBPanelDeviceAddOn::SendMessage(LBK_QUIT_REQUESTED);
+	LBPanelDeviceAddOn::SendMessage(LBK_DEVICE_DETACHED);
 }
 

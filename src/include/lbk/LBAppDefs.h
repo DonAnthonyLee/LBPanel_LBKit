@@ -39,6 +39,7 @@
 #include <be/support/SupportDefs.h>
 #endif // __cplusplus
 
+#define LBK_DEVICE_DETACHED		'lBKd'
 #define LBK_EVENT_PENDING		'lBKe'
 #define LBK_QUIT_REQUESTED		'lBKq'
 #define LBK_APP_SETTINGS_UPDATED	'lBKs'

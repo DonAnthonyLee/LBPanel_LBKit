@@ -652,7 +652,7 @@ NPIHat::InputEventsObserver(void *arg)
 		self->SendMessage(&msg);
 	}
 
-	self->LBPanelDeviceAddOn::SendMessage(LBK_QUIT_REQUESTED);
+	self->LBPanelDeviceAddOn::SendMessage(LBK_DEVICE_DETACHED);
 	return 0;
 }
 

@@ -747,7 +747,7 @@ LBPanelCombiner::SendMessage(const BMessage *msg)
 {
 	switch(msg->what)
 	{
-		case LBK_QUIT_REQUESTED: // device detached when error occurred
+		case LBK_DEVICE_DETACHED: // device detached when error occurred
 			// TODO
 			break;
 

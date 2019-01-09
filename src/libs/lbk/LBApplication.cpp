@@ -614,7 +614,7 @@ LBApplication::MessageReceived(BMessage *msg)
 
 	switch(msg->what)
 	{
-		case LBK_QUIT_REQUESTED:
+		case LBK_DEVICE_DETACHED:
 			if(msg->FindInt32("panel_id", &id) == B_OK)
 			{
 				dev = lbk_app_get_panel_device_data(fAddOnsList, id);
@@ -640,10 +640,10 @@ LBApplication::MessageReceived(BMessage *msg)
 				if(noValidPanels)
 					PostMessage(B_QUIT_REQUESTED, this);
 			}
-			else
-			{
-				PostMessage(B_QUIT_REQUESTED, this);
-			}
+			break;
+
+		case LBK_QUIT_REQUESTED:
+			PostMessage(B_QUIT_REQUESTED, this);
 			break;
 
 		case B_KEY_DOWN:
