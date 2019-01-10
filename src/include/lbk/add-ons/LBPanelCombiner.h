@@ -49,13 +49,18 @@ public:
 
 	status_t		SetCombineStyle(uint32 style);
 
-	status_t		AddScreen(const char *add_on, BPoint location);
-	status_t		AddScreen(LBPanelScreen *screen, BPoint location);
+	status_t		AddScreen(const char *add_on,
+					  BPoint location,
+					  const char *options = NULL);
+	status_t		AddScreen(LBPanelScreen *screen,
+					  BPoint location);
 
-	status_t		AddKeypad(const char *add_on);
+	status_t		AddKeypad(const char *add_on,
+					  const char *options = NULL);
 	status_t		AddKeypad(LBPanelKeypad *keypad);
 
-	status_t		AddTouchpad(const char *add_on);
+	status_t		AddTouchpad(const char *add_on,
+					    const char *options = NULL);
 	status_t		AddTouchpad(LBPanelTouchpad *touchpad);
 
 	virtual status_t	InitCheck(const char *options);
@@ -121,10 +126,9 @@ private:
 	uint16 fWidth;
 	uint16 fHeight;
 	uint8 fKeysCount;
-	bool fState;
 	bool fBlockKeyEvents;
 	bigtime_t fBlockTimestamp;
-	bigtime_t fTimestamp;
+	BRect fClipping;
 #ifdef LBK_ENABLE_MORE_FEATURES
 	uint8 fDepth;
 	lbk_color_space fColorSpace;

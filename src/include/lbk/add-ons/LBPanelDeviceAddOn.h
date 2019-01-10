@@ -61,10 +61,10 @@ private:
 	LBPanelDevice *fDev;
 	void *fAddOn;
 
-	void*			LoadAddOn(const char *add_on,
+	static void*		LoadAddOn(const char *add_on,
 					  void **ptr,
-					  const char *name) const;
-	status_t		UnloadAddOn(void *image) const;
+					  const char *name);
+	static status_t		UnloadAddOn(void *image);
 };
 
 #endif /* __cplusplus */

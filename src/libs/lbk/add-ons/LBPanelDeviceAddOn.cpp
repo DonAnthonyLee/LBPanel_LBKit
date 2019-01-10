@@ -95,7 +95,7 @@ LBPanelDeviceAddOn::Panel() const
 void*
 LBPanelDeviceAddOn::LoadAddOn(const char *add_on,
 			      void **ptr,
-			      const char *name) const
+			      const char *name)
 {
 	void *retVal;
 	image_id image;
@@ -123,7 +123,7 @@ LBPanelDeviceAddOn::LoadAddOn(const char *add_on,
 
 
 status_t
-LBPanelDeviceAddOn::UnloadAddOn(void *m) const
+LBPanelDeviceAddOn::UnloadAddOn(void *m)
 {
 	image_id image;
 

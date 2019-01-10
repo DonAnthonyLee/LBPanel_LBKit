@@ -36,10 +36,8 @@ LBPanelCombiner::LBPanelCombiner()
 	  fWidth(0),
 	  fHeight(0),
 	  fKeysCount(0),
-	  fState(true),
 	  fBlockKeyEvents(false),
-	  fBlockTimestamp(0),
-	  fTimestamp(0)
+	  fBlockTimestamp(0)
 {
 #ifdef LBK_ENABLE_MORE_FEATURES
 	fDepth = 0;
@@ -61,7 +59,7 @@ LBPanelCombiner::~LBPanelCombiner()
 		void *image = item->fAddOn;
 		LBPanelScreen *screen = cast_as(item, LBPanelScreen);
 
-		screen->fDev = NULL;
+		item->fDev = NULL;
 		delete screen;
 		if(image != NULL) LBPanelDeviceAddOn::UnloadAddOn(image);
 	}
@@ -72,7 +70,7 @@ LBPanelCombiner::~LBPanelCombiner()
 		void *image = item->fAddOn;
 		LBPanelKeypad *keypad = cast_as(item, LBPanelKeypad);
 
-		keypad->fDev = NULL;
+		item->fDev = NULL;
 		delete keypad;
 		if(image != NULL) LBPanelDeviceAddOn::UnloadAddOn(image);
 	}
@@ -83,7 +81,7 @@ LBPanelCombiner::~LBPanelCombiner()
 		void *image = item->fAddOn;
 		LBPanelTouchpad *touchpad = cast_as(item, LBPanelTouchpad);
 
-		touchpad->fDev = NULL;
+		item->fDev = NULL;
 		delete touchpad;
 		if(image != NULL) LBPanelDeviceAddOn::UnloadAddOn(image);
 	}
@@ -95,8 +93,12 @@ LBPanelCombiner::InitCheck(const char *options)
 {
 	// TODO
 
-	return((fScreens.CountItems() > 0 &&
-		(fKeypads.CountItems() + fTouchpads.CountItems()) > 0) ? B_OK : B_ERROR);
+	if(fScreens.CountItems() == 0) return B_ERROR;
+
+	uint8 keys_count = 0;
+	GetCountOfKeys(keys_count);
+
+	return((fTouchpads.CountItems() > 0 || keys_count > 0) ? B_OK : B_ERROR);
 }
 
 
@@ -117,8 +119,38 @@ LBPanelCombiner::ScreenHeight()
 status_t
 LBPanelCombiner::ConstrainClipping(BRect r, bigtime_t &ts)
 {
-	// TODO
-	return B_ERROR;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
+
+	bigtime_t t = 0;
+	ts = 0;
+	for(int k = 0; k < fScreens.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
+		LBPanelScreen *screen = cast_as(item, LBPanelScreen);
+
+		BRect rScr;
+		if(r.IsValid())
+		{
+			rScr.SetLeftTop(screen->fLocation);
+			rScr.SetRightBottom(rScr.LeftTop() + BPoint(screen->Width(), screen->Height()) - BPoint(1, 1));
+			if(rScr.Intersects(r) == false) continue;
+
+			rScr &= r;
+			rScr.OffsetBy(B_ORIGIN - screen->fLocation);
+		}
+
+		if(screen->ConstrainClipping(rScr, t) == B_OK)
+			ts = max_c(t, ts);
+	}
+
+	fClipping = r;
+
+	return B_OK;
 }
 
 
@@ -135,7 +167,8 @@ LBPanelCombiner::FillRect(BRect r,
 #endif
 	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
-	bigtime_t t;
+	bigtime_t t = 0;
+	ts = 0;
 	for(int k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
@@ -143,14 +176,16 @@ LBPanelCombiner::FillRect(BRect r,
 
 		BRect rScr(screen->fLocation,
 			   screen->fLocation + BPoint(screen->Width(), screen->Height()) - BPoint(1, 1));
+		if(fClipping.IsValid())
+			rScr &= fClipping;
 		if(rScr.Intersects(r) == false) continue;
 
 		rScr &= r;
 		rScr.OffsetBy(B_ORIGIN - screen->fLocation);
-		screen->FillRect(rScr, p, patternVertical, t);
-	}
 
-	ts = fTimestamp = (fScreens.CountItems() == 1) ? t : system_time();
+		if(screen->FillRect(rScr, p, patternVertical, t) == B_OK)
+			ts = max_c(t, ts);
+	}
 
 	return B_OK;
 }
@@ -206,7 +241,6 @@ LBPanelCombiner::DrawString(const char *str,
 		LBPanelScreen *screen = cast_as(item, LBPanelScreen);
 
 		retVal = screen->DrawString(str, pt + screen->fLocation, fontHeight, erase, ts);
-		if(retVal == B_OK) fTimestamp = ts;
 	}
 	else
 	{
@@ -259,7 +293,8 @@ LBPanelCombiner::InvertRect(BRect r,
 #endif
 	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
-	bigtime_t t;
+	bigtime_t t = 0;
+	ts = 0;
 	for(int k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
@@ -267,14 +302,16 @@ LBPanelCombiner::InvertRect(BRect r,
 
 		BRect rScr(screen->fLocation,
 			   screen->fLocation + BPoint(screen->Width(), screen->Height()) - BPoint(1, 1));
+		if(fClipping.IsValid())
+			rScr &= fClipping;
 		if(rScr.Intersects(r) == false) continue;
 
 		rScr &= r;
 		rScr.OffsetBy(B_ORIGIN - screen->fLocation);
-		screen->InvertRect(rScr, t);
-	}
 
-	ts = fTimestamp = (fScreens.CountItems() == 1) ? t : system_time();
+		if(screen->InvertRect(rScr, t) == B_OK)
+			ts = max_c(t, ts);
+	}
 
 	return B_OK;
 }
@@ -283,7 +320,21 @@ LBPanelCombiner::InvertRect(BRect r,
 status_t
 LBPanelCombiner::GetPowerState(bool &state)
 {
-	state = fState;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
+
+	state = true;
+	for(int k = 0; k < fScreens.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
+
+		if(cast_as(item, LBPanelScreen)->GetPowerState(state) != B_OK) continue;
+		if(state == false) break;
+	}
 
 	return B_OK;
 }
@@ -292,15 +343,46 @@ LBPanelCombiner::GetPowerState(bool &state)
 status_t
 LBPanelCombiner::SetPowerState(bool state, bigtime_t &ts)
 {
-	// TODO
-	return B_ERROR;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
+
+	bigtime_t t = 0;
+	ts = 0;
+	for(int k = 0; k < fScreens.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
+
+		if(cast_as(item, LBPanelScreen)->SetPowerState(state, t) == B_OK)
+			ts = max_c(t, ts);
+	}
+
+	return B_OK;
 }
 
 
 status_t
 LBPanelCombiner::GetTimestamp(bigtime_t &ts)
 {
-	ts = fTimestamp;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
+
+	bigtime_t t = 0;
+	ts = 0;
+	for(int k = 0; k < fScreens.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
+
+		if(cast_as(item, LBPanelScreen)->GetTimestamp(t) == B_OK)
+			ts = max_c(t, ts);
+	}
 
 	return B_OK;
 }
@@ -309,33 +391,26 @@ LBPanelCombiner::GetTimestamp(bigtime_t &ts)
 status_t
 LBPanelCombiner::SetTimestampNow(bigtime_t &tsRet)
 {
-	status_t retVal;
-
 #ifdef ETK_MAJOR_VERSION
 	EAutolock <LBPanelCombiner>autolock(this);
 #else
 	BAutolock autolock(this);
 #endif
-	if(autolock.IsLocked() == false) return B_ERROR;
+	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
-	if(fScreens.CountItems() == 1)
+	bigtime_t t = 0;
+	tsRet = 0;
+	for(int k = 0; k < fScreens.CountItems(); k++)
 	{
-		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(0);
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
-		retVal = cast_as(item, LBPanelScreen)->SetTimestampNow(fTimestamp);
-		if(retVal == B_OK) tsRet = fTimestamp;
-	}
-	else
-	{
-		// TODO
-#if 0
-		tsRet = fTimestamp = system_time();
-#endif
-		retVal = B_ERROR;
+		if(cast_as(item, LBPanelScreen)->SetTimestampNow(t) == B_OK)
+			tsRet = max_c(t, tsRet);
 	}
 
-	return B_ERROR;
+	return B_OK;
 }
+
 
 status_t
 LBPanelCombiner::DisableUpdate()
@@ -351,7 +426,7 @@ LBPanelCombiner::DisableUpdate()
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
-		// TODO: check return value
+		// ignore return value
 		cast_as(item, LBPanelScreen)->DisableUpdate();
 	}
 
@@ -373,7 +448,7 @@ LBPanelCombiner::EnableUpdate()
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
-		// TODO: check return value
+		// ignore return value
 		cast_as(item, LBPanelScreen)->EnableUpdate();
 	}
 
@@ -384,8 +459,29 @@ LBPanelCombiner::EnableUpdate()
 status_t
 LBPanelCombiner::GetCountOfKeys(uint8 &count)
 {
-	// TODO
-	return B_ERROR;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fKeypads.CountItems() == 0) return B_ERROR;
+
+	uint8 t;
+	count = 0;
+	for(int k = 0; k < fKeypads.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fKeypads.ItemAt(k);
+
+		if(cast_as(item, LBPanelKeypad)->GetCountOfKeys(t) != B_OK) continue;
+		if(0xff - count < t || count + t >= LBK_KEY_MAXIMUM_NUMBER)
+		{
+			count = LBK_KEY_MAXIMUM_NUMBER;
+			break;
+		}
+		count += t;
+	}
+
+	return B_OK;
 }
 
 
@@ -418,7 +514,7 @@ LBPanelCombiner::SetHighColor(rgb_color c)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
-		// TODO: check return value
+		// ignore return value
 		cast_as(item, LBPanelScreen)->SetHighColor(c);
 	}
 
@@ -440,7 +536,7 @@ LBPanelCombiner::SetLowColor(rgb_color c)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
-		// TODO: check return value
+		// ignore return value
 		cast_as(item, LBPanelScreen)->SetLowColor(c);
 	}
 
@@ -483,8 +579,22 @@ LBPanelCombiner::Sync()
 status_t
 LBPanelCombiner::SetPowerOffTimeout(bigtime_t t)
 {
-	// TODO
-	return B_ERROR;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
+
+	for(int k = 0; k < fScreens.CountItems(); k++)
+	{
+		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
+
+		// ignore return value
+		cast_as(item, LBPanelScreen)->SetPowerOffTimeout(t);
+	}
+
+	return B_OK;
 }
 
 
@@ -566,7 +676,7 @@ LBPanelCombiner::SetCombineStyle(uint32 style)
 
 
 status_t
-LBPanelCombiner::AddScreen(const char *add_on, BPoint location)
+LBPanelCombiner::AddScreen(const char *add_on, BPoint location, const char *options)
 {
 #ifdef ETK_MAJOR_VERSION
 	EAutolock <LBPanelCombiner>autolock(this);
@@ -580,7 +690,7 @@ LBPanelCombiner::AddScreen(const char *add_on, BPoint location)
 	if(image == NULL) return B_ERROR;
 
 	LBPanelScreen *screen = (*func)();
-	if(screen == NULL || AddScreen(screen, location) != B_OK)
+	if(screen == NULL || screen->InitCheck(options) != B_OK || AddScreen(screen, location) != B_OK)
 	{
 		if(screen != NULL) delete screen;
 		LBPanelDeviceAddOn::UnloadAddOn(image);
@@ -596,7 +706,7 @@ status_t
 LBPanelCombiner::AddScreen(LBPanelScreen *screen, BPoint location)
 {
 	LBPanelDeviceAddOn *add_on = e_cast_as(screen, LBPanelDeviceAddOn);
-	if(add_on == NULL || screen->fDev != NULL) return B_BAD_VALUE;
+	if(add_on == NULL || add_on->fDev != NULL) return B_BAD_VALUE;
 
 	BRect r((int16)0x8000, (int16)0x8000, (int16)0x7fff, (int16)0x7fff);
 	BRect rScr(location, location + BPoint(screen->Width(), screen->Height()) - BPoint(1, 1));
@@ -634,16 +744,16 @@ LBPanelCombiner::AddScreen(LBPanelScreen *screen, BPoint location)
 		// TODO
 	}
 
-	screen->fDev = this;
+	add_on->fDev = this;
 	if(LBPanelDeviceAddOn::fID >= 0)
-		screen->fID = fScreens.CountItems() - 1;
+		add_on->fID = fScreens.CountItems() - 1;
 
 	return B_OK;
 }
 
 
 status_t
-LBPanelCombiner::AddKeypad(const char *add_on)
+LBPanelCombiner::AddKeypad(const char *add_on, const char *options)
 {
 #ifdef ETK_MAJOR_VERSION
 	EAutolock <LBPanelCombiner>autolock(this);
@@ -657,8 +767,9 @@ LBPanelCombiner::AddKeypad(const char *add_on)
 	if(image == NULL) return B_ERROR;
 
 	LBPanelKeypad *keypad = (*func)();
-	if(keypad == NULL || AddKeypad(keypad) != B_OK)
+	if(keypad == NULL || keypad->InitCheck(options) != B_OK || AddKeypad(keypad) != B_OK)
 	{
+		if(keypad != NULL) delete keypad;
 		LBPanelDeviceAddOn::UnloadAddOn(image);
 		return B_ERROR;
 	}
@@ -671,13 +782,28 @@ LBPanelCombiner::AddKeypad(const char *add_on)
 status_t
 LBPanelCombiner::AddKeypad(LBPanelKeypad *keypad)
 {
+	LBPanelDeviceAddOn *add_on = e_cast_as(keypad, LBPanelDeviceAddOn);
+	if(add_on == NULL || add_on->fDev != NULL) return B_BAD_VALUE;
+
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fKeypads.AddItem(add_on) == false) return B_ERROR;
+
 	// TODO
-	return B_ERROR;
+
+	add_on->fDev = this;
+	if(LBPanelDeviceAddOn::fID >= 0)
+		add_on->fID = fKeypads.CountItems() - 1;
+
+	return B_OK;
 }
 
 
 status_t
-LBPanelCombiner::AddTouchpad(const char *add_on)
+LBPanelCombiner::AddTouchpad(const char *add_on, const char *options)
 {
 #ifdef ETK_MAJOR_VERSION
 	EAutolock <LBPanelCombiner>autolock(this);
@@ -691,8 +817,9 @@ LBPanelCombiner::AddTouchpad(const char *add_on)
 	if(image == NULL) return B_ERROR;
 
 	LBPanelTouchpad *touchpad = (*func)();
-	if(touchpad == NULL || AddTouchpad(touchpad) != B_OK)
+	if(touchpad == NULL || touchpad->InitCheck(options) != B_OK || AddTouchpad(touchpad) != B_OK)
 	{
+		if(touchpad != NULL) delete touchpad;
 		LBPanelDeviceAddOn::UnloadAddOn(image);
 		return B_ERROR;
 	}
@@ -705,8 +832,23 @@ LBPanelCombiner::AddTouchpad(const char *add_on)
 status_t
 LBPanelCombiner::AddTouchpad(LBPanelTouchpad *touchpad)
 {
+	LBPanelDeviceAddOn *add_on = e_cast_as(touchpad, LBPanelDeviceAddOn);
+	if(add_on == NULL || add_on->fDev != NULL) return B_BAD_VALUE;
+
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false || fTouchpads.AddItem(add_on) == false) return B_ERROR;
+
 	// TODO
-	return B_ERROR;
+
+	add_on->fDev = this;
+	if(LBPanelDeviceAddOn::fID >= 0)
+		add_on->fID = fTouchpads.CountItems() - 1;
+
+	return B_OK;
 }
 
 
@@ -722,21 +864,18 @@ LBPanelCombiner::Init(int32 id, const BMessenger &msgr)
 	for(int k = 0; k < fScreens.CountItems(); k++)
 	{
 		item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
-
 		item->fID = k;
 	}
 
 	for(int k = 0; k < fKeypads.CountItems(); k++)
 	{
 		item = (LBPanelDeviceAddOn*)fKeypads.ItemAt(k);
-
 		item->fID = k;
 	}
 
 	for(int k = 0; k < fTouchpads.CountItems(); k++)
 	{
 		item = (LBPanelDeviceAddOn*)fTouchpads.ItemAt(k);
-
 		item->fID = k;
 	}
 }
@@ -745,6 +884,10 @@ LBPanelCombiner::Init(int32 id, const BMessenger &msgr)
 status_t
 LBPanelCombiner::SendMessage(const BMessage *msg)
 {
+	int32 id;
+	bigtime_t when;
+	uint8 key;
+
 	switch(msg->what)
 	{
 		case LBK_DEVICE_DETACHED: // device detached when error occurred
@@ -753,16 +896,41 @@ LBPanelCombiner::SendMessage(const BMessage *msg)
 
 		case B_KEY_DOWN:
 		case B_KEY_UP:
-			if(Lock() == false) break;
-			if(fBlockKeyEvents)
-			{
-				bigtime_t when;
+			if(msg->FindInt32("keypad_id", &id) != B_OK || id < 0) break;
+			if(msg->FindInt64("when", &when) != B_OK) break;
+			if(msg->FindInt8("key", (int8*)&key) != B_OK || key > LBK_KEY_ID_MAX) break;
 
-				if(msg->FindInt64("when", &when) != B_OK) break;
-				if(fBlockTimestamp > when) break;
+			if(Lock() == false) break;
+
+			if(id >= fKeypads.CountItems() ||
+			   (fBlockKeyEvents && fBlockTimestamp > when))
+			{
+				Unlock();
+				break;
 			}
+
+			for(int k = 0; k < id; k++)
+			{
+				uint8 t;
+				LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fKeypads.ItemAt(k);
+
+				if(cast_as(item, LBPanelKeypad)->GetCountOfKeys(t) != B_OK) continue;
+				if(0xff - key < t || key + t > LBK_KEY_ID_MAX)
+				{
+					key = 0xff;
+					break;
+				}
+				key += t;
+			}
+
 			Unlock();
-			return LBPanelDevice::SendMessage(msg);
+
+			if(key <= LBK_KEY_ID_MAX)
+			{
+				BMessage aMsg(*msg);
+				aMsg.ReplaceInt8("key", 0, *((int8*)&key));
+				return LBPanelDevice::SendMessage(&aMsg);
+			}
 			break;
 
 		default:
