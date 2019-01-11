@@ -99,6 +99,7 @@ libs/Makefile
 libs/lbk/Makefile
 libs/lbk/add-ons/Makefile
 libs/lbk/add-ons/oled-ssd1306/Makefile
+libs/lbk/add-ons/lcd-st7735s/Makefile
 libs/lbk/add-ons/npi-oled-hat/Makefile
 libs/lbk/add-ons/vpd/Makefile
 cmd/Makefile
