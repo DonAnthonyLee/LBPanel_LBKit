@@ -39,7 +39,6 @@
 
 enum {
 	LBK_SCREEN_COMBINE_BY_SINGLE = 0x00000000,
-	LBK_SCREEN_COMBINE_BY_JOIN_TOGETHER,
 };
 
 class _EXPORT LBPanelCombiner : public LBPanelDevice {
@@ -125,7 +124,6 @@ private:
 
 	uint16 fWidth;
 	uint16 fHeight;
-	uint8 fKeysCount;
 	bool fBlockKeyEvents;
 	bigtime_t fBlockTimestamp;
 	BRect fClipping;

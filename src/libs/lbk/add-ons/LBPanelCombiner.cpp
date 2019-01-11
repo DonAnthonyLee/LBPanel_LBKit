@@ -35,7 +35,6 @@ LBPanelCombiner::LBPanelCombiner()
 	  fCombineStyle(LBK_SCREEN_COMBINE_BY_SINGLE),
 	  fWidth(0),
 	  fHeight(0),
-	  fKeysCount(0),
 	  fBlockKeyEvents(false),
 	  fBlockTimestamp(0)
 {
@@ -53,7 +52,7 @@ LBPanelCombiner::~LBPanelCombiner()
 {
 	// TODO
 
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 		void *image = item->fAddOn;
@@ -64,7 +63,7 @@ LBPanelCombiner::~LBPanelCombiner()
 		if(image != NULL) LBPanelDeviceAddOn::UnloadAddOn(image);
 	}
 
-	for(int k = 0; k < fKeypads.CountItems(); k++)
+	for(int32 k = 0; k < fKeypads.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fKeypads.ItemAt(k);
 		void *image = item->fAddOn;
@@ -75,7 +74,7 @@ LBPanelCombiner::~LBPanelCombiner()
 		if(image != NULL) LBPanelDeviceAddOn::UnloadAddOn(image);
 	}
 
-	for(int k = 0; k < fTouchpads.CountItems(); k++)
+	for(int32 k = 0; k < fTouchpads.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fTouchpads.ItemAt(k);
 		void *image = item->fAddOn;
@@ -128,7 +127,7 @@ LBPanelCombiner::ConstrainClipping(BRect r, bigtime_t &ts)
 
 	bigtime_t t = 0;
 	ts = 0;
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 		LBPanelScreen *screen = cast_as(item, LBPanelScreen);
@@ -169,7 +168,7 @@ LBPanelCombiner::FillRect(BRect r,
 
 	bigtime_t t = 0;
 	ts = 0;
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 		LBPanelScreen *screen = cast_as(item, LBPanelScreen);
@@ -295,7 +294,7 @@ LBPanelCombiner::InvertRect(BRect r,
 
 	bigtime_t t = 0;
 	ts = 0;
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 		LBPanelScreen *screen = cast_as(item, LBPanelScreen);
@@ -328,7 +327,7 @@ LBPanelCombiner::GetPowerState(bool &state)
 	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
 	state = true;
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -352,7 +351,7 @@ LBPanelCombiner::SetPowerState(bool state, bigtime_t &ts)
 
 	bigtime_t t = 0;
 	ts = 0;
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -376,7 +375,7 @@ LBPanelCombiner::GetTimestamp(bigtime_t &ts)
 
 	bigtime_t t = 0;
 	ts = 0;
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -400,7 +399,7 @@ LBPanelCombiner::SetTimestampNow(bigtime_t &tsRet)
 
 	bigtime_t t = 0;
 	tsRet = 0;
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -422,7 +421,7 @@ LBPanelCombiner::DisableUpdate()
 #endif
 	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -444,7 +443,7 @@ LBPanelCombiner::EnableUpdate()
 #endif
 	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -468,7 +467,7 @@ LBPanelCombiner::GetCountOfKeys(uint8 &count)
 
 	uint8 t;
 	count = 0;
-	for(int k = 0; k < fKeypads.CountItems(); k++)
+	for(int32 k = 0; k < fKeypads.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fKeypads.ItemAt(k);
 
@@ -510,7 +509,7 @@ LBPanelCombiner::SetHighColor(rgb_color c)
 #endif
 	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -532,7 +531,7 @@ LBPanelCombiner::SetLowColor(rgb_color c)
 #endif
 	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -586,7 +585,7 @@ LBPanelCombiner::SetPowerOffTimeout(bigtime_t t)
 #endif
 	if(autolock.IsLocked() == false || fScreens.CountItems() == 0) return B_ERROR;
 
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 
@@ -660,17 +659,26 @@ LBPanelCombiner::BlockKeyEvents(bool state)
 status_t
 LBPanelCombiner::SetCombineStyle(uint32 style)
 {
-	if(fCombineStyle == style) return B_OK;
+#ifdef ETK_MAJOR_VERSION
+	EAutolock <LBPanelCombiner>autolock(this);
+#else
+	BAutolock autolock(this);
+#endif
+	if(autolock.IsLocked() == false) return B_ERROR;
 
-	if((style & 0xff) != LBK_SCREEN_COMBINE_BY_SINGLE)
+	if(fCombineStyle != style)
 	{
+		if((style & 0x000000ff) != LBK_SCREEN_COMBINE_BY_SINGLE)
+		{
+			// TODO
+			return B_ERROR;
+		}
+
 		// TODO
-		return B_ERROR;
+
+		fCombineStyle = style;
 	}
 
-	// TODO
-
-	fCombineStyle = style;
 	return B_OK;
 }
 
@@ -742,6 +750,7 @@ LBPanelCombiner::AddScreen(LBPanelScreen *screen, BPoint location)
 	else
 	{
 		// TODO
+		return B_ERROR;
 	}
 
 	add_on->fDev = this;
@@ -857,27 +866,27 @@ LBPanelCombiner::Init(int32 id, const BMessenger &msgr)
 {
 	LBPanelDeviceAddOn *item;
 
-	// WARNING: DO NOT CHANGE THE SEQUENCE OF FOLLOWING 2 LINES !!!
-	LBPanelDeviceAddOn::fMsgr = msgr;
-	LBPanelDeviceAddOn::fID = id;
-
-	for(int k = 0; k < fScreens.CountItems(); k++)
+	for(int32 k = 0; k < fScreens.CountItems(); k++)
 	{
 		item = (LBPanelDeviceAddOn*)fScreens.ItemAt(k);
 		item->fID = k;
 	}
 
-	for(int k = 0; k < fKeypads.CountItems(); k++)
+	for(int32 k = 0; k < fKeypads.CountItems(); k++)
 	{
 		item = (LBPanelDeviceAddOn*)fKeypads.ItemAt(k);
 		item->fID = k;
 	}
 
-	for(int k = 0; k < fTouchpads.CountItems(); k++)
+	for(int32 k = 0; k < fTouchpads.CountItems(); k++)
 	{
 		item = (LBPanelDeviceAddOn*)fTouchpads.ItemAt(k);
 		item->fID = k;
 	}
+
+	// WARNING: DO NOT CHANGE THE SEQUENCE OF FOLLOWING 2 LINES !!!
+	LBPanelDeviceAddOn::fMsgr = msgr;
+	LBPanelDeviceAddOn::fID = id;
 }
 
 
@@ -909,7 +918,7 @@ LBPanelCombiner::SendMessage(const BMessage *msg)
 				break;
 			}
 
-			for(int k = 0; k < id; k++)
+			for(int32 k = 0; k < id; k++)
 			{
 				uint8 t;
 				LBPanelDeviceAddOn *item = (LBPanelDeviceAddOn*)fKeypads.ItemAt(k);
