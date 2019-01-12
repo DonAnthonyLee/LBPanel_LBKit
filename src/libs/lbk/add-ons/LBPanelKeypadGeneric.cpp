@@ -191,19 +191,18 @@ LBPanelKeypadGeneric::InputEventsObserver(void *arg)
 		FD_SET(pipe_fd, &rset);
 
 		int status = select(max_c(input_fd, pipe_fd) + 1, &rset, NULL, NULL, NULL);
+		if(status == 0) continue;
 		if(status < 0)
 		{
 			perror("[LBPanelKeypadGeneric]: Unable to get event from input device");
 			break;
 		}
 
-		if(status > 0 && FD_ISSET(pipe_fd, &rset))
+		if(FD_ISSET(pipe_fd, &rset))
 		{
-			uint8 byte = 0x00;
+			uint8 byte;
 			doingGood = !(read(pipe_fd, &byte, 1) != 1 || byte == 0xff);
 		}
-
-		if(status == 0) continue;
 
 		if(!FD_ISSET(input_fd, &rset)) continue;
 
