@@ -694,7 +694,7 @@ LBPanelCombiner::AddScreen(const char *add_on, BPoint location, const char *opti
 	if(autolock.IsLocked() == false) return B_ERROR;
 
 	LBPanelScreen* (*func)(void) = NULL;
-	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)func, "instantiate_panel_screen");
+	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)&func, "instantiate_panel_screen");
 	if(image == NULL) return B_ERROR;
 
 	LBPanelScreen *screen = (*func)();
@@ -772,7 +772,7 @@ LBPanelCombiner::AddKeypad(const char *add_on, const char *options)
 	if(autolock.IsLocked() == false) return B_ERROR;
 
 	LBPanelKeypad* (*func)(void) = NULL;
-	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)func, "instantiate_panel_keypad");
+	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)&func, "instantiate_panel_keypad");
 	if(image == NULL) return B_ERROR;
 
 	LBPanelKeypad *keypad = (*func)();
@@ -822,7 +822,7 @@ LBPanelCombiner::AddTouchpad(const char *add_on, const char *options)
 	if(autolock.IsLocked() == false) return B_ERROR;
 
 	LBPanelTouchpad* (*func)(void) = NULL;
-	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)func, "instantiate_panel_touchpad");
+	void *image = LBPanelDeviceAddOn::LoadAddOn(add_on, (void**)&func, "instantiate_panel_touchpad");
 	if(image == NULL) return B_ERROR;
 
 	LBPanelTouchpad *touchpad = (*func)();
