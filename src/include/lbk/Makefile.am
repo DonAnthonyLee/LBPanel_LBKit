@@ -3,7 +3,13 @@ noinst_PROGRAMS =
 
 LBK_HEADERS_ADDONS =			\
 	add-ons/LBPanelBuffer.h		\
-	add-ons/LBPanelDevices.h
+	add-ons/LBPanelDeviceAddOn.h	\
+	add-ons/LBPanelDevice.h		\
+	add-ons/LBPanelKeypadGeneric.h	\
+	add-ons/LBPanelTouchpad.h	\
+	add-ons/LBPanelScreen.h		\
+	add-ons/LBPanelScreenNet.h	\
+	add-ons/LBPanelCombiner.h
 
 LBK_HEADERS_MAIN =		\
 	LBKConfig.h		\
