@@ -120,7 +120,6 @@ define Build/InstallDev
 	mkdir -p $(STAGING_DIR)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/liblbk.so* $(STAGING_DIR)/usr/lib/
 	mkdir -p $(STAGING_DIR)/usr/lib/add-ons/lbk
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/libnpi-oled-hat.so.0.0.0 $(STAGING_DIR)/usr/lib/add-ons/lbk/npi-oled-hat.so
 	mkdir -p $(STAGING_DIR)/usr/include/lbk
 	$(CP) $(PKG_BUILD_DIR)/include/lbk/*.h $(STAGING_DIR)/usr/include/lbk/
 	mkdir -p $(STAGING_DIR)/usr/include/lbk/add-ons
@@ -169,6 +168,7 @@ endef
 
 define Package/lbk-npi_oled_hat/install
 	$(INSTALL_DIR) $(1)/usr/lib/add-ons/lbk
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/liboled-ssd1306.so.0.0.0 $(1)/usr/lib/add-ons/lbk/oled-ssd1306.so
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/libnpi-oled-hat.so.0.0.0 $(1)/usr/lib/add-ons/lbk/npi-oled-hat.so
 	$(INSTALL_DIR) $(1)/bin
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/npi_hat_cmd $(1)/bin/npi_hat_cmd
@@ -187,6 +187,8 @@ fi
 endef
 
 define Package/lbk-lcd_st7735s/install
+	$(INSTALL_DIR) $(1)/usr/lib/add-ons/lbk
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/liblcd-st7735s.so.0.0.0 $(1)/usr/lib/add-ons/lbk/lcd-st7735s.so
 	$(INSTALL_DIR) $(1)/bin
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/lcd_cmd $(1)/bin/lcd_cmd
 	ln -sf ./lcd_cmd $(1)/bin/lcd_power
