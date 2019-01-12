@@ -34,13 +34,9 @@
 #define DEFAULT_OLED_DEVICE	"/dev/oled-003c"
 #define DEFAULT_INPUT_EVENT	"/dev/input/event0"
 
-#define OLED_SCREEN_WIDTH	128
-#define OLED_SCREEN_HEIGHT	64
-
-#define OLED_KEYS_COUNT		3
-#define OLED_KEY1_CODE		105	/* KEY_LEFT */
-#define OLED_KEY2_CODE		102	/* KEY_HOME */
-#define OLED_KEY3_CODE		106	/* KEY_RIGHT */
+#define K0_KEYCODE		105	/* KEY_LEFT */
+#define K1_KEYCODE		102	/* KEY_HOME */
+#define K2_KEYCODE		106	/* KEY_RIGHT */
 
 #endif /* __NPI_OLED_HAT_CONFIG_H__ */
 

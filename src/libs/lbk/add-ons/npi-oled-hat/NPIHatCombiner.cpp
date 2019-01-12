@@ -48,9 +48,9 @@ NPIHat::NPIHat()
 		delete keypad;
 		return;
 	}
-	keypad->SetKeycode(0, OLED_KEY1_CODE);
-	keypad->SetKeycode(1, OLED_KEY2_CODE);
-	keypad->SetKeycode(2, OLED_KEY3_CODE);
+	keypad->SetKeycode(0, K0_KEYCODE);
+	keypad->SetKeycode(1, K1_KEYCODE);
+	keypad->SetKeycode(2, K2_KEYCODE);
 
 	BString optScreen;
 	optScreen << "dev=" << DEFAULT_OLED_DEVICE;
