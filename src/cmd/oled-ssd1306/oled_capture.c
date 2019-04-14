@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Commands for NanoPi OLED Hat
+ * Commands for OLED SSD1306
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,7 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: oled_show.c
+ * File: oled_capture.c
  * Description:
  *
  * --------------------------------------------------------------------------*/
@@ -35,42 +35,45 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-typedef unsigned char	bool;
-
-#ifndef true
-#define true 1
-#endif
-
-#ifndef false
-#define false 0
-#endif
-
-#include <oled_ssd1306_ioctl.h>
+#include <sys/mman.h>
 
 #define DEFAULT_DEVICE		"/dev/oled-003c"
+#define OLED_SCREEN_WIDTH	128
+#define OLED_SCREEN_HEIGHT	64
 
 static void show_usage(void)
 {
-	printf("oled_show - Show characters on OLED\n\n");
-	printf("Usage: oled_show [-D device] x y size string [erase_mode]\n\
-    device                     path of device, default value is: %s\n\
-    size = 8,12,14,16,24,32,0    0 means 32x32 icon, range: 0~9.\n\
-    erase_mode = 0,1           default value is: 0\n", DEFAULT_DEVICE);
+	printf("oled_capture - Capture content of OLED and write to an xpm\n\n");
+	printf("Usage: oled_capture [-D device] xpm_filename\n\
+    device                path of device, default value is: %s\n", DEFAULT_DEVICE);
 }
 
+const char xpm_header1[] = "\
+/* XPM */\n\
+static char *t_xpm[] = {\n\
+\" ";
+
+const char xpm_header2[] = "\
+ 2 1\",\n\
+\".\tc #FFFFFF\",\n\
+\"+\tc #000000\",\n";
+
 #ifdef CMD_ALL_IN_ONE
-int cmd_show(int argc, char **argv)
+int cmd_capture(int argc, char **argv)
 #else
 int main(int argc, char **argv)
 #endif
 {
-	int n, f, err = 0;
+	int n, f, out, err = 0;
 	const char *dev_name = DEFAULT_DEVICE;
-	_oled_ssd1306_show_t data;
+	void *buffer;
+	size_t len = OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3);
+	const uint8_t *bits;
+	int x, y;
+	uint8_t c;
+	char str[OLED_SCREEN_WIDTH + 4];
 
 	for (n = 1; n < argc; n++) {
 		if (n < argc - 1 && strcmp(argv[n], "-D") == 0) {
@@ -81,27 +84,66 @@ int main(int argc, char **argv)
 	}
 	argc -= (--n);
 
-	if (argc < 5 || argc > 6) {
+	if (argc != 2) {
 		show_usage();
 		exit(1);
 	}
 
 	if ((f = open(dev_name, O_RDWR)) < 0) {
-		perror("Open");
+		perror("Open device");
 		exit(1);
 	}
 
-	data.x = (int16_t)atoi(argv[n + 1]);
-	data.y = (int16_t)atoi(argv[n + 2]);
-	data.size = (uint8_t)atoi(argv[n + 3]);
-	strncpy(data.str, argv[n + 4], sizeof(data.str));
-	data.erase_mode = (argc < 6 || *argv[n + 5] != '1') ? false : true;
+	if ((out = open(argv[n + 1], O_CREAT | O_TRUNC | O_RDWR, 0600)) < 0) {
+		perror("Open output");
+		close(f);
+		exit(1);
+	}
 
-	if ((err = ioctl(f, OLED_SSD1306_IOC_SHOW, &data)) != 0)
-		perror("Ioctl");
+	buffer = mmap(NULL, len, PROT_READ, MAP_SHARED, f, 0);
+	if(buffer == MAP_FAILED)
+	{
+		perror("mmap");
+		close(out);
+		close(f);
+		exit(1);
+	}
 
+	memset(str, 0, sizeof(str));
+	sprintf(str, "%d %d", OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT);
+
+	do {
+		if ((err = write(out, xpm_header1, strlen(xpm_header1))) < 0) break;
+		if ((err = write(out, str, strlen(str))) < 0) break;
+		if ((err = write(out, xpm_header2, strlen(xpm_header2))) < 0) break;
+
+		str[0] = '"';
+		memcpy(str + OLED_SCREEN_WIDTH + 1, "\",\n", 3);
+
+		for (y = 0; y < OLED_SCREEN_HEIGHT; y++) {
+			bits = (uint8_t*)buffer + OLED_SCREEN_WIDTH * (y >> 3);
+
+			for (x = 0; x < OLED_SCREEN_WIDTH; x++) {
+				c = ((*bits++) >> (y & 0x07)) & 0x01;
+				str[x + 1] = (c == 0 ? '+' : '.');
+			}
+
+			if ((err = write(out, str, OLED_SCREEN_WIDTH + 4)) < 0) break;
+		}
+
+		if (err > 0)
+			err = write(out, "};\n", 3);
+	} while(0);
+
+	if (err < 0)
+		perror("write");
+
+	if (munmap(buffer, len) != 0)
+		perror("munmap");
+
+	close(out);
 	close(f);
 
-	return err;
+	return(err < 0 ? err : 0);
 }
 

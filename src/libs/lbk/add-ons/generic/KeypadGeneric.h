@@ -23,27 +23,40 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: NPIHatCombiner.h
+ * File: KeypadGeneric.h
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
-#ifndef __NPI_OLED_HAT_COMBINER_H__
-#define __NPI_OLED_HAT_COMBINER_H__
+#ifndef __LBK_PANEL_DEVICE_KEYPAD_GENERIC_H__
+#define __LBK_PANEL_DEVICE_KEYPAD_GENERIC_H__
 
-#include <lbk/add-ons/LBPanelCombiner.h>
+#include <lbk/add-ons/LBPanelKeypad.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
-class NPIHat : public LBPanelCombiner {
+class LBPanelKeypadGeneric : public LBPanelKeypad {
 public:
-	NPIHat();
-	virtual ~NPIHat();
+	LBPanelKeypadGeneric(const char *dev = NULL);
+	virtual ~LBPanelKeypadGeneric();
 
 	virtual status_t	InitCheck(const char *options);
+
+	void			SetKeycode(int32 id, uint16 keycode);
+
+	virtual status_t	GetCountOfKeys(uint8 &count);
+
+private:
+	int fFD;
+	int fPipes[2];
+	void *fThread;
+	uint16 fKeycodes[LBK_KEY_MAXIMUM_NUMBER];
+
+	status_t		InitDevice(const char *dev);
+	static int32		InputEventsObserver(void*);
 };
 
 #endif /* __cplusplus */
 
-#endif /* __NPI_OLED_HAT_COMBINER_H__ */
+#endif /* __LBK_PANEL_DEVICE_KEYPAD_GENERIC_H__ */
 

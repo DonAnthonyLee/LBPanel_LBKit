@@ -23,7 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: LBPanelKeypadGeneric.cpp
+ * File: KeypadGeneric.cpp
  * Description:
  *
  * --------------------------------------------------------------------------*/
@@ -41,7 +41,7 @@
 #include <stdio.h>
 #endif
 
-#include <lbk/add-ons/LBPanelKeypadGeneric.h>
+#include "KeypadGeneric.h"
 
 #if 0
 #define DBGOUT(msg...)		do { printf(msg); } while (0)
@@ -50,30 +50,33 @@
 #endif
 
 
-LBPanelKeypadGeneric::LBPanelKeypadGeneric(const char *dev)
-	: LBPanelKeypad(),
-	  fFD(-1),
-	  fThread(NULL)
+extern "C" _EXPORT LBPanelKeypad* instantiate_panel_keypad()
 {
-	bzero(&fKeycodes, sizeof(fKeycodes));
-	fPipes[0] = fPipes[1] = -1;
+	return new LBPanelKeypadGeneric();
+}
+
+
+status_t
+LBPanelKeypadGeneric::InitDevice(const char *dev)
+{
+	if(dev == NULL || fFD >= 0) return B_ERROR;
 
 #ifdef ETK_OS_LINUX
 	if ((fFD = open(dev, O_RDONLY)) < 0)
 	{
 		perror("[LBPanelKeypadGeneric]: Unable to open device !");
-		return;
+		return B_ERROR;
 	}
 
 	if(pipe(fPipes) < 0)
 	{
 		perror("[LBPanelKeypadGeneric]: Unable to create pipe !");
-		return;
+		return B_ERROR;
 	}
 #else
 	// TODO
 	fprintf(stderr, "[LBPanelKeypadGeneric]: No implementation of device !");
-	return;
+	return B_ERROR;
 #endif // ETK_OS_LINUX
 
 #ifdef ETK_MAJOR_VERSION
@@ -89,6 +92,7 @@ LBPanelKeypadGeneric::LBPanelKeypadGeneric(const char *dev)
 			fThread = NULL;
 		}
 		ETK_WARNING("[LBPanelKeypadGeneric]: Unable to create thread !\n");
+		return B_ERROR;
 	}
 #else
 	thread_id tid = spawn_thread(this->InputEventsObserver,
@@ -97,10 +101,27 @@ LBPanelKeypadGeneric::LBPanelKeypadGeneric(const char *dev)
 				     reinterpret_cast<void*>(this));
 
 	if(tid < 0 || resume_thread(tid) != B_OK)
+	{
 		fprintf(stderr, "[LBPanelKeypadGeneric]: Unable to spawn thread !\n");
-	else
-		fThread = reinterpret_cast<void*>((long)tid);
+		return B_ERROR;
+	}
+
+	fThread = reinterpret_cast<void*>((long)tid);
 #endif // ETK_MAJOR_VERSION
+
+	return B_OK;
+}
+
+
+LBPanelKeypadGeneric::LBPanelKeypadGeneric(const char *dev)
+	: LBPanelKeypad(),
+	  fFD(-1),
+	  fThread(NULL)
+{
+	bzero(&fKeycodes, sizeof(fKeycodes));
+	fPipes[0] = fPipes[1] = -1;
+
+	InitDevice(dev);
 }
 
 
@@ -145,7 +166,41 @@ LBPanelKeypadGeneric::~LBPanelKeypadGeneric()
 status_t
 LBPanelKeypadGeneric::InitCheck(const char *options)
 {
-	// TODO
+	if(fFD == -1)
+	{
+		BString opt(options);
+
+		opt.ReplaceAll(":", " ");
+		while(opt.FindFirst("  ") >= 0) opt.ReplaceAll("  ", " ");
+		while(opt.Length() > 0)
+		{
+			int32 found = opt.FindFirst(' ');
+			if(found < 0) found = opt.Length();
+
+			BString item(opt.String(), found);
+			opt.Remove(0, found + 1);
+
+			if(item.Length() <= 0) continue;
+
+			BString value;
+			found = item.FindFirst('=');
+			if(found >= 0)
+			{
+				value.SetTo(item.String() + found + 1);
+				item.Truncate(found);
+			}
+
+			if(item == "dev")
+			{
+				InitDevice(value.String());
+			}
+			else
+			{
+				// TODO: keycodes
+			}
+		}
+	}
+
 	return((fFD < 0 || fPipes[0] < 0 || fThread == NULL) ? B_ERROR : B_OK);
 }
 

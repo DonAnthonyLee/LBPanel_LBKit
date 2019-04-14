@@ -3,7 +3,7 @@ SUB_DIRS =		\
 
 ifeq ($(shell uname),Linux)
 SUB_DIRS += \
-	npi-oled-hat \
+	oled-ssd1306 \
 	lcd-st7735s
 endif
 

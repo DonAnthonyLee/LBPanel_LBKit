@@ -19,13 +19,13 @@ endif
 endif
 
 ADD_ONS_DIRS = \
+	generic \
 	vpd
 
 ifeq ($(shell uname),Linux)
 ADD_ONS_DIRS += \
 	oled-ssd1306 \
-	lcd-st7735s \
-	npi-oled-hat
+	lcd-st7735s
 endif
 
 OBJECTS_1 = \
@@ -34,7 +34,6 @@ OBJECTS_1 = \
 	add-ons/LBPanelDeviceAddOn.o \
 	add-ons/LBPanelCombiner.o \
 	add-ons/LBPanelKeypad.o \
-	add-ons/LBPanelKeypadGeneric.o \
 	add-ons/LBPanelTouchpad.o \
 	add-ons/LBPanelScreen.o \
 	LBView.o \

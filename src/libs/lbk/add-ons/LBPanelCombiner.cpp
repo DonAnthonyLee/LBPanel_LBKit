@@ -28,7 +28,9 @@
  *
  * --------------------------------------------------------------------------*/
 
+#include <stdlib.h>
 #include <lbk/add-ons/LBPanelCombiner.h>
+
 
 LBPanelCombiner::LBPanelCombiner()
 	: LBPanelDevice(),
@@ -90,7 +92,104 @@ LBPanelCombiner::~LBPanelCombiner()
 status_t
 LBPanelCombiner::InitCheck(const char *options)
 {
-	// TODO
+	BString opt(options);
+
+	opt.ReplaceAll(",", " ");
+	while(opt.FindFirst("  ") >= 0) opt.ReplaceAll("  ", " ");
+	while(opt.Length() > 0)
+	{
+		int32 found = opt.FindFirst(' ');
+		if(found < 0) found = opt.Length();
+
+		BString item(opt.String(), found);
+		opt.Remove(0, found + 1);
+
+		if(item.Length() <= 0) continue;
+
+		BString value;
+		found = item.FindFirst('=');
+		if(found >= 0)
+		{
+			value.SetTo(item.String() + found + 1);
+			item.Truncate(found);
+		}
+
+		// TODO
+
+		if(item == "screen")
+		{
+			// seemed like: screen=/usr/lib/add-ons/lbk/oled-ssd1306.so:0:0:dev=/dev/oled-003c
+			BPoint loc(B_ORIGIN);
+			BString optScreen;
+			found = value.FindFirst(':');
+			if(found > 0)
+			{
+				optScreen.SetTo(value.String() + found + 1);
+				value.Truncate(found);
+
+				int32 last_found = optScreen.FindLast(':');
+				found = optScreen.FindFirst(':');
+
+				if(found > 0 && found != last_found)
+				{
+					loc.x = (float)atoi(optScreen.String());
+					loc.y = (float)atoi(optScreen.String() + found + 1);
+					if(last_found < 0)
+						optScreen.Truncate(0);
+					else
+						optScreen.Remove(0, last_found + 1);
+				}
+			}
+
+			AddScreen(value.String(), loc, optScreen.String());
+		}
+		else if(item == "keypad")
+		{
+			// seemed like: keypad=/usr/lib/add-ons/lbk/keypad-generic.so:dev=/dev/input/event0:105:102:106
+			BString optKeypad;
+			found = value.FindFirst(':');
+			if(found > 0)
+			{
+				optKeypad.SetTo(value.String() + found + 1);
+				value.Truncate(found);
+			}
+
+			AddKeypad(value.String(), optKeypad.String());
+		}
+		else if(item == "touchpad")
+		{
+			// seemed like: touchpad=/usr/lib/add-ons/lbk/touchpad-generic.so:dev=/dev/input/event1
+			BString optTouchpad;
+			found = value.FindFirst(':');
+			if(found > 0)
+			{
+				optTouchpad.SetTo(value.String() + found + 1);
+				value.Truncate(found);
+			}
+
+			AddTouchpad(value.String(), optTouchpad.String());
+		}
+#ifdef LBK_ENABLE_MORE_FEATURES
+		else if(item == "keys_RB")
+		{
+			fKeysRB = (value == "1" || value.ICompare("true") == 0);
+		}
+		else if(item == "orient")
+		{
+			fOrientation = (value == "0" || value.ICompare("horizontal") == 0) ? B_HORIZONTAL : B_VERTICAL;
+		}
+		else if(item == "offset_LT")
+		{
+			int v = atoi(value.String());
+			if(v >= 0 && v < 65535) fKeysOffset[0] = (uint16)v;
+		}
+		else if(item == "offset_RB")
+		{
+			int v = atoi(value.String());
+			if(v >= 0 && v < 65535) fKeysOffset[1] = (uint16)v;
+		}
+#endif
+	}
 
 	if(fScreens.CountItems() == 0) return B_ERROR;
 

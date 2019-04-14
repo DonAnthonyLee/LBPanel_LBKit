@@ -8,12 +8,12 @@ SINGLE_C_FILE_PROGRAMS = oled_capture
 SINGLE_CXX_FILE_PROGRAMS =
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
 
-TARGET_1 = npi_hat_cmd
+TARGET_1 = oled_cmd
 TARGET_2 =
 TARGET_3 =
 
 OBJECTS_1 = \
-	npi_hat_cmd.o \
+	oled_cmd.o \
 	oled_clear.o \
 	oled_show.o \
 	oled_update.o \

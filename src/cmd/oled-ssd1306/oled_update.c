@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Commands for NanoPi OLED Hat
+ * Commands for OLED SSD1306
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,67 +23,80 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: npi_hat_cmd.c
+ * File: oled_update.c
  * Description:
  *
  * --------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-extern int cmd_power(int argc, char **argv);
-extern int cmd_clear(int argc, char **argv);
-extern int cmd_show(int argc, char **argv);
-extern int cmd_update(int argc, char **argv);
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-static char org_cmd[] = "npi_hat_cmd";
+typedef unsigned char	bool;
 
-static int show_usage(int argc, char **argv)
+#ifndef true
+#define true 1
+#endif
+
+#ifndef false
+#define false 0
+#endif
+
+#include <oled_ssd1306_ioctl.h>
+
+#define DEFAULT_DEVICE		"/dev/oled-003c"
+
+static void show_usage(void)
 {
-	printf("%s - Commands for NanoPi OLED Hat\n\n", org_cmd);
-	printf("Usage: %s [commad] cmd_options\n\
-    Valid commands:\n\
-        power                   turn screen's power on/off\n\
-        clear                   clear screen\n\
-        show                    show characters on screen\n\
-        update                  whether to update screen when drawing\n", org_cmd);
-
-	return -1;
+	printf("oled_update - Whether to update OLED when drawing\n\n");
+	printf("Usage: oled_update [-D device] [state]\n\
+    device                path of device, default value is: %s\n\
+    state = 0,1           default value is: 1\n", DEFAULT_DEVICE);
 }
 
+#ifdef CMD_ALL_IN_ONE
+int cmd_update(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
-	int (*func)(int, char**) = NULL;
-	int offset = 0;
+	int n, f, err = 0;
+	const char *dev_name = DEFAULT_DEVICE;
+	bool state;
 
-	char cmd[128];
-	char *str;
+	for (n = 1; n < argc; n++) {
+		if (n < argc - 1 && strcmp(argv[n], "-D") == 0) {
+			dev_name = argv[++n];
+		} else {
+			break;
+		}
+	}
+	argc -= (--n);
 
-	memset(cmd, 0, sizeof(cmd));
-
-	str = strrchr(argv[0], '/');
-	strncpy(cmd, (str == NULL ? argv[0] : str + 1), sizeof(cmd) - 1);
-
-	if (strcmp(cmd, org_cmd) == 0 && argc > 1) {
-		strncpy(cmd, "oled_", 5);
-		strncpy(&cmd[5], argv[1], sizeof(cmd) - 6);
-		offset = 1;
+	if (argc > 2) {
+		show_usage();
+		exit(1);
 	}
 
-	if (strncmp(cmd, "oled_", 5) == 0) {
-		if (strcmp(&cmd[5], "power") == 0)
-			func = cmd_power;
-		else if (strcmp(&cmd[5], "clear") == 0)
-			func = cmd_clear;
-		else if (strcmp(&cmd[5], "show") == 0)
-			func = cmd_show;
-		else if (strcmp(&cmd[5], "update") == 0)
-			func = cmd_update;
+	if ((f = open(dev_name, O_RDWR)) < 0) {
+		perror("Open");
+		exit(1);
 	}
 
-	if (func == NULL)
-		func = show_usage;
+	state = (argc == 1 || *(argv[n + 1]) == '1') ? true : false;
 
-	return (*func)(argc - offset, argv + offset);
+	if ((err = ioctl(f, OLED_SSD1306_IOC_UPDATE, &state)) != 0)
+		perror("Ioctl");
+
+	close(f);
+
+	return err;
 }
 

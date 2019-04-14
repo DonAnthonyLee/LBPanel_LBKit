@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Commands for NanoPi OLED Hat
+ * Commands for OLED SSD1306
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to

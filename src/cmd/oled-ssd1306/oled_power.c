@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *
- * Commands for NanoPi OLED Hat
+ * Commands for OLED SSD1306
  * Copyright (C) 2018, Anthony Lee, All Rights Reserved
  *
  * This software is a freeware; it may be used and distributed according to
@@ -23,7 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * File: oled_update.c
+ * File: oled_power.c
  * Description:
  *
  * --------------------------------------------------------------------------*/
@@ -55,21 +55,21 @@ typedef unsigned char	bool;
 
 static void show_usage(void)
 {
-	printf("oled_update - Whether to update OLED when drawing\n\n");
-	printf("Usage: oled_update [-D device] [state]\n\
+	printf("oled_power - Turn OLED's power on/off\n\n\n");
+	printf("Usage: oled_power [-D device] [state]\n\
     device                path of device, default value is: %s\n\
-    state = 0,1           default value is: 1\n", DEFAULT_DEVICE);
+    state = 0,1           default value is 1\n", DEFAULT_DEVICE);
 }
 
 #ifdef CMD_ALL_IN_ONE
-int cmd_update(int argc, char **argv)
+int cmd_power(int argc, char **argv)
 #else
 int main(int argc, char **argv)
 #endif
 {
 	int n, f, err = 0;
 	const char *dev_name = DEFAULT_DEVICE;
-	bool state;
+	_oled_ssd1306_power_t data;
 
 	for (n = 1; n < argc; n++) {
 		if (n < argc - 1 && strcmp(argv[n], "-D") == 0) {
@@ -90,9 +90,9 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	state = (argc == 1 || *(argv[n + 1]) == '1') ? true : false;
+	data.state = (argc == 1 || *(argv[n + 1]) == '1') ? 1 : 0;
 
-	if ((err = ioctl(f, OLED_SSD1306_IOC_UPDATE, &state)) != 0)
+	if ((err = ioctl(f, OLED_SSD1306_IOC_POWER, &data)) != 0)
 		perror("Ioctl");
 
 	close(f);

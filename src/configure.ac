@@ -98,12 +98,12 @@ include/lbk/Makefile
 libs/Makefile
 libs/lbk/Makefile
 libs/lbk/add-ons/Makefile
+libs/lbk/add-ons/generic/Makefile
 libs/lbk/add-ons/oled-ssd1306/Makefile
 libs/lbk/add-ons/lcd-st7735s/Makefile
-libs/lbk/add-ons/npi-oled-hat/Makefile
 libs/lbk/add-ons/vpd/Makefile
 cmd/Makefile
-cmd/npi-oled-hat/Makefile
+cmd/oled-ssd1306/Makefile
 cmd/lcd-st7735s/Makefile
 cmd/lbk/Makefile
 cmd/scripts/Makefile
