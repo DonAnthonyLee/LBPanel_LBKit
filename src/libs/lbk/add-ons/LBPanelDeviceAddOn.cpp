@@ -101,13 +101,22 @@ LBPanelDeviceAddOn::LoadAddOn(const char *add_on,
 	image_id image;
 	BPath pth(add_on, NULL, true);
 
-	if(pth.Path() == NULL || ptr == NULL || name == NULL) return NULL;
+	if(pth.Path() == NULL || ptr == NULL || name == NULL)
+	{
+		ETK_WARNING("[LBPanelDeviceAddOn]: pth.Path() == NULL || ptr == NULL || name == NULL");
+		return NULL;
+	}
 
 	image = load_add_on(pth.Path());
-	if(!IMAGE_IS_VALID(image)) return NULL;
+	if(!IMAGE_IS_VALID(image))
+	{
+		ETK_WARNING("[LBPanelDeviceAddOn]: !IMAGE_IS_VALID(image), path=%s", pth.Path());
+		return NULL;
+	}
 
 	if(get_image_symbol(image, name, B_SYMBOL_TYPE_TEXT, ptr) != B_OK)
 	{
+		ETK_WARNING("[LBPanelDeviceAddOn]: get_image_symbol() != B_OK, name=%s", name);
 		unload_add_on(image);
 		return NULL;
 	}

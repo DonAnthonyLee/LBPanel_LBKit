@@ -36,6 +36,7 @@
 #include <lbk/LBApplication.h>
 
 #include <lbk/add-ons/LBPanelDevice.h>
+#include <lbk/add-ons/LBPanelCombiner.h>
 
 //#define LBK_APP_DEBUG
 #ifdef LBK_APP_DEBUG
@@ -98,26 +99,38 @@ typedef struct
 
 static LBAddOnData* lbk_app_load_panel_device_addon(const BPath &pth, const char *opt)
 {
-	LBAddOnData *data = NULL;
+	LBPanelDeviceAddOnData *devData = (LBPanelDeviceAddOnData*)malloc(sizeof(LBPanelDeviceAddOnData));
+	if(devData == NULL) return NULL;
 
-	image_id image = load_add_on(pth.Path());
-	if(!IMAGE_IS_VALID(image)) return NULL;
-
-	LBPanelDevice* (*instantiate_func)() = NULL;
+	image_id image = (image_id)0;
 	LBPanelDevice *dev = NULL;
-	LBPanelDeviceAddOnData *devData = NULL;
 
-	if(get_image_symbol(image, "instantiate_panel_device", B_SYMBOL_TYPE_TEXT, (void**)&instantiate_func) != B_OK ||
-	   (dev = (*instantiate_func)()) == NULL ||
-	   dev->InitCheck(opt) != B_OK ||
-	   (devData = (LBPanelDeviceAddOnData*)malloc(sizeof(LBPanelDeviceAddOnData))) == NULL)
+	if(pth.Path() != NULL)
+	{
+		image = load_add_on(pth.Path());
+		if(IMAGE_IS_VALID(image))
+		{
+			LBPanelDevice* (*instantiate_func)() = NULL;
+			if(get_image_symbol(image, "instantiate_panel_device",
+					    B_SYMBOL_TYPE_TEXT,
+					    (void**)&instantiate_func) == B_OK)
+			   	dev = (*instantiate_func)();
+		}
+	}
+	else // combiner
+	{
+		dev = new LBPanelCombiner();
+	}
+
+	if(dev == NULL || dev->InitCheck(opt) != B_OK)
 	{
 		if(dev != NULL) delete dev;
-		unload_add_on(image);
+		if(IMAGE_IS_VALID(image)) unload_add_on(image);
+		free(devData);
 		return NULL;
 	}
 
-	data = new LBAddOnData;
+	LBAddOnData *data = new LBAddOnData;
 	data->name.SetTo(pth.Leaf());
 	data->type = LBK_ADD_ON_PANEL_DEVICE;
 	data->dev = reinterpret_cast<void*>(dev);
@@ -136,7 +149,7 @@ static LBAddOnData* lbk_app_load_panel_device_addon(const BPath &pth, const char
 static void lbk_app_unload_panel_device_addon(LBAddOnData *data)
 {
 	if(data == NULL || data->type != LBK_ADD_ON_PANEL_DEVICE) return;
-	if(data->dev == NULL || !IMAGE_IS_VALID(data->image)) return;
+	if(data->dev == NULL) return;
 
 	LBPanelDevice *dev = reinterpret_cast<LBPanelDevice*>(data->dev);
 	delete dev;
@@ -215,7 +228,7 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 		if(name == "PanelDeviceAddon")
 		{
 			BPath pth(value.String(), NULL, true);
-			if(pth.Path() == NULL) continue;
+			if(pth.Path() == NULL && value != "combiner") continue;
 
 			LBAddOnData *data = lbk_app_load_panel_device_addon(pth, options.String());
 			if(data == NULL)
@@ -304,7 +317,8 @@ LBApplication::~LBApplication()
 		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
 			lbk_app_unload_panel_device_addon(data);
 		// TODO: other addons
-		unload_add_on(data->image);
+		if(IMAGE_IS_VALID(data->image))
+			unload_add_on(data->image);
 		delete data;
 	}
 

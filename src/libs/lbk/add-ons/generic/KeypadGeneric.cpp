@@ -168,6 +168,7 @@ LBPanelKeypadGeneric::InitCheck(const char *options)
 {
 	if(fFD == -1)
 	{
+		int32 id = 0;
 		BString opt(options);
 
 		opt.ReplaceAll(":", " ");
@@ -194,9 +195,14 @@ LBPanelKeypadGeneric::InitCheck(const char *options)
 			{
 				InitDevice(value.String());
 			}
-			else
+			else // keycodes
 			{
-				// TODO: keycodes
+				if(item.Length() > 0)
+				{
+					int v = atoi(item.String());
+					if(v > 0) SetKeycode(id, (uint16)v);
+				}
+				id++;
 			}
 		}
 	}

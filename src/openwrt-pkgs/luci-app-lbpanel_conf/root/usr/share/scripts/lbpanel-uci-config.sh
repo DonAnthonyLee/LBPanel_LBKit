@@ -51,7 +51,7 @@ if [ "x$1" = "xinit" ]; then
 elif [ "x$1" = "xreload" ]; then
 	init_config $2 || return 1
 	lbk-notify LBPanel SETTINGS_UPDATED || return 1
-	[ ! -x /bin/npi_hat_cmd ] || oled_power 1
+	[ ! -x /bin/oled_cmd ] || oled_power 1
 fi
 
 return 0

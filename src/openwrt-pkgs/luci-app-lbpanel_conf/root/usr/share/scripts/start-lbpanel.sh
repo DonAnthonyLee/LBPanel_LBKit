@@ -1,11 +1,11 @@
 #!/bin/sh
 
-[ -x /bin/npi_hat_cmd -o -x /bin/lcd_cmd ] || exit 1
+[ -x /bin/oled_cmd -o -x /bin/lcd_cmd ] || exit 1
 [ -x /usr/bin/lbk-cmd -a -x /usr/bin/LBPanel ] || exit 1
 [ -e /usr/share/scripts/lbpanel-uci-config.sh ] || exit 1
 [ ! -z "$1" ] || exit 1
 
-[ ! -x /bin/npi_hat_cmd -o ! -c /dev/oled-003c ] || {
+[ ! -x /bin/oled_cmd -o ! -c /dev/oled-003c ] || {
 	oled_update 0
 	oled_clear 0 0 128 16
 	oled_show 35 1 14 OpenWrt

@@ -60,28 +60,40 @@ define Package/lbpanel/description
   LBPanel - Little Board Panel application
 endef
 
-define Package/lbk-npi_oled_hat
+define Package/lbk-oled_ssd1306
   SECTION:=utils
   CATEGORY:=Utilities
   DEPENDS:=+lbk $(CXX_DEPENDS) +kmod-oled_ssd1306
-  TITLE:=Commands and library for NanoPi OLED hat using LBKit
+  TITLE:=Commands and libraries for OLED SSD1306 using LBKit
+  MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
+endef
+
+define Package/lbk-oled_ssd1306/description
+  Commands and libraries for OLED SSD1306 using LBKit
+endef
+
+define Package/lbk-npi_oled_hat
+  SECTION:=utils
+  CATEGORY:=Utilities
+  DEPENDS:=+lbk-oled_ssd1306
+  TITLE:=Configuration for NanoPi OLED hat using LBKit
   MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 endef
 
 define Package/lbk-npi_oled_hat/description
-  Commands and library for NanoPi OLED hat using LBKit
+  Configuration for NanoPi OLED hat using LBKit
 endef
 
 define Package/lbk-lcd_st7735s
   SECTION:=utils
   CATEGORY:=Utilities
   DEPENDS:=+lbk $(CXX_DEPENDS) +kmod-lcd_st7735s
-  TITLE:=Commands for LCD ST7735S using LBKit
+  TITLE:=Commands and libraries for LCD ST7735S using LBKit
   MAINTAINER:=Anthony Lee <don.anthony.lee@gmail.com>
 endef
 
 define Package/lbk-lcd_st7735s/description
-  Commands for LCD ST7735S using LBKit
+  Commands and libraries for LCD ST7735S using LBKit
 endef
 
 CONFIGURE_ARGS+= \
@@ -136,6 +148,8 @@ endef
 define Package/lbk/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/liblbk.so* $(1)/usr/lib/
+	$(INSTALL_DIR) $(1)/usr/lib/add-ons/lbk
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/libkeypad-generic.so.0.0.0 $(1)/usr/lib/add-ons/lbk/keypad-generic.so
 	$(INSTALL_DIR) $(1)/etc
 	touch $(1)/etc/LBK.conf
 endef
@@ -166,23 +180,27 @@ define Package/lbpanel/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/scripts/* $(1)/usr/share/scripts/
 endef
 
-define Package/lbk-npi_oled_hat/install
+define Package/lbk-oled_ssd1306/install
 	$(INSTALL_DIR) $(1)/usr/lib/add-ons/lbk
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/liboled-ssd1306.so.0.0.0 $(1)/usr/lib/add-ons/lbk/oled-ssd1306.so
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/add-ons/lbk/libnpi-oled-hat.so.0.0.0 $(1)/usr/lib/add-ons/lbk/npi-oled-hat.so
 	$(INSTALL_DIR) $(1)/bin
-	$(CP) $(PKG_INSTALL_DIR)/usr/bin/npi_hat_cmd $(1)/bin/npi_hat_cmd
-	ln -sf ./npi_hat_cmd $(1)/bin/oled_power
-	ln -sf ./npi_hat_cmd $(1)/bin/oled_update
-	ln -sf ./npi_hat_cmd $(1)/bin/oled_clear
-	ln -sf ./npi_hat_cmd $(1)/bin/oled_show
+	$(CP) $(PKG_INSTALL_DIR)/usr/bin/oled_cmd $(1)/bin/oled_cmd
+	ln -sf ./oled_cmd $(1)/bin/oled_power
+	ln -sf ./oled_cmd $(1)/bin/oled_update
+	ln -sf ./oled_cmd $(1)/bin/oled_clear
+	ln -sf ./oled_cmd $(1)/bin/oled_show
+endef
+
+define Package/lbk-npi_oled_hat/install
+	$(INSTALL_DIR) $(1)/usr/lib/add-ons/lbk
 endef
 
 define Package/lbk-npi_oled_hat/postinst
 #!/bin/sh
 FOUND=`grep "npi-oled-hat" $${IPKG_INSTROOT}/etc/LBK.conf`
 if [ -z "$$FOUND" ]; then
-	echo "PanelDeviceAddon=/usr/lib/add-ons/lbk/npi-oled-hat.so" >> $${IPKG_INSTROOT}/etc/LBK.conf
+	echo "#npi-oled-hat" >> $${IPKG_INSTROOT}/etc/LBK.conf
+	echo "PanelDeviceAddon=combiner,screen=/usr/lib/add-ons/lbk/oled-ssd1306.so:0:0:dev=/dev/oled-003c,keypad=/usr/lib/add-ons/lbk/keypad-generic.so:dev=/dev/input/event0:105:102:106" >> $${IPKG_INSTROOT}/etc/LBK.conf
 fi
 endef
 
@@ -200,6 +218,7 @@ endef
 $(eval $(call BuildPackage,lbk))
 $(eval $(call BuildPackage,lbk-cmd))
 $(eval $(call BuildPackage,lbk-dev))
+$(eval $(call BuildPackage,lbk-oled_ssd1306))
 $(eval $(call BuildPackage,lbk-npi_oled_hat))
 $(eval $(call BuildPackage,lbk-lcd_st7735s))
 $(eval $(call BuildPackage,lbpanel))
