@@ -33,7 +33,7 @@
 
 #include <lbk/LBAppDefs.h>
 
-#define LBK_ENABLE_MORE_FEATURES
+//#define LBK_ENABLE_MORE_FEATURES
 
 #define LBK_APP_IPC_BY_FIFO
 
