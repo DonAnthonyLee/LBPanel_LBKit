@@ -35,13 +35,14 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
 
+#include <oled_ssd1306_ioctl.h>
+
 #define DEFAULT_DEVICE		"/dev/oled-003c"
-#define OLED_SCREEN_WIDTH	128
-#define OLED_SCREEN_HEIGHT	64
 
 static void show_usage(void)
 {
@@ -69,11 +70,12 @@ int main(int argc, char **argv)
 	int n, f, out, err = 0;
 	const char *dev_name = DEFAULT_DEVICE;
 	void *buffer;
-	size_t len = OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3);
+	size_t len;
 	const uint8_t *bits;
 	int x, y;
 	uint8_t c;
-	char str[OLED_SCREEN_WIDTH + 4];
+	char str[1024];
+	_oled_ssd1306_prop_t prop;
 
 	for (n = 1; n < argc; n++) {
 		if (n < argc - 1 && strcmp(argv[n], "-D") == 0) {
@@ -94,6 +96,13 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+	memset(&prop, 0, sizeof(prop));
+	if ((err = ioctl(f, OLED_SSD1306_IOC_GET_PROP, &prop)) != 0) {
+		prop.w = 128;
+		prop.h = 64;
+	}
+	len = prop.w * (prop.h >> 3);
+
 	if ((out = open(argv[n + 1], O_CREAT | O_TRUNC | O_RDWR, 0600)) < 0) {
 		perror("Open output");
 		close(f);
@@ -110,7 +119,7 @@ int main(int argc, char **argv)
 	}
 
 	memset(str, 0, sizeof(str));
-	sprintf(str, "%d %d", OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT);
+	sprintf(str, "%d %d", prop.w, prop.h);
 
 	do {
 		if ((err = write(out, xpm_header1, strlen(xpm_header1))) < 0) break;
@@ -118,17 +127,17 @@ int main(int argc, char **argv)
 		if ((err = write(out, xpm_header2, strlen(xpm_header2))) < 0) break;
 
 		str[0] = '"';
-		memcpy(str + OLED_SCREEN_WIDTH + 1, "\",\n", 3);
+		memcpy(str + prop.w + 1, "\",\n", 3);
 
-		for (y = 0; y < OLED_SCREEN_HEIGHT; y++) {
-			bits = (uint8_t*)buffer + OLED_SCREEN_WIDTH * (y >> 3);
+		for (y = 0; y < prop.h; y++) {
+			bits = (uint8_t*)buffer + prop.w * (y >> 3);
 
-			for (x = 0; x < OLED_SCREEN_WIDTH; x++) {
+			for (x = 0; x < prop.w; x++) {
 				c = ((*bits++) >> (y & 0x07)) & 0x01;
 				str[x + 1] = (c == 0 ? '+' : '.');
 			}
 
-			if ((err = write(out, str, OLED_SCREEN_WIDTH + 4)) < 0) break;
+			if ((err = write(out, str, prop.w + 4)) < 0) break;
 		}
 
 		if (err > 0)

@@ -32,6 +32,7 @@ enum {
 	_OLED_SSD1306_INVERT,
 	_OLED_SSD1306_SET_CLIPPING,
 	_OLED_SSD1306_SET_OFF_TIMEOUT,
+	_OLED_SSD1306_GET_PROP,
 };
 
 typedef struct {
@@ -92,6 +93,11 @@ typedef struct {
 	uint64_t ts;
 } _oled_ssd1306_set_clipping_t;
 
+typedef struct {
+	uint16_t w;
+	uint16_t h;
+} _oled_ssd1306_prop_t;
+
 #define OLED_SSD1306_IOC_BASE			0x3c
 
 #define OLED_SSD1306_IOC_TIMESTAMP		_IOWR(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_TIMESTAMP, _oled_ssd1306_ts_t)
@@ -104,6 +110,7 @@ typedef struct {
 #define OLED_SSD1306_IOC_INVERT			_IOWR(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_INVERT, _oled_ssd1306_invert_t)
 #define OLED_SSD1306_IOC_SET_CLIPPING		_IOWR(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_SET_CLIPPING, _oled_ssd1306_set_clipping_t)
 #define OLED_SSD1306_IOC_SET_OFF_TIMEOUT	_IOW(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_SET_OFF_TIMEOUT, uint64_t)
+#define OLED_SSD1306_IOC_GET_PROP		_IOW(OLED_SSD1306_IOC_BASE, _OLED_SSD1306_GET_PROP, _oled_ssd1306_prop_t)
 
 #endif /* __OLED_SSD1306_IOCTL_H__ */
 

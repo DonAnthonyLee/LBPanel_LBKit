@@ -54,7 +54,9 @@ extern "C" _EXPORT LBPanelScreen* instantiate_panel_screen()
 OLEDScreen::OLEDScreen()
 	: LBPanelScreen(),
 	  fFD(-1),
-	  fBuffer(NULL)
+	  fBuffer(NULL),
+	  fWidth(OLED_SCREEN_DEFAULT_WIDTH),
+	  fHeight(OLED_SCREEN_DEFAULT_HEIGHT)
 {
 }
 
@@ -62,7 +64,7 @@ OLEDScreen::OLEDScreen()
 OLEDScreen::~OLEDScreen()
 {
 	if(fBuffer != NULL)
-		munmap(fBuffer, OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3));
+		munmap(fBuffer, fWidth * (fHeight >> 3));
 
 	if(fFD >= 0)
 		close(fFD);
@@ -94,6 +96,17 @@ OLEDScreen::InitCheck(const char *options)
 			perror("[OLEDScreen]: Unable to open device !");
 			fFD = -2;
 		}
+		else
+		{
+			_oled_ssd1306_prop_t prop;
+			bzero(&prop, sizeof(prop));
+
+			if(ioctl(fFD, OLED_SSD1306_IOC_GET_PROP, &prop) == 0)
+			{
+				fWidth = prop.w;
+				fHeight = prop.h;
+			}
+		}
 	}
 
 	return((fFD < 0) ? B_ERROR : B_OK);
@@ -103,14 +116,14 @@ OLEDScreen::InitCheck(const char *options)
 uint16
 OLEDScreen::Width()
 {
-	return OLED_SCREEN_WIDTH;
+	return fWidth;
 }
 
 
 uint16
 OLEDScreen::Height()
 {
-	return OLED_SCREEN_HEIGHT;
+	return fHeight;
 }
 
 
@@ -122,7 +135,7 @@ OLEDScreen::ConstrainClipping(BRect r, bigtime_t &ts)
 	bzero(&data, sizeof(data));
 
 	if(r.IsValid() && r.left >= 0 && r.top >= 0 &&
-	   r.Width() < OLED_SCREEN_WIDTH && r.Height() < OLED_SCREEN_HEIGHT)
+	   r.Width() < fWidth && r.Height() < fHeight)
 	{
 		data.x = (uint8_t)r.left;
 		data.y = (uint8_t)r.top;
@@ -146,8 +159,8 @@ OLEDScreen::FillRect(BRect r,
 
 	if(r.IsValid() == false) return B_BAD_VALUE;
 	if(r.left < 0 || r.top < 0 ||
-	   r.Width() >= OLED_SCREEN_WIDTH ||
-	   r.Height() >= OLED_SCREEN_HEIGHT) return B_BAD_VALUE;
+	   r.Width() >= fWidth ||
+	   r.Height() >= fHeight) return B_BAD_VALUE;
 
 	bzero(&data, sizeof(data));
 
@@ -234,7 +247,7 @@ OLEDScreen::InvertRect(BRect r,
 	_oled_ssd1306_invert_t data;
 
 	if(r.IsValid() == false) return B_BAD_VALUE;
-	if(r.left < 0 || r.top < 0 || r.Width() >= OLED_SCREEN_WIDTH || r.Height() >= OLED_SCREEN_HEIGHT) return B_BAD_VALUE;
+	if(r.left < 0 || r.top < 0 || r.Width() >= fWidth || r.Height() >= fHeight) return B_BAD_VALUE;
 
 	bzero(&data, sizeof(data));
 
@@ -365,7 +378,7 @@ OLEDScreen::MapBuffer(void **buf, size_t *len)
 	if(fBuffer != NULL) return B_ERROR;
 
 	fBuffer = mmap(NULL,
-		       OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3),
+		       fWidth * (fHeight >> 3),
 		       PROT_READ | PROT_WRITE,
 		       MAP_SHARED,
 		       fFD,
@@ -377,7 +390,7 @@ OLEDScreen::MapBuffer(void **buf, size_t *len)
 	}
 
 	*buf = fBuffer;
-	*len = OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3);
+	*len = fWidth * (fHeight >> 3);
 	return B_OK;
 }
 
@@ -389,7 +402,7 @@ OLEDScreen::UnmapBuffer()
 	if(autolock.IsLocked() == false) return B_ERROR;
 
 	if(fBuffer == NULL) return B_BAD_VALUE;
-	if(munmap(fBuffer, OLED_SCREEN_WIDTH * (OLED_SCREEN_HEIGHT >> 3)) != 0) return B_ERROR;
+	if(munmap(fBuffer, fWidth * (fHeight >> 3)) != 0) return B_ERROR;
 	fBuffer = NULL;
 	return B_OK;
 }

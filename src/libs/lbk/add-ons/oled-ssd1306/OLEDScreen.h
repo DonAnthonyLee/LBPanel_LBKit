@@ -35,9 +35,9 @@
 
 #ifdef __cplusplus /* Just for C++ */
 
-#define DEFAULT_OLED_DEVICE	"/dev/oled-003c"
-#define OLED_SCREEN_WIDTH	128
-#define OLED_SCREEN_HEIGHT	64
+#define DEFAULT_OLED_DEVICE		"/dev/oled-003c"
+#define OLED_SCREEN_DEFAULT_WIDTH	128
+#define OLED_SCREEN_DEFAULT_HEIGHT	64
 
 class OLEDScreen : public LBPanelScreen {
 public:
@@ -88,6 +88,8 @@ public:
 private:
 	int fFD;
 	void *fBuffer;
+	uint16_t fWidth;
+	uint16_t fHeight;
 };
 
 #endif /* __cplusplus */
