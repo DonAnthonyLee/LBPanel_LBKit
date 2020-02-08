@@ -1,0 +1,78 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-02-09 02:44+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: luasrc/controller/lbpanel_conf.lua:8 luasrc/model/cbi/lbpanel_conf.lua:9
+msgid "LBPanel"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:9
+msgid "Little board panel application"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:16
+msgid "Screen settings"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:23
+msgid "Screen off timeout (s)"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:23
+msgid "0 to disable, minimum value: 10."
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:30
+msgid "24 hours"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:36
+msgid "Show seconds"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:42
+msgid "LCD style"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:48
+msgid "Custom menu"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:54
+msgid "Item title"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:55
+msgid "Title to show on custom menu"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:57
+msgid "Command"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:58
+msgid "Command line to execute"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:60
+msgid "Arguments"
+msgstr ""
+
+#: luasrc/model/cbi/lbpanel_conf.lua:61
+msgid "Additional command line arguments"
+msgstr ""
