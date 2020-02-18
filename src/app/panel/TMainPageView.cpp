@@ -1053,6 +1053,11 @@ TMainPageView::MessageReceived(BMessage *msg)
 	uint8 clicks = 0;
 	LBView *view;
 
+	bool old_state = false;
+	LBPanelDevice *dev = PanelDevice();
+	if(dev != NULL)
+		dev->GetPowerState(old_state);
+
 	switch(msg->what)
 	{
 		case MSG_POWER_REQUESTED_CONFIRM:
@@ -1154,6 +1159,15 @@ TMainPageView::MessageReceived(BMessage *msg)
 
 		default:
 			LBPageView::MessageReceived(msg);
+	}
+
+	if(dev != NULL && old_state == false)
+	{
+		bool new_state = false;
+
+		dev->GetPowerState(new_state);
+		if(new_state != old_state) // update screen
+			Pulse();
 	}
 }
 
