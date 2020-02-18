@@ -73,7 +73,7 @@ diff -Nur a/src/cmd/lbk/Makefile.alone b/src/cmd/lbk/Makefile.alone
  CFLAGS += -DCMD_ALL_IN_ONE
 diff -Nur a/src/libs/lbk/Makefile.alone b/src/libs/lbk/Makefile.alone
 --- a/src/libs/lbk/Makefile.alone	2020-01-19 21:17:00.000000000 +0800
-+++ b/src/libs/lbk/Makefile.alone	2020-02-18 21:32:48.270001517 +0800
++++ b/src/libs/lbk/Makefile.alone	2020-02-18 22:57:04.932806510 +0800
 @@ -1,6 +1,9 @@
  DEBUG_OPTIONS = -g -Wall
  OPTIMIZE = -O3
@@ -84,16 +84,16 @@ diff -Nur a/src/libs/lbk/Makefile.alone b/src/libs/lbk/Makefile.alone
  SINGLE_C_FILE_PROGRAMS =
  SINGLE_CXX_FILE_PROGRAMS =
  SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
-@@ -18,9 +21,14 @@
- endif
+@@ -19,8 +22,13 @@
  endif
  
-+ADD_ONS_DIRS =
+ ADD_ONS_DIRS = \
+-	generic \
++	generic
 +
 +OPENWRT_FOUND = $(shell cat /etc/os-release | grep 'OpenWrt')
 +ifeq ($(OPENWRT_FOUND), )
- ADD_ONS_DIRS = \
- 	generic \
++ADD_ONS_DIRS += \
  	vpd
 +endif
  
@@ -110,6 +110,32 @@ diff -Nur a/src/libs/lbk/Makefile.alone b/src/libs/lbk/Makefile.alone
  
  SO_CFLAGS = -fPIC
  SO_LDFLAGS =
+diff -Nur a/src/libs/lbk/add-ons/generic/Makefile.alone b/src/libs/lbk/add-ons/generic/Makefile.alone
+--- a/src/libs/lbk/add-ons/generic/Makefile.alone	2020-01-19 21:17:00.000000000 +0800
++++ b/src/libs/lbk/add-ons/generic/Makefile.alone	2020-02-18 23:00:10.959205745 +0800
+@@ -1,6 +1,9 @@
+ DEBUG_OPTIONS = -g -Wall
+ OPTIMIZE = -O3
+ 
++UCLIBCXX_INCLUDES = -I/usr/include/uClibc\+\+
++UCLIBCXX_LIBS = -luClibc\+\+
++
+ SINGLE_C_FILE_PROGRAMS =
+ SINGLE_CXX_FILE_PROGRAMS =
+ SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
+@@ -19,9 +22,9 @@
+ CC = ${CROSS_COMPILE}gcc
+ CXX = ${CROSS_COMPILE}g++
+ LD = ${CROSS_COMPILE}ld
+-CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include
+-CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include
+-LDFLAGS =  $(shell lite-beapi-config --libs) -L../.. -llbk
++CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include $(UCLIBCXX_INCLUDES)
++CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE) $(shell lite-beapi-config --cflags) -fPIC -I../../../../include -I../../../include $(UCLIBCXX_INCLUDES)
++LDFLAGS =  $(shell lite-beapi-config --libs) -L../.. -llbk $(UCLIBCXX_LIBS)
+ 
+ all: targets $(TARGET)
+ 
 diff -Nur a/src/libs/lbk/add-ons/lcd-st7735s/Makefile.alone b/src/libs/lbk/add-ons/lcd-st7735s/Makefile.alone
 --- a/src/libs/lbk/add-ons/lcd-st7735s/Makefile.alone	2020-01-19 21:17:00.000000000 +0800
 +++ b/src/libs/lbk/add-ons/lcd-st7735s/Makefile.alone	2020-02-18 21:32:48.190001517 +0800
