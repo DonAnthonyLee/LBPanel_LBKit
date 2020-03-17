@@ -96,6 +96,20 @@ TListView::Invoke(const BMessage *msg)
 }
 
 
+void
+TListView::KeyUp(uint8 key, uint8 clicks)
+{
+	LBListView::KeyUp(key, clicks);
+
+	if(MasterView()->StandingInView() == this &&
+	   clicks > 1 && clicks != 0xff &&
+	   key == 1) // canceled by user
+	{
+		StandBack();
+	}
+}
+
+
 TCommandsPageView::TCommandsPageView(const char *name)
 	: LBMenuView(name),
 	  fBlockKeyEventsTimestamp(0)
@@ -103,7 +117,7 @@ TCommandsPageView::TCommandsPageView(const char *name)
 	AddItem(new LBMenuItem("系统功能", new BMessage(MSG_SYSTEM_MENU), LBK_ICON_SYSTEM));
 	AddItem(new LBMenuItem("自定功能", new BMessage(MSG_CUSTOM_MENU), LBK_ICON_CUSTOM));
 
-	LBListView *listView = new LBListView(3, "system");
+	LBListView *listView = new TListView("system");
 	for(int k = 0; k < (int)(sizeof(system_menus) / sizeof(system_menus[0])); k++)
 	{
 		listView->AddItem(new LBListStringItem(system_menus[k].title));
