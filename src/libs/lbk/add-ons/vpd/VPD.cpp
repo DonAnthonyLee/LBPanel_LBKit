@@ -148,7 +148,7 @@ LBVPD::InitCheck(const char *options)
 	snooze(200000); // wait for be_app
 
 	if(be_app == NULL || fMsgr.IsValid()) return B_ERROR;
-#ifdef ETK_MAJOR_VERSIN
+#ifdef ETK_MAJOR_VERSION
 	while(be_app->IsRunning() == false) snooze(100000);
 #else
 	while(be_app->Thread() < 0) snooze(100000);

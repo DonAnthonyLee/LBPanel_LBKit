@@ -56,7 +56,7 @@ typedef unsigned char	bool;
 static void show_usage(void)
 {
 	printf("oled_clear - Clear OLED\n\n");
-	printf("Usage: oled_clear [-D device] x y width height [erase_mode]\n\
+	printf("Usage: oled_clear [-v] [-D device] x y width height [erase_mode]\n\
     device                     path of device, default value is: %s\n\
     erase_mode = 0,1           default value is: 1\n", DEFAULT_DEVICE);
 }
@@ -67,13 +67,16 @@ int cmd_clear(int argc, char **argv)
 int main(int argc, char **argv)
 #endif
 {
-	int n, f, err = 0;
+	int n, f, err = 0, show_msg = 0;
 	const char *dev_name = DEFAULT_DEVICE;
 	_oled_ssd1306_clear_t data;
+	_oled_ssd1306_prop_t prop;
 
 	for (n = 1; n < argc; n++) {
 		if (n < argc - 1 && strcmp(argv[n], "-D") == 0) {
 			dev_name = argv[++n];
+		} else if (strcmp(argv[n], "-v") == 0) {
+			show_msg = 1;
 		} else {
 			break;
 		}
@@ -96,11 +99,20 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+	memset(&prop, 0, sizeof(prop));
+	if ((err = ioctl(f, OLED_SSD1306_IOC_GET_PROP, &prop)) != 0) {
+		prop.w = 128;
+		prop.h = 64;
+	}
+	if (show_msg) {
+		fprintf(stdout, "Panel's width: %u\nPanel's height: %u\n", prop.w, prop.h);
+	}
+
 	memset(&data, 0, sizeof(data));
 	if (argc <= 2) {
 		data.x = data.y = 0;
-		data.w = 128;
-		data.h = 64;
+		data.w = prop.w;
+		data.h = prop.h;
 		if(!(argc == 1 || *argv[n + 1] == '1')) memset(data.patterns, (int)0xff, sizeof(data.patterns));
 	} else {
 		data.x = (uint8_t)atoi(argv[n + 1]);

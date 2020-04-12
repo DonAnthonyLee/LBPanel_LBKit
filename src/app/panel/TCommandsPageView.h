@@ -70,7 +70,8 @@ class TListView : public LBListView {
 public:
 	TListView(const char *name);
 
-	virtual status_t Invoke(const BMessage *message);
+	virtual status_t	Invoke(const BMessage *message);
+	virtual void		KeyUp(uint8 key, uint8 clicks);
 };
 
 #endif /* __cplusplus */

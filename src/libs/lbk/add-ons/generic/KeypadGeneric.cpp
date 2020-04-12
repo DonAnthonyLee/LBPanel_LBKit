@@ -292,10 +292,9 @@ LBPanelKeypadGeneric::InputEventsObserver(void *arg)
 		bigtime_t when = (bigtime_t)event.time.tv_sec * (bigtime_t)(1000000) +
 				 (bigtime_t)event.time.tv_usec - etk_system_boot_time();
 
-#if 0
 		bigtime_t t;
-		self->SetTimestampNow(t, false); // update screen's timestamp
-#endif
+		if(self->Panel()) // update screen's timestamp 
+			self->Panel()->SetTimestampNow(t);
 
 		uint8 nKey = 0xff;
 		for(size_t k = 0; k < sizeof(fKeycodes) / sizeof(fKeycodes[0]); k++)

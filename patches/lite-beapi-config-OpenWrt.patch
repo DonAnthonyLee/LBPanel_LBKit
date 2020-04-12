@@ -5,7 +5,7 @@
  
  --libs)
 -	lite_beapi_config_output="$lite_beapi_config_output `$etkxx_config --libs`"
-+	openwrt_found=`uname -a | grep OpenWrt`
++	openwrt_found=`cat /etc/os-release | grep OpenWrt`
 +	if test "x$openwrt_found" != "x"; then
 +		# No need to link with "-lrt -pthread" on OpenWrt
 +		etkxx_libs=`$etkxx_config --libs | sed 's/ -lrt/ /' | sed 's/ -pthread/ /'`

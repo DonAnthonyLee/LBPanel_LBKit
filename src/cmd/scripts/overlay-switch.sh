@@ -12,9 +12,14 @@ return 0
 
 detect_rootfs_data() {
 FOUND=`cat /proc/mtd | grep "rootfs_data" | awk -F ' ' '{printf $1}'`
-[ ! -z "$FOUND" ] || return 1
-
-ROOTFS_DATA_DEV=`echo /dev/${FOUND%%:} | sed 's/mtd/mtdblock/'`
+if [ ! -z "$FOUND" ]; then
+	# OpenWrt always use rootfs_data if existed
+	ROOTFS_DATA_DEV=`echo /dev/${FOUND%%:} | sed 's/mtd/mtdblock/'`
+else
+	# try root device as default overlay
+	ROOTFS_DATA_DEV=`cat /proc/cmdline | grep "root="`
+	[ -z "${ROOTFS_DATA_DEV}" ] || ROOTFS_DATA_DEV=`echo ${ROOTFS_DATA_DEV##*root=} | awk -F ' ' '{printf $1}'`
+fi
 [ ! -z "${ROOTFS_DATA_DEV}" ] || return 1
 
 CUR_OVERLAY_DEV=`df | grep " /overlay" | awk -F ' ' '{printf $1}'`
@@ -34,7 +39,18 @@ mkdir -p ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 if [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
 	mount --bind /overlay ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 else
-	mount -t jffs2 -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+	ROOTFS_DATA_FSTYPE=`block info ${ROOTFS_DATA_DEV} | awk -F 'TYPE="' '{printf $2}' | sed 's/"//'`
+	if [ "x${ROOTFS_DATA_FSTYPE}" = "xjffs2" ]; then
+		mount -t jffs2 -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+	else
+		ROM_MOUNTED=`mount | grep "/rom" | grep "${ROOTFS_DATA_DEV}"`
+		if [ ! -z "${ROM_MOUNTED}" ]; then
+			mount -o rw,remount /rom > /dev/null 2>&1 && \
+			mount --bind /rom ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+		else
+			mount -t ${ROOTFS_DATA_FSTYPE} -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+		fi
+	fi
 fi
 [ "$?" = "0" ] || return 1
 return 0
@@ -67,7 +83,9 @@ find_item_dev() {
 CUR_ITEM=3
 SELE_ITEM_DEV=
 for bo in ${EXT4FS_BLOCKS}; do
-	if [ "x${CUR_ITEM}" = "x$1" ]; then
+	if [ "x${ROOTFS_DATA_DEV}" = "x$bo" ]; then
+		continue
+	elif [ "x${CUR_ITEM}" = "x$1" ]; then
 		SELE_ITEM_DEV="$bo"
 		return 0
 	fi
@@ -89,6 +107,9 @@ fi
 
 CUR_ITEM=3
 for bo in ${EXT4FS_BLOCKS}; do
+	if [ "x${ROOTFS_DATA_DEV}" = "x$bo" ]; then
+		continue
+	fi
 	MENU_ITEMS="${MENU_ITEMS} $bo"
 	if [ "$bo" = ${CUR_OVERLAY_DEV} ]; then
 		MENU_SELE=${CUR_ITEM}
@@ -102,6 +123,7 @@ done
 }
 
 delete_old_overlay_settings() {
+[ "${ROOTFS_DATA_DEV}" != "${CUR_OVERLAY_DEV}" ] || uci commit fstab
 FOUND=`$UCI show fstab | grep ".target='/overlay'"`
 if [ ! -z $FOUND ]; then
 	FOUND="${FOUND%%.target=\'/overlay\'}"
@@ -180,6 +202,7 @@ if [ ! -z "${DST_OVERLAY_DEV}" ]; then
 		add_new_overlay_settings ${DST_OVERLAY_DEV}
 	$UCI commit fstab
 
+	sync;sync;sync
 	lbk-message --type warning --topic "警告" "重启方可生效!\\n确定重启吗?"
 	if [ "$?" = "2" ]; then
 		reboot && lbk-message --k2 none --k3 none --type empty "正在重新启动..."

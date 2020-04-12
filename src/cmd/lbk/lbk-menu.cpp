@@ -44,10 +44,11 @@ Options:\n\
     --max count                Maximum count to show on panel device at the same time\n\
     --timeout seconds          Exit after specified seconds\n\
     --long-press down/up/off   Specify state when \"OK\" key long-pressed, default: up\n\
+    --clicks=on/off            Whether to cancel when \"OK\" key clicked more than once, default: on\n\
 \n\
 Return value:\n\
-    Return index(start from 1) of label if user selected; return 0 if user canceled\n\
-by pressing \"OK\" for a long period; -1 if error occured; -2 if timeout.\n\
+    Return index(start from 1) of label if user selected; return 0 if user canceled by pressing\n\
+\"OK\" for a long period or clicked more than once; -1 if error; -2 if timeout.\n\
     Usually, the negative exit code in shell will be turned to positive, such as,\n\
 255 for -1, 254 for -2.\n");
 }
@@ -61,6 +62,7 @@ static int32 cmd_ret = 0;
 static LBApplication *cmd_app = NULL;
 static bigtime_t cmd_end_time = 0;
 static int16 long_press_state = 0;
+static int8 clicks_to_cancel = 1;
 
 static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFilter *filter)
 {
@@ -82,7 +84,8 @@ static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFi
 			if(!is_kind_of(view, LBListView)) break;
 			if(cast_as(view, LBListView)->GetNavButtonIcon((int32)key) != LBK_ICON_OK) break;
 
-			if(clicks == 0xff && (state >> key) == long_press_state)
+			if((clicks == 0xff && (state >> key) == long_press_state) ||
+			   (clicks > 1 && clicks != 0xff && clicks_to_cancel))
 			{
 				/*
 				 * NOTE:
@@ -174,6 +177,14 @@ int main(int argc, char **argv)
 			else if(strcmp(argv[n], "down") == 0)
 				long_press_state = 1;
 			else if(strcmp(argv[n], "up") != 0)
+				break;
+		}
+		else if(strcmp(argv[n], "--clicks") == 0)
+		{
+			n++;
+			if(strcmp(argv[n], "off") == 0)
+				clicks_to_cancel = 0;
+			else if(strcmp(argv[n], "on") != 0)
 				break;
 		}
 		else break;

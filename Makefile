@@ -107,17 +107,12 @@ CONFIGURE_ARGS+= \
 
 ifeq ($(CONFIG_USE_UCLIBCXX),y)
 	CONFIGURE_ARGS+= \
-		CXX=$(PKG_BUILD_DIR)/wrapper/g++-uc
+		CXX=g++-uc
 endif
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	cp -af ./src/* $(PKG_BUILD_DIR)/
-ifeq ($(CONFIG_USE_UCLIBCXX),y)
-	mkdir $(PKG_BUILD_DIR)/wrapper
-	cp -f $(TOOLCHAIN_DIR)/bin/g++-uc $(PKG_BUILD_DIR)/wrapper/g++-uc
-	cd $(PKG_BUILD_DIR)/wrapper && patch -p1 < $(CURDIR)/patches/g++-uc.patch
-endif
 endef
 
 define Build/Compile
