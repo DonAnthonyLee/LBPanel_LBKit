@@ -85,7 +85,7 @@ LBAppSettings::AddItems(BFile *f, int32 index)
 	f->Seek(0, SEEK_SET);
 
 	if(fsize == (off_t)-1 || fsize > 65535 ||
-	   (buf = (char*)malloc((size_t)fsize)) == NULL ||
+	   (buf = (char*)malloc((size_t)fsize + 1)) == NULL ||
 	   f->Read(buf, fsize) != (ssize_t)fsize)
 	{
 		if(buf != NULL) free(buf);
