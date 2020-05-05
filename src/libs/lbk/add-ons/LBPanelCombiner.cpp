@@ -38,7 +38,8 @@ LBPanelCombiner::LBPanelCombiner()
 	  fWidth(0),
 	  fHeight(0),
 	  fBlockKeyEvents(false),
-	  fBlockTimestamp(0)
+	  fBlockTimestamp(0),
+	  fAllowNoPad(false)
 {
 #ifdef LBK_ENABLE_MORE_FEATURES
 	fDepth = 0;
@@ -169,6 +170,11 @@ LBPanelCombiner::InitCheck(const char *options)
 
 			AddTouchpad(value.String(), optTouchpad.String());
 		}
+		else if(item == "allow_no_pad")
+		{
+			// seemed like: allow_no_pad=1
+			fAllowNoPad = (value.ICompare("true") == 0 || value == "1");
+		}
 #ifdef LBK_ENABLE_MORE_FEATURES
 		else if(item == "keys_RB")
 		{
@@ -196,7 +202,7 @@ LBPanelCombiner::InitCheck(const char *options)
 	uint8 keys_count = 0;
 	GetCountOfKeys(keys_count);
 
-	return((fTouchpads.CountItems() > 0 || keys_count > 0) ? B_OK : B_ERROR);
+	return((fAllowNoPad || (fTouchpads.CountItems() > 0 || keys_count > 0)) ? B_OK : B_ERROR);
 }
 
 

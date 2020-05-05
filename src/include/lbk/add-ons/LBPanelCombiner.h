@@ -127,6 +127,9 @@ private:
 	bool fBlockKeyEvents;
 	bigtime_t fBlockTimestamp;
 	BRect fClipping;
+
+	bool fAllowNoPad;
+
 #ifdef LBK_ENABLE_MORE_FEATURES
 	uint8 fDepth;
 	lbk_color_space fColorSpace;
