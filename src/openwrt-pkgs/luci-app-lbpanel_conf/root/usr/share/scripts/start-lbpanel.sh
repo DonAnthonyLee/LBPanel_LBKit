@@ -28,5 +28,5 @@
 
 . /usr/share/scripts/lbpanel-uci-config.sh init $1
 sleep 1
-/usr/bin/LBPanel --conf $1 > /dev/null 2>&1 &
+SHELL= /usr/bin/LBPanel --conf $1 > /dev/null 2>&1 &
 
