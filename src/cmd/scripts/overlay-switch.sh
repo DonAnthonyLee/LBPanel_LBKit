@@ -23,7 +23,7 @@ fi
 [ ! -z "${ROOTFS_DATA_DEV}" ] || return 1
 
 CUR_OVERLAY_DEV=`df | grep " /overlay" | awk -F ' ' '{printf $1}'`
-[ ! -z "${CUR_OVERLAY_DEV}" ] || return 1
+#[ ! -z "${CUR_OVERLAY_DEV}" ] || return 1
 
 EXT4FS_BLOCKS=`block info | grep "TYPE=\"ext4\"" | awk -F ' ' '{printf $1}' | sed 's/:/ /g'`
 
@@ -36,7 +36,10 @@ return 0
 
 mount_rootfs_data() {
 mkdir -p ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
-if [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
+if [ "x" = "x${CUR_OVERLAY_DEV}" ]; then
+	mount --bind / ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+	UCI="uci"
+elif [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
 	mount --bind /overlay ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 else
 	ROOTFS_DATA_FSTYPE=`block info ${ROOTFS_DATA_DEV} | awk -F 'TYPE="' '{printf $2}' | sed 's/"//'`
@@ -98,7 +101,7 @@ init_menu_items() {
 MENU_SELE=1
 MENU_ITEMS="返回"
 
-if [ "${ROOTFS_DATA_DEV}" = "${CUR_OVERLAY_DEV}" ]; then
+if [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
 	MENU_ITEMS="${MENU_ITEMS} 原始分区(+)"
 	MENU_SELE=2
 else
@@ -111,7 +114,7 @@ for bo in ${EXT4FS_BLOCKS}; do
 		continue
 	fi
 	MENU_ITEMS="${MENU_ITEMS} $bo"
-	if [ "$bo" = ${CUR_OVERLAY_DEV} ]; then
+	if [ "x$bo" = "x${CUR_OVERLAY_DEV}" ]; then
 		MENU_SELE=${CUR_ITEM}
 		MENU_ITEMS="${MENU_ITEMS}(+)"
 	fi
@@ -123,7 +126,7 @@ done
 }
 
 delete_old_overlay_settings() {
-[ "${ROOTFS_DATA_DEV}" != "${CUR_OVERLAY_DEV}" ] || uci commit fstab
+[ "x${ROOTFS_DATA_DEV}" != "x${CUR_OVERLAY_DEV}" ] || uci commit fstab
 FOUND=`$UCI show fstab | grep ".target='/overlay'"`
 if [ ! -z $FOUND ]; then
 	FOUND="${FOUND%%.target=\'/overlay\'}"
@@ -172,14 +175,14 @@ case "${SELE_ITEM}" in
 	exit 0
 ;;
 	2)
-	if [ "${ROOTFS_DATA_DEV}" != "${CUR_OVERLAY_DEV}" ]; then
+	if [ "x${ROOTFS_DATA_DEV}" != "x${CUR_OVERLAY_DEV}" ]; then
 		DST_OVERLAY_DEV="${ROOTFS_DATA_DEV}"
 	fi
 ;;
 	*)
 	find_item_dev ${SELE_ITEM}
 	#echo "SELE_ITEM_DEV=$SELE_ITEM_DEV"
-	if [ "${SELE_ITEM_DEV}" != "${CUR_OVERLAY_DEV}" ]; then
+	if [ "x${SELE_ITEM_DEV}" != "x${CUR_OVERLAY_DEV}" ]; then
 		DST_OVERLAY_DEV="${SELE_ITEM_DEV}"
 	fi
 ;;
