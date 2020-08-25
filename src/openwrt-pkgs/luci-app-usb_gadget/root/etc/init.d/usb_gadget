@@ -32,8 +32,10 @@ init_config(){
 start(){
 	USB_GADGET_ENABLED=`uci get usb_gadget.@usb_gadget[0].enabled`
 	if [ "x${USB_GADGET_ENABLED}" != "x1" ]; then
+		echo host > /sys/bus/platform/devices/musb-hdrc.1.auto/mode
 		echo "usb_gadget: disabled."
 	else
+		echo peripheral > /sys/bus/platform/devices/musb-hdrc.1.auto/mode
 		USB_GADGET_FUNCTION=`uci get usb_gadget.@usb_gadget[0].type`
 		rmmod g_ether > /dev/null 2>&1
 		rmmod g_mass_storage > /dev/null 2>&1
