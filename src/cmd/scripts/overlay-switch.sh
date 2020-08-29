@@ -2,7 +2,6 @@
 
 ROOTFS_DATA_MOUNT_DIR="/tmp/rootfs_data_mount"
 OVERLAY_SOURCE_MOUNT_DIR="/tmp/overlay_source"
-UCI="uci -c ${ROOTFS_DATA_MOUNT_DIR}/upper/etc/config"
 
 check_env() {
 [ -e /etc/config/fstab -a -x /sbin/block ] || return 1
@@ -11,14 +10,17 @@ return 0
 }
 
 detect_rootfs_data() {
-FOUND=`cat /proc/mtd | grep "rootfs_data" | awk -F ' ' '{printf $1}'`
+ROOTFS_DATA_DEV=
+# try root device as default overlay
+FOUND=`cat /proc/cmdline | grep "root="`
 if [ ! -z "$FOUND" ]; then
-	# OpenWrt always use rootfs_data if existed
-	ROOTFS_DATA_DEV=`echo /dev/${FOUND%%:} | sed 's/mtd/mtdblock/'`
+	ROOTFS_DATA_DEV=`echo ${FOUND##*root=} | awk -F ' ' '{printf $1}'`
 else
-	# try root device as default overlay
-	ROOTFS_DATA_DEV=`cat /proc/cmdline | grep "root="`
-	[ -z "${ROOTFS_DATA_DEV}" ] || ROOTFS_DATA_DEV=`echo ${ROOTFS_DATA_DEV##*root=} | awk -F ' ' '{printf $1}'`
+	FOUND=`cat /proc/mtd | grep "rootfs_data" | awk -F ' ' '{printf $1}'`
+	if [ ! -z "$FOUND" ]; then
+		# OpenWrt always use rootfs_data if existed
+		ROOTFS_DATA_DEV=`echo /dev/${FOUND%%:} | sed 's/mtd/mtdblock/'`
+	fi
 fi
 [ ! -z "${ROOTFS_DATA_DEV}" ] || return 1
 
@@ -39,19 +41,27 @@ mkdir -p ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 if [ "x" = "x${CUR_OVERLAY_DEV}" ]; then
 	mount --bind / ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 	UCI="uci"
-elif [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
-	mount --bind /overlay ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 else
 	ROOTFS_DATA_FSTYPE=`block info ${ROOTFS_DATA_DEV} | awk -F 'TYPE="' '{printf $2}' | sed 's/"//'`
-	if [ "x${ROOTFS_DATA_FSTYPE}" = "xjffs2" ]; then
-		mount -t jffs2 -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+	if [ "x${ROOTFS_DATA_FSTYPE}" = "xext4" ]; then
+		UCI="uci -c ${ROOTFS_DATA_MOUNT_DIR}/etc/config"
 	else
-		ROM_MOUNTED=`mount | grep "/rom" | grep "${ROOTFS_DATA_DEV}"`
-		if [ ! -z "${ROM_MOUNTED}" ]; then
-			mount -o rw,remount /rom > /dev/null 2>&1 && \
-			mount --bind /rom ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+		UCI="uci -c ${ROOTFS_DATA_MOUNT_DIR}/upper/etc/config"
+	fi
+
+	if [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
+		mount --bind /overlay ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+	else
+		if [ "x${ROOTFS_DATA_FSTYPE}" = "xjffs2" ]; then
+			mount -t jffs2 -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 		else
-			mount -t ${ROOTFS_DATA_FSTYPE} -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+			ROM_MOUNTED=`mount | grep "/rom" | grep "${ROOTFS_DATA_DEV}"`
+			if [ ! -z "${ROM_MOUNTED}" ]; then
+				mount -o rw,remount /rom > /dev/null 2>&1 && \
+				mount --bind /rom ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+			else
+				mount -t ${ROOTFS_DATA_FSTYPE} -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+			fi
 		fi
 	fi
 fi
@@ -101,7 +111,7 @@ init_menu_items() {
 MENU_SELE=1
 MENU_ITEMS="返回"
 
-if [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
+if [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" -o "x${CUR_OVERLAY_DEV}" = "x" ]; then
 	MENU_ITEMS="${MENU_ITEMS} 原始分区(+)"
 	MENU_SELE=2
 else
