@@ -235,7 +235,8 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 			{
 				fprintf(stderr,
 					"[LBApplication]: %s --- Failed to load add-on (%s) !\n",
-					__func__, pth.Path());
+					__func__,
+					(pth.Path() == NULL) ? "combiner" : pth.Path());
 				continue;
 			}
 
@@ -475,7 +476,7 @@ LBApplication::Go()
 
 	if(pipe(fPipes) < 0)
 	{
-		perror("[LBApplication]: Unable to create pipe");
+		perror("[LBApplication]: Unable to create pipe !\n");
 		return;
 	}
 
@@ -523,7 +524,7 @@ LBApplication::Go()
 		int status = select(fdMax + 1, &rset, NULL, NULL, &timeout);
 		if(status < 0)
 		{
-			perror("[LBApplication]: Unable to get event from input device");
+			perror("[LBApplication]: Unable to get event from input device !\n");
 			break;
 		}
 

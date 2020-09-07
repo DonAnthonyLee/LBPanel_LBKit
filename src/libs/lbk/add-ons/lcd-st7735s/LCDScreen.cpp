@@ -87,7 +87,7 @@ LCDScreen::InitCheck(const char *options)
 			BEntry entry(opt.String() + 4);
 			if(entry.Exists() == false)
 			{
-				fprintf(stderr, "[LCDScreen]: No such device (%s) !", opt.String() + 4);
+				fprintf(stderr, "[LCDScreen]: No such device (%s) !\n", opt.String() + 4);
 				return B_ERROR;
 			}
 
@@ -101,7 +101,7 @@ LCDScreen::InitCheck(const char *options)
 		    ioctl(fFD, LCD_ST7735S_IOC_GET_PROP, &prop) != 0)
 		{
 			if(fFD >= 0) close(fFD);
-			perror("[LCDScreen]: Unable to open device !");
+			perror("[LCDScreen]: Unable to open device !\n");
 			fFD = -2;
 		}
 		else

@@ -64,18 +64,18 @@ LBPanelKeypadGeneric::InitDevice(const char *dev)
 #ifdef ETK_OS_LINUX
 	if ((fFD = open(dev, O_RDONLY)) < 0)
 	{
-		perror("[LBPanelKeypadGeneric]: Unable to open device !");
+		perror("[LBPanelKeypadGeneric]: Unable to open device !\n");
 		return B_ERROR;
 	}
 
 	if(pipe(fPipes) < 0)
 	{
-		perror("[LBPanelKeypadGeneric]: Unable to create pipe !");
+		perror("[LBPanelKeypadGeneric]: Unable to create pipe !\n");
 		return B_ERROR;
 	}
 #else
 	// TODO
-	fprintf(stderr, "[LBPanelKeypadGeneric]: No implementation of device !");
+	fprintf(stderr, "[LBPanelKeypadGeneric]: No implementation of device !\n");
 	return B_ERROR;
 #endif // ETK_OS_LINUX
 
@@ -255,7 +255,7 @@ LBPanelKeypadGeneric::InputEventsObserver(void *arg)
 		if(status == 0) continue;
 		if(status < 0)
 		{
-			perror("[LBPanelKeypadGeneric]: Unable to get event from input device");
+			perror("[LBPanelKeypadGeneric]: Unable to get event from input device !\n");
 			break;
 		}
 
@@ -272,7 +272,7 @@ LBPanelKeypadGeneric::InputEventsObserver(void *arg)
 
 		if(n <= 0)
 		{
-			perror("[LBPanelKeypadGeneric]: Unable to get event from input device");
+			perror("[LBPanelKeypadGeneric]: Unable to get event from input device! \n");
 			break;
 		}
 

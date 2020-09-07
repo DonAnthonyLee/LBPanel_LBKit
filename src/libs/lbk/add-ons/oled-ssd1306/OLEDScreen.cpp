@@ -84,7 +84,7 @@ OLEDScreen::InitCheck(const char *options)
 			BEntry entry(opt.String() + 4);
 			if(entry.Exists() == false)
 			{
-				fprintf(stderr, "[OLEDScreen]: No such device (%s) !", opt.String() + 4);
+				fprintf(stderr, "[OLEDScreen]: No such device (%s) !\n", opt.String() + 4);
 				return B_ERROR;
 			}
 
@@ -93,7 +93,7 @@ OLEDScreen::InitCheck(const char *options)
 
 		if((fFD = open(dev, O_RDWR)) < 0)
 		{
-			perror("[OLEDScreen]: Unable to open device !");
+			perror("[OLEDScreen]: Unable to open device !\n");
 			fFD = -2;
 		}
 		else
