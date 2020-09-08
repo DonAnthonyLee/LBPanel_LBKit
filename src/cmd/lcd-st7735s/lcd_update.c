@@ -51,14 +51,20 @@ typedef unsigned char	bool;
 
 #include <lcd_st7735s_ioctl.h>
 
-#define DEFAULT_DEVICE		"/dev/spi-lcd0.1"
+// lcd_probe.c
+extern char* lcd_st7735s_probe_default_device(void);
 
 static void show_usage(void)
 {
+	char *dev_name = lcd_st7735s_probe_default_device();
+
 	printf("lcd_update - Whether to update LCD when drawing\n\n");
 	printf("Usage: lcd_update [-D device] [state]\n\
     device                path of device, default value is: %s\n\
-    state = 0,1           default value is: 1\n", DEFAULT_DEVICE);
+    state = 0,1           default value is: 1\n", (dev_name ? dev_name : "none"));
+
+	if (dev_name != NULL)
+		free(dev_name);
 }
 
 #ifdef CMD_ALL_IN_ONE
@@ -68,12 +74,14 @@ int main(int argc, char **argv)
 #endif
 {
 	int n, f, err = 0;
-	const char *dev_name = DEFAULT_DEVICE;
+	char *dev_name = NULL;
 	bool state;
 
 	for (n = 1; n < argc; n++) {
 		if (n < argc - 1 && strcmp(argv[n], "-D") == 0) {
-			dev_name = argv[++n];
+			if(dev_name != NULL)
+				free(dev_name);
+			dev_name = strdup(argv[++n]);
 		} else {
 			break;
 		}
@@ -81,14 +89,24 @@ int main(int argc, char **argv)
 	argc -= (--n);
 
 	if (argc > 2) {
+		if (dev_name != NULL)
+			free(dev_name);
 		show_usage();
+
 		exit(1);
 	}
 
-	if ((f = open(dev_name, O_RDWR)) < 0) {
-		perror("Open");
+	if (dev_name == NULL)
+		dev_name = lcd_st7735s_probe_default_device();
+
+	if (dev_name == NULL || (f = open(dev_name, O_RDWR)) < 0) {
+		fprintf(stderr, "No such device: %s\n", (dev_name == NULL) ? "none" : dev_name);
+		if(dev_name != NULL)
+			free(dev_name);
+
 		exit(1);
 	}
+	free(dev_name);
 
 	state = (argc == 1 || *(argv[n + 1]) == '1') ? true : false;
 

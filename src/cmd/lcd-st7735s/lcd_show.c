@@ -51,16 +51,23 @@ typedef unsigned char	bool;
 
 #include <lcd_st7735s_ioctl.h>
 
-#define DEFAULT_DEVICE		"/dev/spi-lcd0.1"
+// lcd_probe.c
+extern char* lcd_st7735s_probe_default_device(void);
+
 #define DEFAULT_COLOR		0x0000cbff
 
 static void show_usage(void)
 {
+	char *dev_name = lcd_st7735s_probe_default_device();
+
 	printf("lcd_show - Show characters on LCD\n\n");
 	printf("Usage: lcd_show [-D device] x y size string [rgb_color]\n\
     device                       path of device, default value is: %s\n\
     size = 8,12,14,16,24,32,0    0 means 32x32 icon, range: 0~9.\n\
-    rgb_color[B:G:R]             default value is: 0x%06x\n", DEFAULT_DEVICE, DEFAULT_COLOR);
+    rgb_color[B:G:R]             default value is: 0x%06x\n", (dev_name ? dev_name : "none"), DEFAULT_COLOR);
+
+	if (dev_name != NULL)
+		free(dev_name);
 }
 
 #ifdef CMD_ALL_IN_ONE
@@ -70,13 +77,15 @@ int main(int argc, char **argv)
 #endif
 {
 	int n, f, err = 0;
-	const char *dev_name = DEFAULT_DEVICE;
+	char *dev_name = NULL;
 	_lcd_st7735s_draw_str_t data;
 	uint32_t color = DEFAULT_COLOR;
 
 	for (n = 1; n < argc; n++) {
 		if (n < argc - 1 && strcmp(argv[n], "-D") == 0) {
-			dev_name = argv[++n];
+			if(dev_name != NULL)
+				free(dev_name);
+			dev_name = strdup(argv[++n]);
 		} else {
 			break;
 		}
@@ -84,14 +93,24 @@ int main(int argc, char **argv)
 	argc -= (--n);
 
 	if (argc < 5 || argc > 6) {
+		if (dev_name != NULL)
+			free(dev_name);
 		show_usage();
+
 		exit(1);
 	}
 
-	if ((f = open(dev_name, O_RDWR)) < 0) {
-		perror("Open");
+	if (dev_name == NULL)
+		dev_name = lcd_st7735s_probe_default_device();
+
+	if (dev_name == NULL || (f = open(dev_name, O_RDWR)) < 0) {
+		fprintf(stderr, "No such device: %s\n", (dev_name == NULL) ? "none" : dev_name);
+		if(dev_name != NULL)
+			free(dev_name);
+
 		exit(1);
 	}
+	free(dev_name);
 
 	data.x = (int16_t)atoi(argv[n + 1]);
 	data.y = (int16_t)atoi(argv[n + 2]);

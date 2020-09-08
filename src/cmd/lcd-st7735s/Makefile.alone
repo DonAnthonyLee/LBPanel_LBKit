@@ -17,7 +17,8 @@ OBJECTS_1 = \
 	lcd_clear.o \
 	lcd_show.o \
 	lcd_update.o \
-	lcd_power.o
+	lcd_power.o \
+	lcd_probe.o
 
 OBJECTS_2 =
 OBJECTS_3 =
