@@ -18,12 +18,23 @@
 	oled_update 1
 }
 
-[ ! -x /bin/lcd_cmd -o ! -c /dev/spi-lcd0.1 ] || {
-	lcd_update 0
-	echo "OpenWrt" > /sys/bus/spi/drivers/lcd_st7735s_spi/spi0.1/show_stage_title
-	echo 7 > /sys/bus/spi/drivers/lcd_st7735s_spi/spi0.1/show_stage_icon
-	echo "进入系统..." > /sys/bus/spi/drivers/lcd_st7735s_spi/spi0.1/show_stage_status
-	lcd_update 1
+[ ! -c /dev/spi-lcd0.1 -a ! -c /dev/spi-lcd1.0 ] || {
+	[ ! -x /bin/lcd_cmd -o ] || {
+		[ ! -c /dev/spi-lcd0.1 ] || {
+			lcd_update -D /dev/spi-lcd0.1 0
+			echo "OpenWrt" > /sys/bus/spi/drivers/lcd_st7735s_spi/spi0.1/show_stage_title
+			echo 7 > /sys/bus/spi/drivers/lcd_st7735s_spi/spi0.1/show_stage_icon
+			echo "进入系统..." > /sys/bus/spi/drivers/lcd_st7735s_spi/spi0.1/show_stage_status
+			lcd_update -D /dev/spi-lcd0.1 1
+		}
+		[ ! -c /dev/spi-lcd1.0 ] || {
+			lcd_update -D /dev/spi-lcd1.0 0
+			echo "OpenWrt" > /sys/bus/spi/drivers/lcd_st7735s_spi/spi1.0/show_stage_title
+			echo 7 > /sys/bus/spi/drivers/lcd_st7735s_spi/spi1.0/show_stage_icon
+			echo "进入系统..." > /sys/bus/spi/drivers/lcd_st7735s_spi/spi1.0/show_stage_status
+			lcd_update -D /dev/spi-lcd1.0 1
+		}
+	}
 }
 
 . /usr/share/scripts/lbpanel-uci-config.sh init $1
