@@ -6,15 +6,24 @@
 [ ! -z "$1" ] || exit 1
 
 [ ! -x /bin/oled_cmd -o ! -c /dev/oled-003c ] || {
+	OLED_WIDTH=`cat /sys/bus/i2c/drivers/oled_ssd1306_i2c/0-003c/width`
+	OLED_HEIGHT=`cat /sys/bus/i2c/drivers/oled_ssd1306_i2c/0-003c/height`
 	oled_update 0
-	oled_clear 0 0 128 16
-	oled_show 35 1 14 OpenWrt
-	oled_clear 0 16 128 34 0
-	oled_show 8 17 0 5 1
-	oled_show 48 17 0 6 1
-	oled_show 88 17 0 7 1
-	oled_clear 0 51 128 12
-	oled_show 10 51 12 进入系统...
+	if [ "x${OLED_HEIGHT}" = "x64" ]; then
+		oled_clear 0 0 ${OLED_WIDTH} 16
+		oled_show 35 1 14 OpenWrt
+		oled_clear 0 16 ${OLED_WIDTH} 34 0
+		oled_show 8 17 0 5 1
+		oled_show 48 17 0 6 1
+		oled_show 88 17 0 7 1
+		oled_clear 0 51 128 12
+		oled_show 10 51 12 进入系统...
+	else
+		oled_clear 0 0 ${OLED_WIDTH} ${OLED_HEIGHT} 0
+		oled_show 8 0 0 5 1
+		oled_show 48 0 0 6 1
+		oled_show 88 0 0 7 1
+	fi
 	oled_update 1
 }
 
