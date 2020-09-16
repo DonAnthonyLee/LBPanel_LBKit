@@ -416,6 +416,41 @@ LBView::Pulse()
 }
 
 
+void
+LBView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	// Empty
+}
+
+
+void
+LBView::FlexibleKeyUp(uint16 key, uint8 clicks)
+{
+	// Empty
+}
+
+
+void
+LBView::PointerDown(uint8 index, BPoint where)
+{
+	// Empty
+}
+
+
+void
+LBView::PointerMoved(uint8 index, BPoint where, BPoint prev)
+{
+	// Empty
+}
+
+
+void
+LBView::PointerUp(uint8 index, BPoint where)
+{
+	// Empty
+}
+
+
 uint8
 LBView::KeyState(uint8 *down_state) const
 {
@@ -449,6 +484,22 @@ LBView::SetKeyMessage(uint32 command)
 {
 	BMessage *msg = new BMessage(command);
 	SetKeyMessage(msg, BMessenger());
+}
+
+
+uint8
+LBView::CountPointers() const
+{
+	// TODO
+	return 0;
+}
+
+
+bool
+LBView::GetPointerState(uint8 index, BMessage *msg_state) const
+{
+	// TODO
+	return false;
 }
 
 

@@ -83,6 +83,12 @@ public:
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	Pulse();
+
+	virtual void	FlexibleKeyDown(uint16 key, uint8 clicks);
+	virtual void	FlexibleKeyUp(uint16 key, uint8 clicks);
+	virtual void	PointerDown(uint8 index, BPoint where);
+	virtual void	PointerMoved(uint8 index, BPoint where, BPoint prev);
+	virtual void	PointerUp(uint8 index, BPoint where);
 	// Empty functions END
 
 	uint8		KeyState(uint8 *down_state = NULL) const;
@@ -90,6 +96,9 @@ public:
 	BMessage*	KeyMessage() const;
 	void		SetKeyMessage(BMessage *msg, BMessenger target);
 	void		SetKeyMessage(uint32 command);
+
+	uint8		CountPointers() const;
+	bool		GetPointerState(uint8 index, BMessage *msg_state) const;
 
 	bool		IsActivated() const;
 	virtual void	Activated(bool state);
