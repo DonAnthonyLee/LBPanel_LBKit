@@ -11,16 +11,16 @@ return 0
 
 detect_rootfs_data() {
 ROOTFS_DATA_DEV=
-# try root device as default overlay
-FOUND=`cat /proc/cmdline | grep "root="`
-if [ ! -z "$FOUND" ]; then
-	ROOTFS_DATA_DEV=`echo ${FOUND##*root=} | awk -F ' ' '{printf $1}'`
-else
-	FOUND=`cat /proc/mtd | grep "rootfs_data" | awk -F ' ' '{printf $1}'`
+# OpenWrt always use mtd at first if possible
+FOUND=`cat /proc/mtd | grep "rootfs_data" | awk -F ' ' '{printf $1}'`
+if [ -z "$FOUND" ]; then
+	# try root device as default overlay
+	FOUND=`cat /proc/cmdline | grep "root="`
 	if [ ! -z "$FOUND" ]; then
-		# OpenWrt always use rootfs_data if existed
-		ROOTFS_DATA_DEV=`echo /dev/${FOUND%%:} | sed 's/mtd/mtdblock/'`
+		ROOTFS_DATA_DEV=`echo ${FOUND##*root=} | awk -F ' ' '{printf $1}'`
 	fi
+else
+	ROOTFS_DATA_DEV=`echo /dev/${FOUND%%:} | sed 's/mtd/mtdblock/'`
 fi
 [ ! -z "${ROOTFS_DATA_DEV}" ] || return 1
 
@@ -40,29 +40,26 @@ mount_rootfs_data() {
 mkdir -p ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 if [ "x" = "x${CUR_OVERLAY_DEV}" ]; then
 	mount --bind / ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
-	UCI="uci"
+	UCI="uci -c ${ROOTFS_DATA_MOUNT_DIR}/etc/config"
+	touch ${ROOTFS_DATA_MOUNT_DIR}/etc/config/fstab
+elif [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
+	mount --bind /overlay ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+	touch ${ROOTFS_DATA_MOUNT_DIR}/upper/etc/config/fstab
 else
 	ROOTFS_DATA_FSTYPE=`block info ${ROOTFS_DATA_DEV} | awk -F 'TYPE="' '{printf $2}' | sed 's/"//'`
-	if [ "x${ROOTFS_DATA_FSTYPE}" = "xext4" ]; then
-		UCI="uci -c ${ROOTFS_DATA_MOUNT_DIR}/etc/config"
+	if [ "x${ROOTFS_DATA_FSTYPE}" = "xjffs2" ]; then
+		mount -t jffs2 -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+		touch ${ROOTFS_DATA_MOUNT_DIR}/upper/etc/config/fstab
 	else
-		UCI="uci -c ${ROOTFS_DATA_MOUNT_DIR}/upper/etc/config"
-	fi
-
-	if [ "x${ROOTFS_DATA_DEV}" = "x${CUR_OVERLAY_DEV}" ]; then
-		mount --bind /overlay ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
-	else
-		if [ "x${ROOTFS_DATA_FSTYPE}" = "xjffs2" ]; then
-			mount -t jffs2 -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
+		ROM_MOUNTED=`mount | grep "/rom" | grep "${ROOTFS_DATA_DEV}"`
+		if [ ! -z "${ROM_MOUNTED}" ]; then
+			mount -o rw,remount /rom > /dev/null 2>&1 && \
+			mount --bind /rom ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 		else
-			ROM_MOUNTED=`mount | grep "/rom" | grep "${ROOTFS_DATA_DEV}"`
-			if [ ! -z "${ROM_MOUNTED}" ]; then
-				mount -o rw,remount /rom > /dev/null 2>&1 && \
-				mount --bind /rom ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
-			else
-				mount -t ${ROOTFS_DATA_FSTYPE} -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
-			fi
+			mount -t ${ROOTFS_DATA_FSTYPE} -o rw ${ROOTFS_DATA_DEV} ${ROOTFS_DATA_MOUNT_DIR} > /dev/null 2>&1
 		fi
+		UCI="uci -c ${ROOTFS_DATA_MOUNT_DIR}/etc/config"
+		touch ${ROOTFS_DATA_MOUNT_DIR}/etc/config/fstab
 	fi
 fi
 [ "$?" = "0" ] || return 1
