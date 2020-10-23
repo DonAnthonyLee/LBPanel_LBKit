@@ -110,6 +110,21 @@ TListView::KeyUp(uint8 key, uint8 clicks)
 }
 
 
+void
+TListView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	switch(key)
+	{
+		case B_ESCAPE:
+			StandBack();
+			break;
+
+		default:
+			LBListView::FlexibleKeyDown(key, clicks);
+	}
+}
+
+
 TCommandsPageView::TCommandsPageView(const char *name)
 	: LBMenuView(name),
 	  fBlockKeyEventsTimestamp(0)
@@ -154,6 +169,25 @@ TCommandsPageView::KeyUp(uint8 key, uint8 clicks)
 		else if(key == 2) // Right
 			SwitchToNextPage();
 		return;
+	}
+}
+
+
+void
+TCommandsPageView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	switch(key)
+	{
+		case B_PAGE_UP:
+			SwitchToPrevPage();
+			break;
+
+		case B_PAGE_DOWN:
+			SwitchToNextPage();
+			break;
+
+		default:
+			LBMenuView::FlexibleKeyDown(key, clicks);
 	}
 }
 

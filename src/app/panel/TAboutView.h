@@ -42,6 +42,7 @@ public:
 
 	virtual void	Draw(BRect updateRect);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
+	virtual void	FlexibleKeyDown(uint16 key, uint8 clicks);
 	virtual void	Attached();
 
 private:

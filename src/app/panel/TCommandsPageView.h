@@ -41,6 +41,7 @@ public:
 	virtual ~TCommandsPageView();
 
 	virtual void	KeyUp(uint8 key, uint8 clicks);
+	virtual void	FlexibleKeyDown(uint16 key, uint8 clicks);
 	virtual void	Attached();
 	virtual void	MessageReceived(BMessage *msg);
 
@@ -72,6 +73,7 @@ public:
 
 	virtual status_t	Invoke(const BMessage *message);
 	virtual void		KeyUp(uint8 key, uint8 clicks);
+	virtual void		FlexibleKeyDown(uint16 key, uint8 clicks);
 };
 
 #endif /* __cplusplus */

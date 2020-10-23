@@ -76,6 +76,25 @@ TMenuPageView::KeyUp(uint8 key, uint8 clicks)
 
 
 void
+TMenuPageView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	switch(key)
+	{
+		case B_PAGE_UP:
+			SwitchToPrevPage();
+			break;
+
+		case B_PAGE_DOWN:
+			SwitchToNextPage();
+			break;
+
+		default:
+			LBMenuView::FlexibleKeyDown(key, clicks);
+	}
+}
+
+
+void
 TMenuPageView::MessageReceived(BMessage *msg)
 {
 	int32 which = -1;

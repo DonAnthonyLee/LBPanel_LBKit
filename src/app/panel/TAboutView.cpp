@@ -53,6 +53,13 @@ TAboutView::KeyUp(uint8 key, uint8 clicks)
 
 
 void
+TAboutView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	StandBack();
+}
+
+
+void
 TAboutView::Attached()
 {
 	LBView::Attached();

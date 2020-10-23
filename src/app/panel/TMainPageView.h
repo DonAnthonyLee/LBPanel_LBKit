@@ -46,6 +46,7 @@ public:
 	virtual void	Draw(BRect updateRect);
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
+	virtual void	FlexibleKeyDown(uint16 key, uint8 clicks);
 	virtual void	Pulse();
 	virtual void	Activated(bool state);
 
@@ -91,6 +92,9 @@ private:
 	bool GetInterfaceIPv6(BString &ipaddr, const char *ifname) const;
 
 	bool CheckInterfaces(bool force = false);
+
+	void ConfirmedRequested();
+	void PowerOffRequested();
 };
 
 #endif /* __cplusplus */

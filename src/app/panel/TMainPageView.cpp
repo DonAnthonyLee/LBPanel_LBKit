@@ -816,18 +816,8 @@ TMainPageView::KeyDown(uint8 key, uint8 clicks)
 	if(clicks == 0xff) switch(key)
 	{
 		case 1: // K2 long press
-		{
-			LBAlertView *view = new LBAlertView("关闭机器",
-							    "是否确定\n进行关机操作?",
-							    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
-							    B_WARNING_ALERT);
-			view->SetInvoker(new BInvoker(new BMessage(MSG_POWER_REQUESTED_CONFIRM), this));
-			view->SetName("PowerOffRequested");
-			AddStickView(view);
-			view->StandIn();
-		}
-		printf("[TMainPageView]: Power off requested.\n");
-		return;
+			PowerOffRequested();
+			return;
 
 		case 0: // K1 long press
 			fTabIndex = -2;
@@ -880,20 +870,7 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 		}
 		else if(key == 1) // Setup
 		{
-#ifdef ETK_OS_LINUX
-			if(fTabIndex == -1) // BoardInfo Page
-			{
-				LBAlertView *view = new LBAlertView("释放缓存",
-								    "是否需要\n进行缓存释放?",
-								    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
-								    B_IDEA_ALERT);
-				view->SetInvoker(new BInvoker(new BMessage(MSG_FREE_MEMORY_CACHE), this));
-				view->SetName("FreeMemoryCache");
-				AddStickView(view);
-				view->StandIn();
-			}
-#endif
-			// TODO
+			ConfirmedRequested();
 		}
 	}
 	else if(clicks != 0xff)
@@ -932,6 +909,110 @@ TMainPageView::KeyUp(uint8 key, uint8 clicks)
 
 		Invalidate();
 	}
+}
+
+
+void
+TMainPageView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	int32 saveIndex = fTabIndex;
+
+	switch(key)
+	{
+		case B_LEFT_ARROW:
+			if(fTabIndex > -2) fTabIndex--;
+			break;
+
+		case B_RIGHT_ARROW:
+			if(fTabIndex < fInterfacesCount) fTabIndex++;
+			break;
+
+		case B_HOME:
+		case B_UP_ARROW:
+			fTabIndex = -2;
+			break;
+
+		case B_END:
+		case B_DOWN_ARROW:
+			CheckInterfaces(true);
+			fTabIndex = fInterfacesCount;
+			break;
+
+		case B_PAGE_UP:
+			SwitchToPrevPage();
+			return;
+
+		case B_PAGE_DOWN:
+			SwitchToNextPage();
+			return;
+
+		case B_ENTER:
+			ConfirmedRequested();
+			return;
+
+		case B_ESCAPE:
+			if(fTabIndex != 0)
+			{
+				fTabIndex = 0;
+				break;
+			}
+			PowerOffRequested();
+			return;
+	}
+
+	if(saveIndex != fTabIndex)
+	{
+		UpdatePulseRate(fTabIndex != 0 ? (bigtime_t)-1 : 500000);
+		if(fTabIndex >= 0 && key != B_DOWN_ARROW) CheckInterfaces(true);
+
+		fShowTimestamp = system_time();
+		if(fTabIndex > -2)
+			ShowNavButton(0);
+		else
+			HideNavButton(0);
+
+		if(fTabIndex < fInterfacesCount)
+			ShowNavButton(2);
+		else
+			HideNavButton(2);
+
+		Invalidate();
+	}
+}
+
+
+void
+TMainPageView::ConfirmedRequested()
+{
+	// TODO
+#ifdef ETK_OS_LINUX
+	if(fTabIndex == -1) // BoardInfo Page
+	{
+		LBAlertView *view = new LBAlertView("释放缓存",
+						    "是否需要\n进行缓存释放?",
+						    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
+						    B_IDEA_ALERT);
+		view->SetInvoker(new BInvoker(new BMessage(MSG_FREE_MEMORY_CACHE), this));
+		view->SetName("FreeMemoryCache");
+		AddStickView(view);
+		view->StandIn();
+	}
+#endif
+}
+
+
+void
+TMainPageView::PowerOffRequested()
+{
+	LBAlertView *view = new LBAlertView("关闭机器",
+					    "是否确定\n进行关机操作?",
+					    LBK_ICON_NO, LBK_ICON_YES, LBK_ICON_NONE,
+					    B_WARNING_ALERT);
+	view->SetInvoker(new BInvoker(new BMessage(MSG_POWER_REQUESTED_CONFIRM), this));
+	view->SetName("PowerOffRequested");
+	AddStickView(view);
+	view->StandIn();
+	printf("[TMainPageView]: Power off requested.\n");
 }
 
 
