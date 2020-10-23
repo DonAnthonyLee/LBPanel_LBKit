@@ -52,17 +52,20 @@ LBPageView::~LBPageView()
 void
 LBPageView::ShowNavButton(uint8 idBtn)
 {
-	if(idBtn >= LBK_KEY_TYPICAL_NUMBER) return;
+	if(idBtn > LBK_KEY_ID_MAX) return;
 
 	if((fNavButtonsState & (0x01 << idBtn)) == 0)
 	{
 		fNavButtonsState |= (0x01 << idBtn);
 
-		// It's unnesssary to draw single icon, here we draw all
-		BRect r = LBView::Bounds();
-		r.top = r.bottom - 15;
+		if(idBtn < CountPanelKeys())
+		{
+			// It's unnesssary to draw single icon, here we draw all
+			BRect r = LBView::Bounds();
+			r.top = r.bottom - 15;
 
-		Invalidate(r);
+			Invalidate(r);
+		}
 	}
 }
 
@@ -70,17 +73,20 @@ LBPageView::ShowNavButton(uint8 idBtn)
 void
 LBPageView::HideNavButton(uint8 idBtn)
 {
-	if(idBtn >= LBK_KEY_TYPICAL_NUMBER) return;
+	if(idBtn > LBK_KEY_ID_MAX) return;
 
 	if((fNavButtonsState & (0x01 << idBtn)) != 0)
 	{
 		fNavButtonsState &= ~(0x01 << idBtn);
 
-		// It's unnesssary to draw single icon, here we draw all
-		BRect r = LBView::Bounds();
-		r.top = r.bottom - 15;
+		if(idBtn < CountPanelKeys())
+		{
+			// It's unnesssary to draw single icon, here we draw all
+			BRect r = LBView::Bounds();
+			r.top = r.bottom - 15;
 
-		Invalidate(r);
+			Invalidate(r);
+		}
 	}
 }
 
@@ -88,7 +94,7 @@ LBPageView::HideNavButton(uint8 idBtn)
 bool
 LBPageView::IsNavButtonHidden(uint8 idBtn) const
 {
-	if(idBtn >= LBK_KEY_TYPICAL_NUMBER) return false;
+	if(idBtn > LBK_KEY_ID_MAX || idBtn >= CountPanelKeys()) return true;
 
 	return((fNavButtonsState & (0x01 << idBtn)) == 0);
 }
@@ -97,7 +103,7 @@ LBPageView::IsNavButtonHidden(uint8 idBtn) const
 void
 LBPageView::SetNavButtonIcon(int32 idBtn, lbk_icon_id idIcon)
 {
-	if(idBtn >= LBK_KEY_TYPICAL_NUMBER) return;
+	if(idBtn > LBK_KEY_ID_MAX) return;
 	if(!ICON_IS_VALID(idIcon)) return;
 
 	if(fButtonIcons[idBtn] != idIcon)
@@ -118,7 +124,7 @@ LBPageView::SetNavButtonIcon(int32 idBtn, lbk_icon_id idIcon)
 lbk_icon_id
 LBPageView::GetNavButtonIcon(int32 idBtn) const
 {
-	return(IsNavButtonHidden(idBtn) ? LBK_ICON_NONE : fButtonIcons[idBtn]);
+	return((idBtn > LBK_KEY_ID_MAX) ? LBK_ICON_NONE : fButtonIcons[idBtn]);
 }
 
 
@@ -145,14 +151,18 @@ LBPageView::Bounds() const
 void
 LBPageView::Draw(BRect rect)
 {
-	if(fNavButtonsState == 0) return;
+	uint8 keysCount = CountPanelKeys();
+	if(fNavButtonsState == 0 || keysCount == 0) return;
 
 	BRect r = LBView::Bounds();
-	r.right = r.Width() / (float)LBK_KEY_TYPICAL_NUMBER - 1.f;
+	r.right = r.Width() / (float)keysCount - 1.f;
 	r.top = r.bottom - 15;
 
-	for(int k = 0; k < LBK_KEY_TYPICAL_NUMBER; k++)
+	for(int k = 0; k < keysCount; k++)
 	{
+#ifdef LBK_ENABLE_MORE_FEATURES
+		// TODO: orientation, side, offset, etc.
+#endif
 		if(IsNavButtonHidden(k) == false && r.Intersects(rect))
 		{
 			BPoint pt = r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(7, 7);
