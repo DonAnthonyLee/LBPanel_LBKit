@@ -74,7 +74,13 @@ static filter_result cmd_msg_filter(BMessage *msg, BHandler **target, BMessageFi
 	switch(msg->what)
 	{
 		case CMD_MSG_KEY:
-			if(msg->FindInt8("key", (int8*)&key) != B_OK) break;
+			if(msg->FindInt8("key", (int8*)&key) != B_OK)
+			{
+				uint16 keyID;
+				if(msg->FindInt16("key", (int16*)&keyID) == B_OK && keyID == B_ESCAPE)
+					cmd_app->PostMessage(B_QUIT_REQUESTED);
+				break;
+			}
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
 			if(msg->FindInt16("down_state", &state) != B_OK) break;
 
