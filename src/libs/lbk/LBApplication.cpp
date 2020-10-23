@@ -665,10 +665,27 @@ LBApplication::MessageReceived(BMessage *msg)
 			if(msg->FindInt32("panel_id", &id) != B_OK) break;
 			if((dev = lbk_app_get_panel_device_data(fAddOnsList, id)) == NULL) break;
 			if(dev->preferHandler == NULL) break;
-			if(msg->FindInt8("key", (int8*)&key) != B_OK || key >= 8) break;
+
 			if(msg->FindInt64("when", &when) != B_OK) break;
 			if(when > system_time()) // should never happen, just in case
 				when = system_time();
+
+			if(msg->HasInt16("key")) // flexiable keys
+			{
+				uint16 keyID;
+				uint8 clicks;
+				if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK || clicks == 0) break;
+				msg->FindInt16("key", (int16*)&keyID);
+
+				BMessage aMsg(msg->what);
+				aMsg.AddInt16("key", *((int16*)&keyID));
+				aMsg.AddInt8("clicks", *((int8*)&clicks));
+				aMsg.AddInt64("when", when);
+				PostMessage(&aMsg, dev->preferHandler);
+				break;
+			}
+
+			if(msg->FindInt8("key", (int8*)&key) != B_OK || key >= 8) break;
 			if(msg->what == B_KEY_DOWN)
 			{
 				if((dev->keyState & (0x01 << key)) != 0) // already DOWN

@@ -212,6 +212,52 @@ LBMenuView::KeyUp(uint8 key, uint8 clicks)
 
 
 void
+LBMenuView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	int32 pos = -1;
+	LBMenuItem *curItem;
+
+	switch(key)
+	{
+		case B_LEFT_ARROW:
+			RollDown();
+			break;
+
+		case B_RIGHT_ARROW:
+			RollUp();
+			break;
+
+		case B_HOME:
+		case B_UP_ARROW:
+			FirstVisibleItem(pos);
+			SetPosition(pos);
+			break;
+
+		case B_END:
+		case B_DOWN_ARROW:
+			LastVisibleItem(pos);
+			SetPosition(pos);
+			break;
+
+		case B_ENTER:
+			if((curItem = CurrentSelection()) != NULL)
+			{
+				if(curItem->Invoke((const BMessage*)NULL) == B_OK)
+					ItemInvoked(curItem);
+			}
+			break;
+	}
+}
+
+
+void
+LBMenuView::FlexibleKeyUp(uint16 key, uint8 clicks)
+{
+	// TODO
+}
+
+
+void
 LBMenuView::StandIn()
 {
 	LBPageView::StandIn();

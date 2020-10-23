@@ -204,6 +204,48 @@ LBListView::KeyUp(uint8 key, uint8 clicks)
 
 
 void
+LBListView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	int32 pos = -1;
+	LBListItem *curItem;
+
+	switch(key)
+	{
+		case B_UP_ARROW:
+			RollDown();
+			break;
+
+		case B_DOWN_ARROW:
+			RollUp();
+			break;
+
+		case B_HOME:
+		case B_LEFT_ARROW:
+			FirstVisibleItem(pos);
+			SetPosition(pos);
+			break;
+
+		case B_END:
+		case B_RIGHT_ARROW:
+			LastVisibleItem(pos);
+			SetPosition(pos);
+			break;
+
+		case B_ENTER:
+			if(fSelectable == false || (curItem = CurrentSelection()) == NULL) break;
+			Invoke((const BMessage*)NULL);
+			break;
+	}
+}
+
+
+void
+LBListView::FlexibleKeyUp(uint16 key, uint8 clicks)
+{
+	// TODO
+}
+
+void
 LBListView::StandIn()
 {
 	LBPageView::StandIn();

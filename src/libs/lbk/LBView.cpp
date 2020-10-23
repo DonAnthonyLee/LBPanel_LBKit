@@ -508,6 +508,7 @@ LBView::MessageReceived(BMessage *msg)
 {
 	uint8 key = 0xff;
 	uint8 clicks = 0;
+	bigtime_t when;
 
 	switch(msg->what)
 	{
@@ -519,9 +520,49 @@ LBView::MessageReceived(BMessage *msg)
 				Looper()->PostMessage(msg, fStandingInView);
 				break;
 			}
-			if(msg->FindInt8("key", (int8*)&key) != B_OK) break;
+			if(msg->FindInt64("when", &when) != B_OK) break;
 			if(msg->FindInt8("clicks", (int8*)&clicks) != B_OK) break;
 			if(clicks == 0) break;
+
+			if(msg->HasInt16("key")) // flexiable keys
+			{
+				uint16 keyID;
+				if(msg->FindInt16("key", (int16*)&keyID) != B_OK) break;
+
+				if(msg->what == B_KEY_DOWN)
+				{
+					if(GetPowerState() == false) break;
+					FlexibleKeyDown(keyID, clicks);
+				}
+				else // msg->what == B_KEY_UP
+				{
+					if(GetPowerState() == false)
+					{
+						SetPowerState(true);
+						break;
+					}
+					FlexibleKeyUp(keyID, clicks);
+				}
+
+				if(fKeyMessage != NULL)
+				{
+					BMessage aMsg(*fKeyMessage);
+					aMsg.AddPointer("source", reinterpret_cast<void*>(this));
+					aMsg.AddInt16("key", *((int16*)&keyID));
+					aMsg.AddInt8("clicks", *((int8*)&clicks));
+					aMsg.AddInt64("when", when);
+					aMsg.AddInt16("state", (msg->what == B_KEY_DOWN) ? 1 : 0);
+
+					if(fKeyMsgTarget.IsValid())
+						fKeyMsgTarget.SendMessage(&aMsg);
+					else
+						Looper()->PostMessage(&aMsg, this);
+				}
+
+				break;
+			}
+
+			if(msg->FindInt8("key", (int8*)&key) != B_OK) break;
 #if 0 // don't care
 			if(key >= CountPanelKeys()) break;
 #else
@@ -541,7 +582,7 @@ LBView::MessageReceived(BMessage *msg)
 					aMsg.AddPointer("source", reinterpret_cast<void*>(this));
 					aMsg.AddInt8("key", *((int8*)&key));
 					aMsg.AddInt8("clicks", *((int8*)&clicks));
-					aMsg.AddInt64("when", system_time());
+					aMsg.AddInt64("when", when);
 					aMsg.AddInt16("state", fKeyState & 0x00ff);
 					aMsg.AddInt16("down_state", (fKeyState >> 8) & 0x00ff);
 
@@ -568,7 +609,7 @@ LBView::MessageReceived(BMessage *msg)
 						aMsg.AddPointer("source", reinterpret_cast<void*>(this));
 						aMsg.AddInt8("key", *((int8*)&key));
 						aMsg.AddInt8("clicks", *((int8*)&clicks));
-						aMsg.AddInt64("when", system_time());
+						aMsg.AddInt64("when", when);
 						aMsg.AddInt16("state", fKeyState & 0x00ff);
 						aMsg.AddInt16("down_state", (fKeyState >> 8) & 0x00ff);
 

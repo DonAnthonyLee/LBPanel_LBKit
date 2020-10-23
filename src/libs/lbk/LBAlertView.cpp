@@ -343,3 +343,40 @@ LBAlertView::KeyUp(uint8 key, uint8 clicks)
 	}
 }
 
+
+void
+LBAlertView::FlexibleKeyDown(uint16 key, uint8 clicks)
+{
+	switch(key)
+	{
+		case B_ENTER:
+			for(int k = 0; k < 3; k++)
+			{
+				if(!(fIcons[k] == LBK_ICON_YES || fIcons[k] == LBK_ICON_OK)) continue;
+				if(fInvoker != NULL)
+				{
+					BMessage aMsg = *(fInvoker->Message());
+					aMsg.AddInt32("which", k);
+					aMsg.AddInt8("clicks", *((int8*)&clicks));
+					fInvoker->Invoke(&aMsg);
+				}
+				else
+				{
+					StandBack();
+				}
+			}
+			break;
+
+		case B_ESCAPE:
+			StandBack();
+			break;
+	}
+}
+
+
+void
+LBAlertView::FlexibleKeyUp(uint16 key, uint8 clicks)
+{
+	// TODO
+}
+
