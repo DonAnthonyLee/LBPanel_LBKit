@@ -63,6 +63,14 @@ public:
 	virtual void		Draw(BRect updateRect);
 	virtual void		MessageReceived(BMessage *msg);
 
+	virtual void		MouseDown(BPoint where);
+	virtual void		MouseUp(BPoint where);
+	virtual void		MouseMoved(BPoint where, uint32 code, const BMessage *msg);
+	virtual void		KeyDown(const char *bytes, int32 numBytes);
+	virtual void		KeyUp(const char *bytes, int32 numBytes);
+
+	virtual void		MakeFocus(bool state);
+
 private:
 	LBPanelBuffer fBuffer;
 	uint8 fPointSize;

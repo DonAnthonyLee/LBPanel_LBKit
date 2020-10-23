@@ -109,6 +109,7 @@ VPDWindow::VPDWindow(BRect frame, const char* title,
 	if(keys_count > 0) frame.bottom -= 30;
 
 	VPDView *view = new VPDView(frame, "screen", B_FOLLOW_LEFT | B_FOLLOW_TOP);
+	fScreenView = view;
 	view->ResizeBuffer(w, h, cspace);
 	view->SetPointSize(point_size);
 	if(id >= 0)
@@ -160,10 +161,24 @@ VPDWindow::QuitRequested()
 
 
 void
+VPDWindow::DispatchMessage(BMessage *msg, BHandler *target)
+{
+	if(CurrentFocus() == NULL &&
+	   (msg->what == B_KEY_DOWN || msg->what == B_KEY_UP) &&
+	   target != fScreenView)
+	{
+		PostMessage(msg, fScreenView);
+	}
+	BWindow::DispatchMessage(msg, target);
+}
+
+
+void
 VPDWindow::MessageReceived(BMessage *msg)
 {
 	VPDView *view;
 	int8 keyID;
+	uint16 flexKeyID;
 	bigtime_t when;
 	bool keyState;
 
@@ -171,14 +186,26 @@ VPDWindow::MessageReceived(BMessage *msg)
 	{
 		case VPD_MSG_KEY:
 			if(fVPD == NULL) break;
-			if(msg->FindInt8("id", &keyID) != B_OK || keyID < 0 || keyID >= 8) break;
 			if(msg->FindBool("state", &keyState) != B_OK) break;
 			if(msg->FindInt64("when", &when) != B_OK)
 				when = system_time();
-			if(keyState)
-				fVPD->KeyDown((uint8)keyID, when);
-			else
-				fVPD->KeyUp((uint8)keyID, when);
+			if(msg->FindInt8("id", &keyID) == B_OK && keyID >= 0 && keyID < 8)
+			{
+				if(keyState)
+					fVPD->KeyDown((uint8)keyID, when);
+				else
+					fVPD->KeyUp((uint8)keyID, when);
+			}
+			else if(msg->FindInt16("id", (int16*)&flexKeyID) == B_OK)
+			{
+				uint8 clicks = 1;
+				msg->FindInt8("clicks", (int8*)&clicks);
+
+				if(keyState)
+					fVPD->FlexibleKeyDown(flexKeyID, when, clicks);
+				else
+					fVPD->FlexibleKeyUp(flexKeyID, when, clicks);
+			}
 			break;
 
 		case VPD_MSG_POWER_STATE:

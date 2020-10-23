@@ -78,10 +78,12 @@ public:
 	virtual ~VPDWindow();
 
 	virtual bool	QuitRequested();
+	virtual void	DispatchMessage(BMessage *msg, BHandler *target);
 	virtual void	MessageReceived(BMessage *msg);
 
 private:
 	LBVPD *fVPD;
+	BView *fScreenView;
 };
 
 

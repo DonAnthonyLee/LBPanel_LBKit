@@ -38,11 +38,14 @@
 	#else
 		#define B_HOST_IS_BENDIAN	0
 	#endif
+	#ifndef B_KEYBOARD_NAVIGATION_COLOR
+		#define B_KEYBOARD_NAVIGATION_COLOR	E_NAVIGATION_BASE_COLOR
+	#endif
 #endif
 
 
 VPDView::VPDView(BRect frame, const char* title, uint32 resizingMode)
-	: BView(frame, title, resizingMode, B_WILL_DRAW),
+	: BView(frame, title, resizingMode, B_WILL_DRAW | B_NAVIGABLE),
 	  fPointSize(1),
 	  fLabel(NULL),
 	  fPowerState(true),
@@ -188,6 +191,15 @@ VPDView::GetPreferredSize(float *width, float *height)
 
 
 void
+VPDView::MakeFocus(bool state)
+{
+	if(state != IsFocus())
+		Invalidate();
+	BView::MakeFocus(state);
+}
+
+
+void
 VPDView::Draw(BRect updateRect)
 {
 	BRect r;
@@ -264,6 +276,12 @@ VPDView::Draw(BRect updateRect)
 		}
 
 		PopState();
+	}
+
+	if(IsFocus())
+	{
+		SetHighColor(ui_color(B_KEYBOARD_NAVIGATION_COLOR));
+		StrokeRect(Bounds());
 	}
 }
 
@@ -730,3 +748,54 @@ VPDView::DrawStringOnBuffer_h8(const char *str, uint16 x, uint16 y, bool erase_m
 	return DrawingArea(x, y, w, h);
 }
 
+
+void
+VPDView::MouseDown(BPoint where)
+{
+	// TODO: Touchpad simulation
+	MakeFocus(true);
+}
+
+
+void
+VPDView::MouseUp(BPoint where)
+{
+	// TODO: Touchpad simulation
+}
+
+
+void
+VPDView::MouseMoved(BPoint where, uint32 code, const BMessage *msg)
+{
+	// TODO: Touchpad simulation
+}
+
+
+void
+VPDView::KeyDown(const char *bytes, int32 numBytes)
+{
+	if(numBytes == 1)
+	{
+		// TODO: clicks
+		BMessage msg(VPD_MSG_KEY);
+		msg.AddInt16("id", (int16)bytes[0]);
+		msg.AddBool("state", 1);
+		msg.AddInt64("when", system_time());
+		Looper()->PostMessage(&msg);
+	}
+}
+
+
+void
+VPDView::KeyUp(const char *bytes, int32 numBytes)
+{
+	if(numBytes == 1)
+	{
+		// TODO: clicks
+		BMessage msg(VPD_MSG_KEY);
+		msg.AddInt16("id", (int16)bytes[0]);
+		msg.AddBool("state", 0);
+		msg.AddInt64("when", system_time());
+		Looper()->PostMessage(&msg);
+	}
+}

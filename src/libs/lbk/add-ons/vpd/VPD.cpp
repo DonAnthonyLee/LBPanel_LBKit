@@ -744,6 +744,55 @@ LBVPD::KeyUp(uint8 key, bigtime_t when)
 
 
 void
+LBVPD::FlexibleKeyDown(uint16 key, bigtime_t when, uint8 clicks)
+{
+	if(fBlockKeyEvents || fBlockTimestamp > when) return;
+
+	BMessage msg(B_KEY_DOWN);
+	msg.AddInt16("key", *((int16*)&key));
+	msg.AddInt8("clicks", *((int8*)&clicks));
+	msg.AddInt64("when", when);
+
+	SendMessage(&msg);
+}
+
+
+void
+LBVPD::FlexibleKeyUp(uint16 key, bigtime_t when, uint8 clicks)
+{
+	if(fBlockKeyEvents || fBlockTimestamp > when) return;
+
+	BMessage msg(B_KEY_UP);
+	msg.AddInt16("key", *((int16*)&key));
+	msg.AddInt8("clicks", *((int8*)&clicks));
+	msg.AddInt64("when", when);
+
+	SendMessage(&msg);
+}
+
+
+void
+LBVPD::PointerDown(uint8 index, BPoint where)
+{
+	// TODO
+}
+
+
+void
+LBVPD::PointerMoved(uint8 index, BPoint where, BPoint prev)
+{
+	// TODO
+}
+
+
+void
+LBVPD::PointerUp(uint8 index, BPoint where)
+{
+	// TODO
+}
+
+
+void
 LBVPD::QuitRequested()
 {
 	LBPanelDeviceAddOn::SendMessage(LBK_DEVICE_DETACHED);

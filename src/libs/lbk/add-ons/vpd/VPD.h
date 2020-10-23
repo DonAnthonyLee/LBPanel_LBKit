@@ -92,11 +92,16 @@ public:
 #endif
 
 	/*
-	 * KeyDown()/KeyUp()/QuitRequested():
+	 * KeyDown()/KeyUp()/FlexibleKeyUp()/FlexibleKeyDown()/PointerDown()/PointerUp()/PointerMoved()/QuitRequested():
 	 * 	Callback functions for VPDWindow, should be MT-SAFE
 	 */
 	void			KeyDown(uint8 key, bigtime_t when);
 	void			KeyUp(uint8 key, bigtime_t when);
+	void			FlexibleKeyDown(uint16 key, bigtime_t when, uint8 clicks);
+	void			FlexibleKeyUp(uint16 key, bigtime_t when, uint8 clicks);
+	void			PointerDown(uint8 index, BPoint where);
+	void			PointerMoved(uint8 index, BPoint where, BPoint prev);
+	void			PointerUp(uint8 index, BPoint where);
 	void			QuitRequested();
 
 private:
