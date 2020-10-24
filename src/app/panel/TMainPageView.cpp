@@ -945,25 +945,12 @@ TMainPageView::FlexibleKeyDown(uint16 key, uint8 clicks)
 		case B_PAGE_DOWN:
 			SwitchToNextPage();
 			return;
-
-		case B_ENTER:
-			ConfirmedRequested();
-			return;
-
-		case B_ESCAPE:
-			if(fTabIndex != 0)
-			{
-				fTabIndex = 0;
-				break;
-			}
-			PowerOffRequested();
-			return;
 	}
 
 	if(saveIndex != fTabIndex)
 	{
 		UpdatePulseRate(fTabIndex != 0 ? (bigtime_t)-1 : 500000);
-		if(fTabIndex >= 0 && key != B_DOWN_ARROW) CheckInterfaces(true);
+		if(fTabIndex >= 0 && !(key == B_END || key == B_DOWN_ARROW)) CheckInterfaces(true);
 
 		fShowTimestamp = system_time();
 		if(fTabIndex > -2)
@@ -977,6 +964,23 @@ TMainPageView::FlexibleKeyDown(uint16 key, uint8 clicks)
 			HideNavButton(2);
 
 		Invalidate();
+	}
+}
+
+
+void
+TMainPageView::FlexibleKeyUp(uint16 key, uint8 clicks)
+{
+	switch(key)
+	{
+		case B_ENTER:
+			ConfirmedRequested();
+			break;
+
+		case B_ESCAPE:
+			if(fTabIndex == 0)
+				PowerOffRequested();
+			break;
 	}
 }
 
