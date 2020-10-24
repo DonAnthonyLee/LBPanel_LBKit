@@ -78,6 +78,7 @@ public:
 	virtual void		FlexibleKeyUp(uint16 key, uint8 clicks);
 	virtual void		StandIn();
 	virtual void		Activated(bool state);
+	virtual void		Attached();
 	virtual status_t	Invoke(const BMessage *message = NULL);
 
 protected:
