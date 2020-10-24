@@ -31,10 +31,23 @@
 #include <lbk/LBKConfig.h>
 #include <lbk/LBMenuView.h>
 
-// Comment the line below out when it's SURE to use it
-#if LBK_KEY_TYPICAL_NUMBER < 2
-#error "LBMenuView: Usually, it's useless when number of keys less than 2 !!!"
-#endif
+/*
+ * Default behavior of keypad control:
+ *	Count of keys = 1:
+ *		Single click to switch to next item.
+ *		Double clicks to cancel if AutoStandBack set.
+ *		Long press to launch.
+ *	Count of keys = 2:
+ *		At default, LEFT for the first key, RIGHT for the last key.
+ *		Single click at LEFT/RIGHT to switch to previous/next item.
+ *		Double clicks at LEFT to launch, double clicks at RIGHT to cancel if AutoStandBack set.
+ *		Long press at LEFT/RIGHT to switch to first/last item.
+ *	Count of keys >= 3:
+ *		At default, LEFT for the the antepenultimate key, OK for the penultimate key, RIGHT for the last key.
+ *		Single click at LEFT/RIGHT to switch to previous/next item, single click at OK to launch.
+ *		Double clicks at OK to cancel if AutoStandBack set.
+ *		Long press at LEFT/RIGHT to switch to first/last item.
+ */
 
 
 LBMenuView::LBMenuView(const char *name)
@@ -42,14 +55,6 @@ LBMenuView::LBMenuView(const char *name)
 	  LBScopeHandler(),
 	  fAutoStandBack(true)
 {
-#if LBK_KEY_TYPICAL_NUMBER == 2
-	SetNavButtonIcon(0, LBK_ICON_LEFT);
-	SetNavButtonIcon(1, LBK_ICON_RIGHT);
-#elif LBK_KEY_TYPICAL_NUMBER >= 3
-	SetNavButtonIcon(LBK_KEY_TYPICAL_NUMBER - 3, LBK_ICON_LEFT);
-	SetNavButtonIcon(LBK_KEY_TYPICAL_NUMBER - 2, LBK_ICON_OK);
-	SetNavButtonIcon(LBK_KEY_TYPICAL_NUMBER - 1, LBK_ICON_RIGHT);
-#endif
 }
 
 
@@ -148,22 +153,39 @@ LBMenuView::KeyDown(uint8 key, uint8 clicks)
 {
 	LBPageView::KeyDown(key, clicks);
 
-	if(clicks != 0xff) return;
-	if(IsNavButtonHidden(key)) return;
+	uint8 count = CountPanelKeys();
+	if(count == 0 || key >= count) return; 
+
+	lbk_icon_id btnIcon = GetNavButtonIcon((int32)key);
+	if(count > 1 && (IsNavButtonHidden(key) || btnIcon == LBK_ICON_NONE)) return;
 
 	int32 pos = -1;
-	switch(GetNavButtonIcon((int32)key))
+	switch(count)
 	{
-		case LBK_ICON_LEFT:
-			FirstVisibleItem(pos);
-			break;
-
-		case LBK_ICON_RIGHT:
-			LastVisibleItem(pos);
-			break;
+		case 1:
+			if(btnIcon == LBK_ICON_NONE && clicks == 1)
+			{
+				pos = Position();
+				if(NextVisibleItem(pos) == NULL)
+					FirstVisibleItem(pos);
+				break;
+			}
+			return;
 
 		default:
-			return;
+			if(!(btnIcon == LBK_ICON_LEFT || btnIcon == LBK_ICON_RIGHT)) return;
+			if(clicks == 1)
+			{
+				if(btnIcon == LBK_ICON_LEFT)
+					RollDown();
+				else // btnIcon == LBK_ICON_RIGHT
+					RollUp();
+			}
+			if(clicks != 0xff) return;
+			if(btnIcon == LBK_ICON_LEFT)
+				FirstVisibleItem(pos);
+			else // btnIcon == LBK_ICON_RIGHT
+				LastVisibleItem(pos);
 	}
 	SetPosition(pos);
 }
@@ -173,40 +195,36 @@ LBMenuView::KeyUp(uint8 key, uint8 clicks)
 {
 	LBPageView::KeyUp(key, clicks);
 
-	if(IsNavButtonHidden(key)) return;
+	uint8 count = CountPanelKeys();
+	if(count == 0 || key >= count) return; 
 
 	lbk_icon_id btnIcon = GetNavButtonIcon((int32)key);
-	if(btnIcon == LBK_ICON_NONE) return;
+	if(count > 1 && (IsNavButtonHidden(key) || btnIcon == LBK_ICON_NONE)) return;
 
-#if LBK_KEY_TYPICAL_NUMBER >= 3
-	if(clicks == 1 && btnIcon == LBK_ICON_OK)
-#else // LBK_KEY_TYPICAL_NUMBER < 3
-	if((clicks == 1 && btnIcon == LBK_ICON_OK) ||
-	   ((clicks > 1 && clicks != 0xff) && btnIcon == LBK_ICON_LEFT))
-#endif
+	switch(count)
 	{
-		LBMenuItem *curItem = CurrentSelection();
-		if(curItem != NULL)
-		{
-			if(curItem->Invoke((const BMessage*)NULL) == B_OK)
-				ItemInvoked(curItem);
-		}
-		return;
-	}
-	if(clicks > 1) return;
-
-	switch(btnIcon)
-	{
-		case LBK_ICON_LEFT:
-			RollDown();
-			break;
-
-		case LBK_ICON_RIGHT:
-			RollUp();
-			break;
+		case 1:
+			if(btnIcon != LBK_ICON_NONE) return;
+			if(clicks == 0xff) break;
+			if(clicks > 1 && clicks != 0xff && fAutoStandBack)
+				StandBack();
+			return;
 
 		default:
-			break;
+			if(count == 2 && clicks > 1 && clicks != 0xff && btnIcon == LBK_ICON_LEFT) break;
+			if(clicks == 1 && btnIcon == LBK_ICON_OK) break;
+			if(fAutoStandBack && clicks > 1 && clicks != 0xff &&
+			   ((count == 2 && btnIcon == LBK_ICON_RIGHT) ||
+			    (count > 2 && btnIcon == LBK_ICON_OK)))
+				StandBack();
+			return;
+	}
+
+	LBMenuItem *curItem = CurrentSelection();
+	if(curItem != NULL)
+	{
+		if(curItem->Invoke((const BMessage*)NULL) == B_OK)
+			ItemInvoked(curItem);
 	}
 }
 
@@ -237,6 +255,9 @@ LBMenuView::FlexibleKeyDown(uint16 key, uint8 clicks)
 			LastVisibleItem(pos);
 			SetPosition(pos);
 			break;
+
+		default:
+			break;
 	}
 }
 
@@ -254,6 +275,9 @@ LBMenuView::FlexibleKeyUp(uint16 key, uint8 clicks)
 				if(curItem->Invoke((const BMessage*)NULL) == B_OK)
 					ItemInvoked(curItem);
 			}
+			break;
+
+		default:
 			break;
 	}
 }
@@ -294,51 +318,38 @@ LBMenuView::Activated(bool state)
 void
 LBMenuView::RefreshNavButtonIcons()
 {
+	uint8 count = CountPanelKeys();
+	if(count < 2) return;
+
 	int32 n = (Position() <= 0 ? 0 : CountVisibleItems(0, Position()));
+	for(uint8 k = 0; k < count; k++)
+	{
+		switch(GetNavButtonIcon((int32)k))
+		{
+			case LBK_ICON_LEFT:
+				if(n > 0)
+					ShowNavButton(k);
+				else
+					HideNavButton(k);
+				break;
 
-	// LEFT
-	if(n > 0)
-	{
-#if LBK_KEY_TYPICAL_NUMBER == 2
-		ShowNavButton(0);
-#elif LBK_KEY_TYPICAL_NUMBER >= 3
-		ShowNavButton(LBK_KEY_TYPICAL_NUMBER - 3);
-#endif
-	}
-	else
-	{
-#if LBK_KEY_TYPICAL_NUMBER == 2
-		HideNavButton(0);
-#elif LBK_KEY_TYPICAL_NUMBER >= 3
-		HideNavButton(LBK_KEY_TYPICAL_NUMBER - 3);
-#endif
-	}
+			case LBK_ICON_OK:
+				if(CurrentSelection() != NULL)
+					ShowNavButton(k);
+				else
+					HideNavButton(k);
+				break;
 
-	// OK
-#if LBK_KEY_TYPICAL_NUMBER >= 3
-	if(CurrentSelection() != NULL)
-		ShowNavButton(LBK_KEY_TYPICAL_NUMBER - 2);
-	else
-		HideNavButton(LBK_KEY_TYPICAL_NUMBER - 2);
-#endif
+			case LBK_ICON_RIGHT:
+				if(CountVisibleItems(Position() + 1, -1) > 0)
+					ShowNavButton(k);
+				else
+					HideNavButton(k);
+				break;
 
-	// RIGHT
-	n = CountVisibleItems(Position() + 1, -1);
-	if(n > 0)
-	{
-#if LBK_KEY_TYPICAL_NUMBER == 2
-		ShowNavButton(1);
-#elif LBK_KEY_TYPICAL_NUMBER >= 3
-		ShowNavButton(LBK_KEY_TYPICAL_NUMBER - 1);
-#endif
-	}
-	else
-	{
-#if LBK_KEY_TYPICAL_NUMBER == 2
-		HideNavButton(1);
-#elif LBK_KEY_TYPICAL_NUMBER >= 3
-		HideNavButton(LBK_KEY_TYPICAL_NUMBER - 1);
-#endif
+			default:
+				break;
+		}
 	}
 }
 
@@ -356,6 +367,23 @@ LBMenuView::Attached()
 	LBMenuItem *item;
 
 	LBPageView::Attached();
+
+	uint8 count = CountPanelKeys();
+	switch(count)
+	{
+		case 2:
+			// TODO: orientation, etc.
+			SetNavButtonIcon(0, LBK_ICON_LEFT);
+			SetNavButtonIcon(1, LBK_ICON_RIGHT);
+			break;
+
+		default:
+			// TODO: orientation, etc.
+			if(count < 3 || count > LBK_KEY_MAXIMUM_NUMBER) break;
+			SetNavButtonIcon(count - 3, LBK_ICON_LEFT);
+			SetNavButtonIcon(count - 2, LBK_ICON_OK);
+			SetNavButtonIcon(count - 1, LBK_ICON_RIGHT);
+	}
 
 	for(int32 k = 0; k < CountItems(); k++)
 	{
