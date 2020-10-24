@@ -215,7 +215,6 @@ void
 LBMenuView::FlexibleKeyDown(uint16 key, uint8 clicks)
 {
 	int32 pos = -1;
-	LBMenuItem *curItem;
 
 	switch(key)
 	{
@@ -238,7 +237,17 @@ LBMenuView::FlexibleKeyDown(uint16 key, uint8 clicks)
 			LastVisibleItem(pos);
 			SetPosition(pos);
 			break;
+	}
+}
 
+
+void
+LBMenuView::FlexibleKeyUp(uint16 key, uint8 clicks)
+{
+	LBMenuItem *curItem;
+
+	switch(key)
+	{
 		case B_ENTER:
 			if((curItem = CurrentSelection()) != NULL)
 			{
@@ -247,13 +256,6 @@ LBMenuView::FlexibleKeyDown(uint16 key, uint8 clicks)
 			}
 			break;
 	}
-}
-
-
-void
-LBMenuView::FlexibleKeyUp(uint16 key, uint8 clicks)
-{
-	// TODO
 }
 
 

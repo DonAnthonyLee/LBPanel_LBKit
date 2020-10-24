@@ -207,7 +207,6 @@ void
 LBListView::FlexibleKeyDown(uint16 key, uint8 clicks)
 {
 	int32 pos = -1;
-	LBListItem *curItem;
 
 	switch(key)
 	{
@@ -230,11 +229,6 @@ LBListView::FlexibleKeyDown(uint16 key, uint8 clicks)
 			LastVisibleItem(pos);
 			SetPosition(pos);
 			break;
-
-		case B_ENTER:
-			if(fSelectable == false || (curItem = CurrentSelection()) == NULL) break;
-			Invoke((const BMessage*)NULL);
-			break;
 	}
 }
 
@@ -242,8 +236,17 @@ LBListView::FlexibleKeyDown(uint16 key, uint8 clicks)
 void
 LBListView::FlexibleKeyUp(uint16 key, uint8 clicks)
 {
-	// TODO
+	LBListItem *curItem;
+
+	switch(key)
+	{
+		case B_ENTER:
+			if(fSelectable == false || (curItem = CurrentSelection()) == NULL) break;
+			Invoke((const BMessage*)NULL);
+			break;
+	}
 }
+
 
 void
 LBListView::StandIn()

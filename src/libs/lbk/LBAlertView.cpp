@@ -347,6 +347,13 @@ LBAlertView::KeyUp(uint8 key, uint8 clicks)
 void
 LBAlertView::FlexibleKeyDown(uint16 key, uint8 clicks)
 {
+	// TODO
+}
+
+
+void
+LBAlertView::FlexibleKeyUp(uint16 key, uint8 clicks)
+{
 	switch(key)
 	{
 		case B_ENTER:
@@ -372,11 +379,3 @@ LBAlertView::FlexibleKeyDown(uint16 key, uint8 clicks)
 			break;
 	}
 }
-
-
-void
-LBAlertView::FlexibleKeyUp(uint16 key, uint8 clicks)
-{
-	// TODO
-}
-
