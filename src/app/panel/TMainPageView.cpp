@@ -979,7 +979,16 @@ TMainPageView::FlexibleKeyUp(uint16 key, uint8 clicks)
 
 		case B_ESCAPE:
 			if(fTabIndex == 0)
+			{
 				PowerOffRequested();
+			}
+			else
+			{
+				fTabIndex = 0;
+				HideNavButton(0);
+				HideNavButton(2);
+				Invalidate();
+			}
 			break;
 	}
 }
