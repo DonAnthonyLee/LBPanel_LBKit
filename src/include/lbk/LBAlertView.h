@@ -65,12 +65,14 @@ public:
 	void		SetText(const char *text);
 	void		SetButtonIcon(int32 index, lbk_icon_id idIcon);
 	void		SetButtonAlignment(alignment align);
+	alignment	ButtonAlignment() const;
 
 	virtual void	Draw(BRect updateRect);
 	virtual void	KeyDown(uint8 key, uint8 clicks);
 	virtual void	KeyUp(uint8 key, uint8 clicks);
 	virtual void	FlexibleKeyDown(uint16 key, uint8 clicks);
 	virtual void	FlexibleKeyUp(uint16 key, uint8 clicks);
+	virtual void	Attached();
 
 protected:
 	virtual void	DrawButtonIcon(lbk_icon_id idIcon, BPoint location);
@@ -83,6 +85,7 @@ private:
 	lbk_icon_id fIcons[4];
 	uint8 fButtonMask;
 	BInvoker *fInvoker;
+	alignment fAlignment;
 };
 
 #endif /* __cplusplus */
