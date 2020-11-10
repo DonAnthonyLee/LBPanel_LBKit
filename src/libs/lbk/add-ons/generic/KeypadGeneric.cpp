@@ -116,7 +116,8 @@ LBPanelKeypadGeneric::InitDevice(const char *dev)
 LBPanelKeypadGeneric::LBPanelKeypadGeneric(const char *dev)
 	: LBPanelKeypad(),
 	  fFD(-1),
-	  fThread(NULL)
+	  fThread(NULL),
+	  fFlexible(false)
 {
 	bzero(&fKeycodes, sizeof(fKeycodes));
 	fPipes[0] = fPipes[1] = -1;
@@ -194,6 +195,10 @@ LBPanelKeypadGeneric::InitCheck(const char *options)
 			if(item == "dev")
 			{
 				InitDevice(value.String());
+			}
+			else if(item == "flex")
+			{
+				fFlexible = (value == "1" || value.ICompare("true") == 0);
 			}
 			else // keycodes
 			{
@@ -304,10 +309,58 @@ LBPanelKeypadGeneric::InputEventsObserver(void *arg)
 				nKey = (uint8)k;
 			}
 		}
-		if(nKey == 0xff) continue;
+		if(nKey == 0xff && self->fFlexible == false) continue;
 
 		BMessage msg(event.value == 0 ? B_KEY_UP : B_KEY_DOWN);
-		msg.AddInt8("key", *((int8*)&nKey));
+		if(nKey != 0xff)
+			msg.AddInt8("key", *((int8*)&nKey));
+		else
+		{
+			uint16 keycode;
+			switch(event.code)
+			{
+				case KEY_LEFT:
+					keycode = B_LEFT_ARROW;
+					break;
+
+				case KEY_RIGHT:
+					keycode = B_RIGHT_ARROW;
+					break;
+
+				case KEY_UP:
+					keycode = B_UP_ARROW;
+					break;
+
+				case KEY_DOWN:
+					keycode = B_DOWN_ARROW;
+					break;
+
+				case KEY_ENTER:
+					keycode = B_ENTER;
+					break;
+
+				case KEY_ESC:
+					keycode = B_ESCAPE;
+					break;
+
+				case KEY_PAGEDOWN:
+					keycode = B_PAGE_DOWN;
+					break;
+
+				case KEY_PAGEUP:
+					keycode = B_PAGE_UP;
+					break;
+
+				default:
+					// TODO: other keys
+					keycode = 0;
+					break;
+			}
+
+			if(keycode == 0) continue;
+			msg.AddInt8("clicks", 1); // TODO
+			msg.AddInt16("key", *((int16*)&keycode));
+		}
 		msg.AddInt64("when", when);
 
 		self->SendMessage(&msg);

@@ -1012,6 +1012,8 @@ LBPanelCombiner::SendMessage(const BMessage *msg)
 		case B_KEY_UP:
 			if(msg->FindInt32("keypad_id", &id) != B_OK || id < 0) break;
 			if(msg->FindInt64("when", &when) != B_OK) break;
+			if(msg->HasInt8("key") == false && msg->HasInt16("key"))
+				return LBPanelDevice::SendMessage(msg);
 			if(msg->FindInt8("key", (int8*)&key) != B_OK || key > LBK_KEY_ID_MAX) break;
 
 			if(Lock() == false) break;

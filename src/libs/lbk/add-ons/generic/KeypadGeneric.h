@@ -50,6 +50,7 @@ private:
 	int fFD;
 	int fPipes[2];
 	void *fThread;
+	bool fFlexible;
 	uint16 fKeycodes[LBK_KEY_MAXIMUM_NUMBER];
 
 	status_t		InitDevice(const char *dev);
