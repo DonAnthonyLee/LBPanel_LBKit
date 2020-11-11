@@ -34,13 +34,13 @@
 /*
  * Default behavior of keypad control:
  *	Count of keys = 1:
- *		Single click to switch to next item.
- *		Double clicks to cancel if AutoStandBack set.
- *		Long press to launch.
+ *		Single click to switch to next item if the id of icon is LBK_ICON_NONE.
+ *		Double clicks to cancel if AutoStandBack set and the id of icon is LBK_ICON_NONE.
+ *		Long press to launch if the id of icon is LBK_ICON_NONE.
  *	Count of keys = 2:
  *		At default, LEFT for the first key, RIGHT for the last key.
  *		Single click at LEFT/RIGHT to switch to previous/next item.
- *		Double clicks at LEFT to launch, double clicks at RIGHT to cancel if AutoStandBack set.
+ *		Double clicks at the first key to launch, double clicks at the last key to cancel if AutoStandBack set.
  *		Long press at LEFT/RIGHT to switch to first/last item.
  *	Count of keys >= 3:
  *		At default, LEFT for the the antepenultimate key, OK for the penultimate key, RIGHT for the last key.
@@ -154,40 +154,27 @@ LBMenuView::KeyDown(uint8 key, uint8 clicks)
 	LBPageView::KeyDown(key, clicks);
 
 	uint8 count = CountPanelKeys();
-	if(count == 0 || key >= count) return; 
+	if(count < 3 || key >= count) return;
 
 	lbk_icon_id btnIcon = GetNavButtonIcon((int32)key);
-	if(count > 1 && (IsNavButtonHidden(key) || btnIcon == LBK_ICON_NONE)) return;
+	if(IsNavButtonHidden(key) || !(btnIcon == LBK_ICON_LEFT || btnIcon == LBK_ICON_RIGHT)) return;
 
-	int32 pos = -1;
-	switch(count)
+	if(clicks == 1)
 	{
-		case 1:
-			if(btnIcon == LBK_ICON_NONE && clicks == 1)
-			{
-				pos = Position();
-				if(NextVisibleItem(pos) == NULL)
-					FirstVisibleItem(pos);
-				break;
-			}
-			return;
-
-		default:
-			if(!(btnIcon == LBK_ICON_LEFT || btnIcon == LBK_ICON_RIGHT)) return;
-			if(clicks == 1)
-			{
-				if(btnIcon == LBK_ICON_LEFT)
-					RollDown();
-				else // btnIcon == LBK_ICON_RIGHT
-					RollUp();
-			}
-			if(clicks != 0xff) return;
-			if(btnIcon == LBK_ICON_LEFT)
-				FirstVisibleItem(pos);
-			else // btnIcon == LBK_ICON_RIGHT
-				LastVisibleItem(pos);
+		if(btnIcon == LBK_ICON_LEFT)
+			RollDown();
+		else // btnIcon == LBK_ICON_RIGHT
+			RollUp();
 	}
-	SetPosition(pos);
+	else if(clicks == 0xff)
+	{
+		int32 pos = -1;
+		if(btnIcon == LBK_ICON_LEFT)
+			FirstVisibleItem(pos);
+		else // btnIcon == LBK_ICON_RIGHT
+			LastVisibleItem(pos);
+		SetPosition(pos);
+	}
 }
 
 void
@@ -199,22 +186,53 @@ LBMenuView::KeyUp(uint8 key, uint8 clicks)
 	if(count == 0 || key >= count) return; 
 
 	lbk_icon_id btnIcon = GetNavButtonIcon((int32)key);
-	if(count > 1 && (IsNavButtonHidden(key) || btnIcon == LBK_ICON_NONE)) return;
+	if(count > 2 && (IsNavButtonHidden(key) || btnIcon == LBK_ICON_NONE)) return;
 
 	switch(count)
 	{
 		case 1:
 			if(btnIcon != LBK_ICON_NONE) return;
 			if(clicks == 0xff) break;
-			if(clicks > 1 && clicks != 0xff && fAutoStandBack)
+			if(clicks == 1)
+			{
+				int32 pos = Position();
+				if(NextVisibleItem(pos) == NULL)
+					FirstVisibleItem(pos);
+				SetPosition(pos);
+			}
+			else if(clicks > 1 && clicks != 0xff && fAutoStandBack)
+			{
 				StandBack();
+			}
 			return;
 
 		default:
-			if(count == 2 && clicks > 1 && clicks != 0xff && btnIcon == LBK_ICON_LEFT) break;
+			if(count == 2)
+			{
+				if(clicks > 1 && clicks != 0xff && key == 0) break;
+				if(btnIcon == LBK_ICON_LEFT || btnIcon == LBK_ICON_RIGHT)
+				{
+					if(clicks == 1)
+					{
+						if(btnIcon == LBK_ICON_LEFT)
+							RollDown();
+						else // btnIcon == LBK_ICON_RIGHT
+							RollUp();
+					}
+					else if(clicks == 0xff)
+					{
+						int32 pos = -1;
+						if(btnIcon == LBK_ICON_LEFT)
+							FirstVisibleItem(pos);
+						else // btnIcon == LBK_ICON_RIGHT
+							LastVisibleItem(pos);
+						SetPosition(pos);
+					}
+				}
+			}
 			if(clicks == 1 && btnIcon == LBK_ICON_OK) break;
 			if(fAutoStandBack && clicks > 1 && clicks != 0xff &&
-			   ((count == 2 && btnIcon == LBK_ICON_RIGHT) ||
+			   ((count == 2 && key == 1) ||
 			    (count > 2 && btnIcon == LBK_ICON_OK)))
 				StandBack();
 			return;
