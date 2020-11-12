@@ -1,0 +1,109 @@
+DEBUG_OPTIONS = -g -Wall
+OPTIMIZE = -O3
+
+SINGLE_C_FILE_PROGRAMS =
+SINGLE_CXX_FILE_PROGRAMS =
+SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
+
+TARGET_1 = LBMPClient
+TARGET_2 =
+TARGET_3 =
+
+OBJECTS_1 = IconData.o MPDClient.o TMainPageView.o TApplication.o main.o
+OBJECTS_2 =
+OBJECTS_3 =
+
+TARGET = $(TARGET_1) $(TARGET_2) $(TARGET_3)
+OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
+
+IS_BEOS_PLATFORM = 0
+ifeq ($(shell uname),Haiku)
+IS_BEOS_PLATFORM = 1
+else
+ifeq ($(shell uname),BeOS)
+IS_BEOS_PLATFORM = 1
+endif
+endif
+
+CC = ${CROSS_COMPILE}gcc
+CXX = ${CROSS_COMPILE}g++
+LD = ${CROSS_COMPILE}ld
+
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+LDFLAGS =
+
+LITE_BEAPI_VERSION = "0.0.3"
+ifeq ($(IS_BEOS_PLATFORM),0)
+	LITE_BEAPI_CHECK = $(shell lite-beapi-config --atleast-version $(LITE_BEAPI_VERSION) || printf "0")
+	CFLAGS += $(shell lite-beapi-config --cflags)
+	CXXFLAGS += $(shell lite-beapi-config --cflags)
+	LDFLAGS += $(shell lite-beapi-config --libs)
+else
+	# BeOS/HaikuOS
+	CXXFLAGS += -Wno-multichar
+	LDFLAGS += -lbe -lroot
+endif
+
+CFLAGS += -I../../include -I../../libs/include
+CXXFLAGS += -I../../include -I../../libs/include
+LDFLAGS += -L../../libs/lbk -llbk
+
+all: targets $(TARGET)
+	ln -sf ./LBMPClient _APP_
+
+$(C_PROGRAM): $(C_PROGRAM).o
+	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+
+$(CXX_PROGRAM): $(CXX_PROGRAM).o
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+
+targets:
+ifeq ($(IS_BEOS_PLATFORM),0)
+ifeq ($(LITE_BEAPI_CHECK),0)
+	@echo "\033[31mVersion of Lite BeAPI < $(LITE_BEAPI_VERSION)\033[0m" && exit 1
+endif
+endif
+	for f in $(SINGLE_C_FILE_PROGRAMS) .none; do \
+		(test $$f = .none || CC=$(CC) $(MAKE) -f Makefile.alone C_PROGRAM=$$f $$f) \
+	done
+	for f in $(SINGLE_CXX_FILE_PROGRAMS) .none; do \
+		(test $$f = .none || CXX=$(CXX) $(MAKE) -f Makefile.alone CXX_PROGRAM=$$f $$f) \
+	done
+
+$(TARGET_1): $(OBJECTS_1)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+
+$(TARGET_2): $(OBJECTS_2)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+
+$(TARGET_3): $(OBJECTS_3)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+
+clean:
+	for f in $(TARGET) $(OBJECTS) .none; do \
+		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
+	done
+	for f in $(SINGLE_FILE_PROGRAMS) $(TARGET) .none; do \
+		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
+		(test $$f = .none || test ! -e "$$f.o" || rm -f $$f.o); \
+		(test $$f = .none || test ! -e "$$f.obj" || rm -f $$f.obj); \
+		(test $$f = .none || test ! -e "$$f.exe" || rm -f $$f.exe); \
+		(test $$f = .none || test ! -e "$$f.exe.stackdump" || rm -f $$f.exe.stackdump); \
+		(test $$f = .none || test ! -e "$$f.exe.so" || rm -f $$f.exe.so); \
+	done
+	rm -f ./_APP_
+
+.SUFFIXES: .c .cpp .cxx .cc .o
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.cxx.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.cc.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
