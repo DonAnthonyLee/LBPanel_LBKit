@@ -1,4 +1,4 @@
-SUBDIRS = panel
+SUBDIRS = panel mpd-client
 
 noinst_PROGRAMS =
 

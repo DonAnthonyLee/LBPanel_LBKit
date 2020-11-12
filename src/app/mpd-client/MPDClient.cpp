@@ -269,6 +269,7 @@ MPDClient::SendCommand(const char *cmd, BString *recvBuf)
 				recvBuf->Append(buf);
 
 			t = when - system_time();
+			if(fEndpoint.IsDataPending(0) == false) break;
 		}
 
 		if(recvBuf->Length() == 0)
