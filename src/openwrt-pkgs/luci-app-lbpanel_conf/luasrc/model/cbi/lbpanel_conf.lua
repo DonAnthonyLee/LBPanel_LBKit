@@ -38,12 +38,6 @@ c.optional = false
 c.rmempty = false
 -- END Checkbox
 
--- BEGIN Checkbox
-c = s:option(Flag, "lcd_style", translate("LCD style"), "")
-c.optional = false
-c.rmempty = false
--- END Checkbox
-
 -- BEGIN Section
 s = m:section(TypedSection, "custom_menu", translate("Custom menu"))
 s.template = "cbi/tblsection"

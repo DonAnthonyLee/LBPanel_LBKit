@@ -3,5 +3,4 @@ config main
 	option screen_off_timeout '180'
 	option hours '0'
 	option show_seconds '0'
-	option lcd_style '0'
 

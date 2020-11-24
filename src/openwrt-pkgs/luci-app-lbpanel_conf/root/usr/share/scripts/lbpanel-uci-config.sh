@@ -19,9 +19,6 @@ VALUE=`uci get lbpanel_conf.@main[0].hours`
 VALUE=`uci get lbpanel_conf.@main[0].show_seconds`
 [ -z "$VALUE" ] || echo "LBPanel::ShowSeconds=$VALUE" >> $1
 
-VALUE=`uci get lbpanel_conf.@main[0].lcd_style`
-[ -z "$VALUE" ] || echo "LBPanel::LCDStyle=$VALUE" >> $1
-
 INDEX=0
 while ( true ); do
 	ITEM_TITLE=`uci get lbpanel_conf.@custom_menu[$INDEX].title`
