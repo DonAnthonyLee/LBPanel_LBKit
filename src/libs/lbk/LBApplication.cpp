@@ -207,22 +207,20 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 {
 	fPipes[0] = fPipes[1] = -1;
 
-	LBAppSettings cfg;
-
 	if(use_lbk_default_settings)
 	{
 		BFile f("/etc/LBK.conf", B_READ_ONLY);
-		cfg.AddItems(&f);
+		fSettings.AddItems(&f);
 	}
 
 	if(settings != NULL)
-		cfg.AddItems(*settings);
+		fSettings.AddItems(*settings);
 
-	for(int32 k = 0; k < cfg.CountItems(); k++)
+	for(int32 k = 0; k < fSettings.CountItems(); k++)
 	{
 		BString name, value, options;
 
-		if(cfg.GetItemAt(k, &name, &value, &options) != B_OK) continue;
+		if(fSettings.GetItemAt(k, &name, &value, &options) != B_OK) continue;
 		if(name.FindFirst("::") >= 0) continue; // sub-settings
 
 		if(name == "PanelDeviceAddon")
@@ -882,3 +880,18 @@ LBApplication::CountPanels() const
 	return fPanelsCount;
 }
 
+
+const LBAppSettings*
+LBApplication::Settings() const
+{
+	return &fSettings;
+}
+
+
+void
+LBApplication::SetSettings(const LBAppSettings* settings)
+{
+	fSettings.MakeEmpty();
+	if(settings != NULL)
+		fSettings.AddItems(*settings);
+}

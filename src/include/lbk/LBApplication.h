@@ -44,27 +44,29 @@ public:
 		      bool use_lbk_default_settings = true);
 	virtual ~LBApplication();
 
-	bool		AddPageView(LBView *view, bool left_side = true, int32 panel_index = 0);
-	bool		RemovePageView(LBView *view);
-	LBView*		RemovePageView(int32 index, bool left_side = true, int32 panel_index = 0);
-	LBView*		PageViewAt(int32 index, bool left_side = true, int32 panel_index = 0) const;
-	int32		CountPageViews(bool left_side = true, int32 panel_index = 0) const;
+	bool			AddPageView(LBView *view, bool left_side = true, int32 panel_index = 0);
+	bool			RemovePageView(LBView *view);
+	LBView*			RemovePageView(int32 index, bool left_side = true, int32 panel_index = 0);
+	LBView*			PageViewAt(int32 index, bool left_side = true, int32 panel_index = 0) const;
+	int32			CountPageViews(bool left_side = true, int32 panel_index = 0) const;
 
-	void		ActivatePageView(int32 index, bool left_side = true, int32 panel_index = 0);
-	LBView*		GetActivatedPageView(int32 panel_index = 0) const;
+	void			ActivatePageView(int32 index, bool left_side = true, int32 panel_index = 0);
+	LBView*			GetActivatedPageView(int32 panel_index = 0) const;
 
-	void		Go();
+	const LBAppSettings*	Settings() const;
+	void			Go();
 
-	bigtime_t	PulseRate() const;
-	virtual void	SetPulseRate(bigtime_t rate);
+	bigtime_t		PulseRate() const;
+	virtual void		SetPulseRate(bigtime_t rate);
 
-	virtual bool	QuitRequested();
-	virtual void	MessageReceived(BMessage *msg);
+	virtual bool		QuitRequested();
+	virtual void		MessageReceived(BMessage *msg);
 
 protected:
-	int32		CountPanels() const;
-	LBPanelDevice*	PanelAt(int32 index) const;
-	uint8		CountPanelKeys(int32 index) const;
+	int32			CountPanels() const;
+	LBPanelDevice*		PanelAt(int32 index) const;
+	uint8			CountPanelKeys(int32 index) const;
+	void			SetSettings(const LBAppSettings *settings);
 
 private:
 	bool fQuitLooper;
@@ -74,6 +76,7 @@ private:
 	int32 fPanelsCount;
 	void *fIPC;
 	bigtime_t fKeyInterval;
+	LBAppSettings fSettings;
 };
 
 #endif /* __cplusplus */

@@ -187,6 +187,7 @@ TApplication::MessageReceived(BMessage *msg)
 
 				if(f.InitCheck() != B_OK || cfg.AddItems(&f) == false) break;
 				LoadConfig(&cfg);
+				SetSettings(&cfg);
 
 				// Just for debug
 				fprintf(stdout, "[TApplication]: Settings updated.\n");
