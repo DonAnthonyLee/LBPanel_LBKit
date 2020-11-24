@@ -60,7 +60,7 @@
 TMainPageView::TMainPageView(const char *name)
 	: LBPageView(name),
 	  fTabIndex(0),
-	  f24Hours(false), fShowSeconds(false), fLCDStyle(false),
+	  f24Hours(false), fShowSeconds(false),
 	  fShowTimestamp(0),
 	  fThermalZone(0),
 	  fInterfacesCount(0), fInterfaceCheckTimestamp(0),
@@ -247,8 +247,6 @@ TMainPageView::DrawDateAndTime(BRect rect)
 	if(r.Intersects(rect) && fTime.Length() > 0)
 	{
 		FillRect(r & rect);
-
-		// TODO: LCD style
 
 		SetFontSize(fShowSeconds ? 24 : 32);
 		if(fShowSeconds == false && f24Hours == false && fTime.Length() > 6)
@@ -1053,22 +1051,6 @@ TMainPageView::ShowSeconds(bool state)
 	{
 		fShowSeconds = state;
 		GetTime(&fDate, &fTime, &fWeek);
-		if(fTabIndex == 0)
-		{
-			if(fShowTimestamp == 0)
-				UpdatePulseRate();
-			Invalidate();
-		}
-	}
-}
-
-
-void
-TMainPageView::SetLCDStyle(bool state)
-{
-	if(fLCDStyle != state)
-	{
-		fLCDStyle = state;
 		if(fTabIndex == 0)
 		{
 			if(fShowTimestamp == 0)

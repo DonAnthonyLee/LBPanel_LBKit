@@ -53,7 +53,6 @@ public:
 
 	void		Set24Hours(bool state = true);
 	void		ShowSeconds(bool state = true);
-	void		SetLCDStyle(bool state = true);
 	void		SetThermalZone(int32 zone);
 
 	virtual void	MessageReceived(BMessage *msg);
@@ -62,7 +61,6 @@ private:
 	int32 fTabIndex;
 	bool f24Hours;
 	bool fShowSeconds;
-	bool fLCDStyle;
 	bigtime_t fShowTimestamp;
 	int32 fThermalZone;
 

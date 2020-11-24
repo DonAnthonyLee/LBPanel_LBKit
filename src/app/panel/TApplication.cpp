@@ -93,7 +93,6 @@ TApplication::LoadConfig(const LBAppSettings *cfg)
 	bool use24Hours = false;
 	bool showSeconds = false;
 	int32 thermalZone = 0;
-	bool useLCDStyle = false;
 	int32 screenOffTimeout = fScreenOffTimeout;
 
 	EmptyCustomMenu();
@@ -147,10 +146,6 @@ TApplication::LoadConfig(const LBAppSettings *cfg)
 		{
 			thermalZone = (int32)atoi(value.String());
 		}
-		else if(name == "LCDStyle")
-		{
-			useLCDStyle = (value == "1" || value.ICompare("true") == 0);
-		}
 		else if(name == "Config" && fConfigPath.Path() == NULL)
 		{
 			fConfigPath.SetTo(value.String(), NULL, true);
@@ -162,7 +157,6 @@ TApplication::LoadConfig(const LBAppSettings *cfg)
 	{
 		mainPageView->Set24Hours(use24Hours);
 		mainPageView->ShowSeconds(showSeconds);
-		mainPageView->SetLCDStyle(useLCDStyle);
 		mainPageView->SetThermalZone(thermalZone);
 	}
 
