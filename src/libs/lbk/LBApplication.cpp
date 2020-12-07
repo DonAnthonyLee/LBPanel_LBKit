@@ -61,6 +61,7 @@ typedef enum
 {
 	LBK_ADD_ON_NONE = 0,
 	LBK_ADD_ON_PANEL_DEVICE,
+	LBK_ADD_ON_PANEL_MODULE,
 } LBAddOnType;
 
 // use ETK++'s functions for no implementation in Lite BeAPI
@@ -197,11 +198,27 @@ static LBPanelDeviceAddOnData* lbk_app_get_panel_device_data(const BList &addOns
 }
 
 
+static LBAddOnData* lbk_app_load_panel_module(const BPath &pth, const char *opt)
+{
+	// TODO
+	return NULL;
+}
+
+
+static void lbk_app_unload_panel_module(LBAddOnData *data)
+{
+	if(data == NULL || data->type != LBK_ADD_ON_PANEL_MODULE) return;
+
+	// TODO
+}
+
+
 LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default_settings)
 	: BLooper(NULL, B_URGENT_DISPLAY_PRIORITY),
 	  fQuitLooper(false),
 	  fPulseRate(0),
-	  fPanelsCount(0),
+	  fPanelDevicesCount(0),
+	  fPanelModulesCount(0),
 	  fIPC(NULL),
 	  fKeyInterval(LBK_KEY_INTERVAL_DEFAULT)
 {
@@ -233,11 +250,28 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 			{
 				fprintf(stderr,
 					"[LBApplication]: %s --- Failed to load add-on (%s) !\n",
+					__func__, (pth.Path() == NULL) ? "combiner" : pth.Path());
+				continue;
+			}
+
+			fPanelDevicesCount++;
+			fAddOnsList.AddItem(data);
+		}
+		else if(name == "PanelAppAddon")
+		{
+			BPath pth(value.String(), NULL, true);
+			if(pth.Path() == NULL) continue;
+
+			LBAddOnData *data = lbk_app_load_panel_module(pth, options.String());
+			if(data == NULL)
+			{
+				fprintf(stderr,
+					"[LBApplication]: %s --- Failed to load add-on (%s) !\n",
 					__func__, pth.Path());
 				continue;
 			}
 
-			fPanelsCount++;
+			fPanelModulesCount++;
 			fAddOnsList.AddItem(data);
 		}
 		else if(name == "IPC" && fIPC == NULL)
@@ -312,9 +346,19 @@ LBApplication::~LBApplication()
 	for(int32 k = 0; k < fAddOnsList.CountItems(); k++)
 	{
 		LBAddOnData *data = (LBAddOnData*)fAddOnsList.ItemAt(k);
-		if(data->type == LBK_ADD_ON_PANEL_DEVICE)
-			lbk_app_unload_panel_device_addon(data);
-		// TODO: other addons
+		switch(data->type)
+		{
+			case LBK_ADD_ON_PANEL_DEVICE:
+				lbk_app_unload_panel_device_addon(data);
+				break;
+
+			case LBK_ADD_ON_PANEL_MODULE:
+				lbk_app_unload_panel_module(data);
+				break;
+
+			default:
+				break;
+		}
 		if(IMAGE_IS_VALID(data->image))
 			unload_add_on(data->image);
 		delete data;
@@ -877,7 +921,7 @@ LBApplication::CountPanelKeys(int32 index) const
 int32
 LBApplication::CountPanels() const
 {
-	return fPanelsCount;
+	return fPanelDevicesCount;
 }
 
 
@@ -894,4 +938,27 @@ LBApplication::SetSettings(const LBAppSettings* settings)
 	fSettings.MakeEmpty();
 	if(settings != NULL)
 		fSettings.AddItems(*settings);
+}
+
+
+int32
+LBApplication::CountModules() const
+{
+	return fPanelModulesCount;
+}
+
+
+const lbk_icon*
+LBApplication::GetModuleIcon(int32 index) const
+{
+	// TODO
+	return NULL;
+}
+
+
+LBView*
+LBApplication::InitModule(int32 index)
+{
+	// TODO
+	return NULL;
 }

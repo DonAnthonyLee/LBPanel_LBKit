@@ -32,6 +32,7 @@
 #define __LBK_APPLICATION_H__
 
 #include <lbk/LBAppSettings.h>
+#include <lbk/LBIconDefs.h>
 #include <lbk/LBView.h>
 
 #ifdef __cplusplus /* Just for C++ */
@@ -68,12 +69,17 @@ protected:
 	uint8			CountPanelKeys(int32 index) const;
 	void			SetSettings(const LBAppSettings *settings);
 
+	int32			CountModules() const;
+	const lbk_icon*		GetModuleIcon(int32 index) const;
+	LBView*			InitModule(int32 index);
+
 private:
 	bool fQuitLooper;
 	BList fAddOnsList;
 	int fPipes[2];
 	bigtime_t fPulseRate;
-	int32 fPanelsCount;
+	int32 fPanelDevicesCount;
+	int32 fPanelModulesCount;
 	void *fIPC;
 	bigtime_t fKeyInterval;
 	LBAppSettings fSettings;
