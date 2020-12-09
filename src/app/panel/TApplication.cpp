@@ -42,11 +42,17 @@ TApplication::TApplication(const LBAppSettings *settings)
 {
 	if(CountPanels() == 0) return;
 
-	AddPageView(new TCommandsPageView(), true);
+	TCommandsPageView *cmdsView = new TCommandsPageView();
+	AddPageView(cmdsView, true);
 	AddPageView(new TMainPageView(), false);
 	AddPageView(new TMenuPageView(), false);
 
 	LoadConfig(settings);
+
+	for(int32 k = 0; k < CountModules(); k++)
+	{
+		cmdsView->AddModuleItem(GetModuleView(k), GetModuleDescription(k), GetModuleIcon(k));
+	}
 }
 
 
@@ -187,6 +193,8 @@ TApplication::MessageReceived(BMessage *msg)
 
 				if(f.InitCheck() != B_OK || cfg.AddItems(&f) == false) break;
 				LoadConfig(&cfg);
+
+				// TODO: PostMessage() to LBApplication.
 				SetSettings(&cfg);
 
 				// Just for debug

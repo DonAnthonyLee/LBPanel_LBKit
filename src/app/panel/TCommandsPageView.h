@@ -45,6 +45,9 @@ public:
 	virtual void	Attached();
 	virtual void	MessageReceived(BMessage *msg);
 
+	void		AddModuleItem(LBView *view, const char *title, const lbk_icon *icon);
+	void		EmptyModuleItems();
+
 protected:
 	virtual int32	VisibleItemsCountMax() const;
 

@@ -35,6 +35,7 @@
 #define MSG_CUSTOM_MENU		'mcus'
 #define MSG_SYSTEM_MENU_ITEM	'msyi'
 #define MSG_CUSTOM_MENU_ITEM	'mcui'
+#define MSG_MODULE_ITEM		'modi'
 
 
 static const t_menu_item system_menus[] = {
@@ -146,7 +147,7 @@ TCommandsPageView::TCommandsPageView(const char *name)
 
 TCommandsPageView::~TCommandsPageView()
 {
-	// TODO
+	EmptyModuleItems();
 }
 
 
@@ -266,6 +267,46 @@ TCommandsPageView::ExecCommand(const char *command, const char *args)
 
 
 void
+TCommandsPageView::AddModuleItem(LBView *view, const char *title, const lbk_icon *icon)
+{
+	if(view == NULL || view->MasterView() != NULL || AddStickView(view) == false) return;
+
+	int32 n = CountItems();
+	BMessage *msg = new BMessage(MSG_MODULE_ITEM);
+	msg->AddPointer("view", reinterpret_cast<void*>(view));
+
+#if 0
+	// TODO: implement LBMenuItem to support lbk_icon more than lbk_icon_id
+	AddItem(new LBMenuItem(title, msg, icon), n - 1);
+#else
+	// Note: Just for test
+	AddItem(new LBMenuItem(title, msg, LBK_ICON_NONE), n - 1);
+#endif
+}
+
+
+void
+TCommandsPageView::EmptyModuleItems()
+{
+	while(CountItems() > 2)
+	{
+		LBMenuItem *item = e_cast_as(ItemAt(1), LBMenuItem);
+		BMessage *msg = item->Message();
+
+		void *source = NULL;
+		if(msg->FindPointer("view", &source) == B_OK && source != NULL)
+		{
+			// remove stick view without deleting
+			RemoveStickView(reinterpret_cast<LBView*>(source));
+		}
+
+		RemoveItem(item);
+		delete item;
+	}
+}
+
+
+void
 TCommandsPageView::MessageReceived(BMessage *msg)
 {
 	bigtime_t when;
@@ -341,6 +382,17 @@ TCommandsPageView::MessageReceived(BMessage *msg)
 			view->StandBack();
 			break;
 
+		case MSG_MODULE_ITEM:
+			{
+				void *source = NULL;
+				if(msg->FindPointer("view", &source) != B_OK || source == NULL) break;
+				
+				LBView *view = reinterpret_cast<LBView*>(source);
+				view->SetName("module"); // see LBK_VIEW_STOOD_BACK
+				view->StandIn();
+			}
+			break;
+
 		case LBK_VIEW_STOOD_BACK:
 			{
 				void *source = NULL;
@@ -348,7 +400,8 @@ TCommandsPageView::MessageReceived(BMessage *msg)
 
 				LBView *stickView = reinterpret_cast<LBView*>(source);
 				if(stickView->Name() == NULL ||
-				   !(strcmp(stickView->Name(), "system") == 0))
+				   !(strcmp(stickView->Name(), "system") == 0 ||
+				     strcmp(stickView->Name(), "module") == 0))
 				{
 					RemoveStickView(stickView);
 					delete stickView;
@@ -360,5 +413,3 @@ TCommandsPageView::MessageReceived(BMessage *msg)
 			LBMenuView::MessageReceived(msg);
 	}
 }
-
-

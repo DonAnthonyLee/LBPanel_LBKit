@@ -90,6 +90,13 @@ typedef struct
 
 typedef struct
 {
+	const char *desc;
+	const lbk_icon *icon;
+	LBView *view;
+} LBPanelModuleData;
+
+typedef struct
+{
 	BString name;
 	LBAddOnType type;
 	void *dev;
@@ -150,7 +157,7 @@ static LBAddOnData* lbk_app_load_panel_device_addon(const BPath &pth, const char
 static void lbk_app_unload_panel_device_addon(LBAddOnData *data)
 {
 	if(data == NULL || data->type != LBK_ADD_ON_PANEL_DEVICE) return;
-	if(data->dev == NULL) return;
+	if(data->dev == NULL || data->data == NULL) return;
 
 	LBPanelDevice *dev = reinterpret_cast<LBPanelDevice*>(data->dev);
 	delete dev;
@@ -200,16 +207,68 @@ static LBPanelDeviceAddOnData* lbk_app_get_panel_device_data(const BList &addOns
 
 static LBAddOnData* lbk_app_load_panel_module(const BPath &pth, const char *opt)
 {
-	// TODO
-	return NULL;
+	LBPanelModuleData *devData = (LBPanelModuleData*)malloc(sizeof(LBPanelModuleData));
+	if(devData == NULL) return NULL;
+	devData->view = NULL;
+
+	image_id image = load_add_on(pth.Path());
+	if(IMAGE_IS_VALID(image))
+	{
+		LBView* (*instantiate_func)(const char**, const lbk_icon**) = NULL;
+		if(get_image_symbol(image, "instantiate_panel_module",
+				B_SYMBOL_TYPE_TEXT,
+				(void**)&instantiate_func) == B_OK)
+		{
+			devData->desc = NULL;
+			devData->icon = NULL;
+			devData->view = (*instantiate_func)(&devData->desc, &devData->icon);
+		}
+	}
+
+	if(devData->view == NULL)
+	{
+		if(IMAGE_IS_VALID(image)) unload_add_on(image);
+		free(devData);
+		return NULL;
+	}
+
+	LBAddOnData *data = new LBAddOnData;
+	data->name.SetTo(pth.Leaf());
+	data->type = LBK_ADD_ON_PANEL_MODULE;
+	data->dev = NULL;
+	data->image = image;
+	data->data = devData;
+
+	return data;
 }
 
 
 static void lbk_app_unload_panel_module(LBAddOnData *data)
 {
 	if(data == NULL || data->type != LBK_ADD_ON_PANEL_MODULE) return;
+	if(data->data == NULL) return;
 
-	// TODO
+	LBPanelModuleData *devData = (LBPanelModuleData*)data->data;
+	delete devData->view;
+	free(devData);
+}
+
+
+static LBPanelModuleData* lbk_app_get_panel_module_data(const BList &addOnsList, int32 index)
+{
+	if(index < 0 || index >= addOnsList.CountItems()) return NULL;
+
+	for(int32 k = 0; k < addOnsList.CountItems(); k++)
+	{
+		LBAddOnData *data = (LBAddOnData*)addOnsList.ItemAt(k);
+		if(data->type == LBK_ADD_ON_PANEL_MODULE)
+		{
+			if(index-- == 0)
+				return((LBPanelModuleData*)data->data);
+		}
+	}
+
+	return NULL;
 }
 
 
@@ -257,7 +316,7 @@ LBApplication::LBApplication(const LBAppSettings *settings, bool use_lbk_default
 			fPanelDevicesCount++;
 			fAddOnsList.AddItem(data);
 		}
-		else if(name == "PanelAppAddon")
+		else if(name == "PanelModule")
 		{
 			BPath pth(value.String(), NULL, true);
 			if(pth.Path() == NULL) continue;
@@ -846,6 +905,7 @@ LBApplication::MessageReceived(BMessage *msg)
 
 		case LBK_APP_SETTINGS_UPDATED: // derived class should read the settings then pass it to LBApplication.
 			if(msg->HasMessage("settings") == false) break;
+			// TODO: read default config if needed
 			for(id = 0; id < CountPanels(); id++)
 			{
 				dev = lbk_app_get_panel_device_data(fAddOnsList, id);
@@ -951,14 +1011,22 @@ LBApplication::CountModules() const
 const lbk_icon*
 LBApplication::GetModuleIcon(int32 index) const
 {
-	// TODO
-	return NULL;
+	LBPanelModuleData *data = lbk_app_get_panel_module_data(fAddOnsList, index);
+	return((data != NULL) ? data->icon : NULL);
+}
+
+
+const char*
+LBApplication::GetModuleDescription(int32 index) const
+{
+	LBPanelModuleData *data = lbk_app_get_panel_module_data(fAddOnsList, index);
+	return((data != NULL) ? data->desc : NULL);
 }
 
 
 LBView*
-LBApplication::InitModule(int32 index)
+LBApplication::GetModuleView(int32 index) const
 {
-	// TODO
-	return NULL;
+	LBPanelModuleData *data = lbk_app_get_panel_module_data(fAddOnsList, index);
+	return((data != NULL) ? data->view : NULL);
 }

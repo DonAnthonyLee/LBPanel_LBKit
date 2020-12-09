@@ -71,7 +71,8 @@ protected:
 
 	int32			CountModules() const;
 	const lbk_icon*		GetModuleIcon(int32 index) const;
-	LBView*			InitModule(int32 index);
+	const char*		GetModuleDescription(int32 index) const;
+	LBView*			GetModuleView(int32 index) const;
 
 private:
 	bool fQuitLooper;
