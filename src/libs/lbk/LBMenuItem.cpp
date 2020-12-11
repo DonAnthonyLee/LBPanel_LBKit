@@ -41,10 +41,25 @@ LBMenuItem::LBMenuItem(const char *label,
 	: LBScopeItem(),
 	  BInvoker(message, NULL),
 	  fLabel(NULL),
-	  fIcon(LBK_ICON_NONE)
+	  fIcon(LBK_ICON_NONE),
+	  fIconData(NULL)
 {
 	SetLabel(label);
 	SetIcon(idIcon);
+}
+
+
+LBMenuItem::LBMenuItem(const char *label,
+		       BMessage *message,
+		       const lbk_icon *icon)
+	: LBScopeItem(),
+	  BInvoker(message, NULL),
+	  fLabel(NULL),
+	  fIcon(LBK_ICON_NONE),
+	  fIconData(NULL)
+{
+	SetLabel(label);
+	SetIcon(icon);
 }
 
 
@@ -84,11 +99,35 @@ LBMenuItem::Icon() const
 }
 
 
+const lbk_icon*
+LBMenuItem::IconData() const
+{
+	return((fIconData != NULL) ? fIconData : lbk_get_icon_data(fIcon));
+}
+
+
 void
 LBMenuItem::SetIcon(lbk_icon_id idIcon)
 {
 	// only 32x32
 	fIcon = (ICON_IS_32x32(idIcon) ? idIcon : LBK_ICON_NONE);
+	fIconData = NULL;
+
+	if(IsVisible() == false) return;
+
+	LBMenuView *view = e_cast_as(ScopeHandler(), LBMenuView);
+	if(view == NULL || view->IsActivated() == false) return;
+
+	BRect r = view->ItemIconBounds();
+	view->Invalidate(r);
+}
+
+
+void
+LBMenuItem::SetIcon(const lbk_icon *icon)
+{
+	fIcon = LBK_ICON_NONE;
+	fIconData = icon;
 
 	if(IsVisible() == false) return;
 
@@ -104,6 +143,29 @@ bool
 LBMenuItem::IsHidden() const
 {
 	return(!IsVisible());
+}
+
+
+void
+LBMenuItem::DrawLabel(LBView *view, BRect r)
+{
+	if(fLabel == NULL) return;
+
+	view->SetFontSize(12);
+	BPoint loc(r.left + r.Width() / 2.f - (float)view->StringWidth(fLabel) / 2.f, r.top + 1.f);
+	view->DrawString(fLabel, loc);
+}
+
+
+void
+LBMenuItem::DrawIcon(LBView *view, BRect r)
+{
+	BPoint loc = r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15);
+
+	if(fIconData != NULL)
+		view->DrawIcon(fIconData, loc);
+	else
+		view->DrawIcon(fIcon, loc);
 }
 
 

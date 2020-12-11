@@ -95,29 +95,19 @@ LBMenuView::CurrentSelection() const
 
 
 void
-LBMenuView::DrawMenuIcon(lbk_icon_id icon, BPoint location)
-{
-	DrawIcon(icon, location);
-}
-
-
-void
 LBMenuView::Draw(BRect rect)
 {
 	LBPageView::Draw(rect);
 	if(CountItems() == 0) return;
 
-	uint16 w;
 	BRect r;
 	LBMenuItem *curItem = CurrentSelection();
 
 	// item label
 	r = ItemLabelBounds();
-	if(!(curItem == NULL || curItem->Label() == NULL) && r.Intersects(rect))
+	if(curItem != NULL && r.Intersects(rect))
 	{
-		SetFontSize(12);
-		w = StringWidth(curItem->Label());
-		DrawString(curItem->Label(), BPoint(r.left + r.Width() / 2.f - w / 2.f, 1));
+		curItem->DrawLabel(this, r);
 	}
 
 	// item icons
@@ -136,8 +126,7 @@ LBMenuView::Draw(BRect rect)
 
 		if(r.Intersects(rect))
 		{
-			DrawMenuIcon(aItem->Icon(),
-				     r.LeftTop() + BPoint(r.Width() / 2.f, r.Height() / 2.f) - BPoint(15, 15));
+			aItem->DrawIcon(this, r);
 
 			if(aItem == curItem)
 				InvertRect(r & rect);

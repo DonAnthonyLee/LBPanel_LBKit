@@ -33,6 +33,7 @@
 
 #include <lbk/LBIconDefs.h>
 #include <lbk/LBScopeItem.h>
+#include <lbk/LBView.h>
 
 #ifdef __cplusplus /* Just for C++ */
 
@@ -41,15 +42,23 @@ public:
 	LBMenuItem(const char *label,
 		   BMessage *message,
 		   lbk_icon_id idIcon);
+	LBMenuItem(const char *label,
+		   BMessage *message,
+		   const lbk_icon *icon);
 	virtual ~LBMenuItem();
 
 	const char*		Label() const;
 	void			SetLabel(const char *label);
 
 	lbk_icon_id		Icon() const;
+	const lbk_icon*		IconData() const;
 	void			SetIcon(lbk_icon_id idIcon);
+	void			SetIcon(const lbk_icon *icon);
 
 	bool			IsHidden() const;
+
+	virtual void		DrawLabel(LBView *view, BRect bounds);
+	virtual void		DrawIcon(LBView *view, BRect bounds);
 
 #ifndef ETK_MAJOR_VERSION
 	virtual status_t	Invoke(const BMessage *msg);
@@ -58,6 +67,7 @@ public:
 private:
 	char *fLabel;
 	lbk_icon_id fIcon;
+	const lbk_icon *fIconData;
 };
 
 #endif /* __cplusplus */
