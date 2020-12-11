@@ -189,8 +189,18 @@ TApplication::MessageReceived(BMessage *msg)
 			if(fConfigPath.Path() != NULL)
 			{
 				LBAppSettings cfg;
-				BFile f(fConfigPath.Path(), B_READ_ONLY);
+				const LBAppSettings *old_cfg = Settings();
+				for(int32 k = 0; k < old_cfg->CountItems(); k++)
+				{
+					BString name;
 
+					if(old_cfg->GetItemAt(k, &name, NULL, NULL) != B_OK) continue;
+					if(name.FindFirst("LBPanel::") != 0) continue;
+
+					cfg.AddItem(old_cfg->ItemAt(k));
+				}
+
+				BFile f(fConfigPath.Path(), B_READ_ONLY);
 				if(f.InitCheck() != B_OK || cfg.AddItems(&f) == false) break;
 				LoadConfig(&cfg);
 
@@ -206,4 +216,3 @@ TApplication::MessageReceived(BMessage *msg)
 			LBApplication::MessageReceived(msg);
 	}
 };
-

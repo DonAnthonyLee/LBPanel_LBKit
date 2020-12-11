@@ -275,13 +275,7 @@ TCommandsPageView::AddModuleItem(LBView *view, const char *title, const lbk_icon
 	BMessage *msg = new BMessage(MSG_MODULE_ITEM);
 	msg->AddPointer("view", reinterpret_cast<void*>(view));
 
-#if 0
-	// TODO: implement LBMenuItem to support lbk_icon more than lbk_icon_id
 	AddItem(new LBMenuItem(title, msg, icon), n - 1);
-#else
-	// Note: Just for test
-	AddItem(new LBMenuItem(title, msg, LBK_ICON_NONE), n - 1);
-#endif
 }
 
 
