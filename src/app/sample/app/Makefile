@@ -1,11 +1,6 @@
 DEBUG_OPTIONS = -g -Wall
 OPTIMIZE = -O3
 
-UCLIBCXX_INCLUDES = -I../include/uClibc\+\+
-
-# run "ln -sf /usr/lib/libuClibc++.so.0 /usr/lib/libuClibc++.so" to make this work
-UCLIBCXX_LIBS = -luClibc\+\+
-
 SINGLE_C_FILE_PROGRAMS =
 SINGLE_CXX_FILE_PROGRAMS = helloworld
 SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
@@ -21,6 +16,15 @@ OBJECTS_3 =
 TARGET = $(TARGET_1) $(TARGET_2) $(TARGET_3)
 OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
 
+IS_BEOS_PLATFORM = 0
+ifeq ($(shell uname),Haiku)
+IS_BEOS_PLATFORM = 1
+else
+ifeq ($(shell uname),BeOS)
+IS_BEOS_PLATFORM = 1
+endif
+endif
+
 CC = ${CROSS_COMPILE}gcc
 CXX = ${CROSS_COMPILE}g++
 LD = ${CROSS_COMPILE}ld
@@ -28,13 +32,38 @@ LD = ${CROSS_COMPILE}ld
 CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
 CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
 LDFLAGS =
+EXTRA_CXX_LDFLAGS =
 
-LITE_BEAPI_CFLAGS = $(shell lite-beapi-config --cflags)
-LITE_BEAPI_LIBS = $(shell lite-beapi-config --libs)
+ifeq ($(IS_BEOS_PLATFORM),0)
+	CFLAGS += $(shell lite-beapi-config --cflags)
+	CXXFLAGS += $(shell lite-beapi-config --cflags)
+	LDFLAGS += $(shell lite-beapi-config --libs)
+	ifneq ($(shell cat /etc/os-release | grep 'OpenWrt'), )
+		UCLIBCXX_INCLUDES = -I/usr/include/uClibc\+\+
 
-CFLAGS += $(LITE_BEAPI_CFLAGS)
-CXXFLAGS += $(LITE_BEAPI_CFLAGS) $(UCLIBCXX_INCLUDES)
-LDFLAGS += $(LITE_BEAPI_LIBS) -llbk
+		# run "ln -sf /usr/lib/libuClibc++.so.0 /usr/lib/libuClibc++.so" to make this work
+		UCLIBCXX_LIBS = -L/usr/lib -luClibc\+\+
+
+		CXXFLAGS += $(UCLIBCXX_INCLUDES)
+		EXTRA_CXX_LDFLAGS += $(UCLIBCXX_LIBS)
+	endif
+else
+	# BeOS/HaikuOS
+	CXXFLAGS += -Wno-multichar
+	LDFLAGS += -lbe -lroot
+endif
+
+ifeq (1,0)
+	LBK_CFLAGS = -I/usr/include
+	LBK_LIBS = -L/usr/lib -llbk
+else
+	LBK_CFLAGS = -I../../../include
+	LBK_LIBS = -L../../../libs/lbk -llbk
+endif
+
+CFLAGS += $(LBK_CFLAGS)
+CXXFLAGS += $(LBK_CFLAGS)
+LDFLAGS += $(LBK_LIBS)
 
 all: targets $(TARGET)
 
@@ -42,7 +71,7 @@ $(C_PROGRAM): $(C_PROGRAM).o
 	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
 
 $(CXX_PROGRAM): $(CXX_PROGRAM).o
-	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS) $(UCLIBCXX_LIBS)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS) $(EXTRA_CXX_LDFLAGS)
 
 targets:
 	for f in $(SINGLE_C_FILE_PROGRAMS) .none; do \
