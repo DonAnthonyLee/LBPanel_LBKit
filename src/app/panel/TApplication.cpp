@@ -195,7 +195,7 @@ TApplication::MessageReceived(BMessage *msg)
 					BString name;
 
 					if(old_cfg->GetItemAt(k, &name, NULL, NULL) != B_OK) continue;
-					if(name.FindFirst("LBPanel::") != 0) continue;
+					if(name.FindFirst("LBPanel::") == 0) continue;
 
 					cfg.AddItem(old_cfg->ItemAt(k));
 				}

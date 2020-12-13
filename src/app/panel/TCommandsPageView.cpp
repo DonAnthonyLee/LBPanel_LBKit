@@ -154,7 +154,7 @@ TCommandsPageView::~TCommandsPageView()
 int32
 TCommandsPageView::VisibleItemsCountMax() const
 {
-	return 2;
+	return((CountItems() <= 2) ? 2 : LBMenuView::VisibleItemsCountMax());
 }
 
 
@@ -275,7 +275,10 @@ TCommandsPageView::AddModuleItem(LBView *view, const char *title, const lbk_icon
 	BMessage *msg = new BMessage(MSG_MODULE_ITEM);
 	msg->AddPointer("view", reinterpret_cast<void*>(view));
 
-	AddItem(new LBMenuItem(title, msg, icon), n - 1);
+	LBMenuItem *item = new LBMenuItem(title, msg, icon);
+	AddItem(item, n - 1);
+	if(Looper() != NULL)
+		item->SetTarget(this);
 }
 
 
