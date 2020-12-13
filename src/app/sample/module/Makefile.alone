@@ -1,0 +1,126 @@
+DEBUG_OPTIONS = -g -Wall
+OPTIMIZE = -O3
+
+SINGLE_C_FILE_PROGRAMS =
+SINGLE_CXX_FILE_PROGRAMS =
+SINGLE_FILE_PROGRAMS = $(SINGLE_C_FILE_PROGRAMS) $(SINGLE_CXX_FILE_PROGRAMS)
+
+TARGET_1 = helloworld.so
+TARGET_2 =
+TARGET_3 =
+
+OBJECTS_1 = helloworld.o
+OBJECTS_2 =
+OBJECTS_3 =
+
+TARGET = $(TARGET_1) $(TARGET_2) $(TARGET_3)
+OBJECTS = $(OBJECTS_1) $(OBJECTS_2) $(OBJECTS_3)
+
+IS_BEOS_PLATFORM = 0
+ifeq ($(shell uname),Haiku)
+IS_BEOS_PLATFORM = 1
+else
+ifeq ($(shell uname),BeOS)
+IS_BEOS_PLATFORM = 1
+endif
+endif
+
+CC = ${CROSS_COMPILE}gcc
+CXX = ${CROSS_COMPILE}g++
+LD = ${CROSS_COMPILE}ld
+
+CFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+CXXFLAGS = $(DEBUG_OPTIONS) $(OPTIMIZE)
+LDFLAGS =
+EXTRA_CXX_LDFLAGS =
+
+ifeq ($(IS_BEOS_PLATFORM),0)
+	SO_CFLAGS = -fPIC
+	SO_LDFLAGS += -shared
+	ifneq ($(shell cat /etc/os-release | grep 'OpenWrt'), )
+		UCLIBCXX_INCLUDES = -I/usr/include/uClibc\+\+
+
+		# run "ln -sf /usr/lib/libuClibc++.so.0 /usr/lib/libuClibc++.so" to make this work
+		UCLIBCXX_LIBS = -L/usr/lib -luClibc\+\+
+
+		CXXFLAGS += $(UCLIBCXX_INCLUDES)
+		EXTRA_CXX_LDFLAGS += $(UCLIBCXX_LIBS)
+	endif
+
+	CFLAGS += $(shell lite-beapi-config --cflags) $(SO_CFLAGS)
+	CXXFLAGS += $(shell lite-beapi-config --cflags) $(SO_CFLAGS)
+	LDFLAGS += $(shell lite-beapi-config --libs)
+else
+	# BeOS/HaikuOS
+	SO_CFLAGS = -fPIC
+	SO_LDFLAGS += -Xlinker --soname=$(TARGET_1)
+	ifeq ($(shell uname),BeOS)
+		SO_LDFLAGS += -nostart
+	else
+		SO_LDFLAGS += -shared
+	endif
+
+	CFLAGS += $(SO_CFLAGS)
+	CXXFLAGS += -Wno-multichar $(SO_CFLAGS)
+	LDFLAGS += -lbe -lroot
+endif
+
+ifeq (1,0)
+	LBK_CFLAGS = -I/usr/include
+	LBK_LIBS = -L/usr/lib -llbk
+else
+	LBK_CFLAGS = -I../../../include
+	LBK_LIBS = -L../../../libs/lbk -llbk
+endif
+
+CFLAGS += $(LBK_CFLAGS)
+CXXFLAGS += $(LBK_CFLAGS)
+LDFLAGS += $(LBK_LIBS)
+
+all: targets $(TARGET)
+
+$(C_PROGRAM): $(C_PROGRAM).o
+	$(CC) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+
+$(CXX_PROGRAM): $(CXX_PROGRAM).o
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS) $(EXTRA_CXX_LDFLAGS)
+
+targets:
+	for f in $(SINGLE_C_FILE_PROGRAMS) .none; do \
+		(test $$f = .none || CC=$(CC) $(MAKE) C_PROGRAM=$$f $$f) \
+	done
+	for f in $(SINGLE_CXX_FILE_PROGRAMS) .none; do \
+		(test $$f = .none || CXX=$(CXX) $(MAKE) CXX_PROGRAM=$$f $$f) \
+	done
+
+$(TARGET_1): $(OBJECTS_1)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $(SO_LDFLAGS) $^ -o $@ $(LDFLAGS)
+
+$(TARGET_2): $(OBJECTS_2)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+
+$(TARGET_3): $(OBJECTS_3)
+	$(CXX) $(DEBUG_OPTIONS) $(OPTIMIZE) $^ -o $@ $(LDFLAGS)
+
+clean:
+	for f in $(TARGET) $(OBJECTS) .none; do \
+		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
+	done
+	for f in $(SINGLE_FILE_PROGRAMS) $(TARGET) .none; do \
+		(test $$f = .none || test ! -e "$$f" || rm -f $$f); \
+		(test $$f = .none || test ! -e "$$f.o" || rm -f $$f.o); \
+	done
+
+.SUFFIXES: .c .cpp .cxx .cc .o
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.cxx.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.cc.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
