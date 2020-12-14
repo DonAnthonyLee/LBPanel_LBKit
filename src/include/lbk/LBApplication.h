@@ -70,7 +70,7 @@ protected:
 	void			SetSettings(const LBAppSettings *settings);
 
 	int32			CountModules() const;
-	const lbk_icon*		GetModuleIcon(int32 index) const;
+	const lbk_icon*		GetModuleIcon(int32 module_index, int32 icon_index = 0) const;
 	const char*		GetModuleDescription(int32 index) const;
 	LBView*			GetModuleView(int32 index) const;
 

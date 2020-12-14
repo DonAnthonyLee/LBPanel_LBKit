@@ -91,7 +91,8 @@ typedef struct
 typedef struct
 {
 	const char *desc;
-	const lbk_icon *icon;
+	const lbk_icon **icons;
+	int icons_count;
 	LBView *view;
 } LBPanelModuleData;
 
@@ -214,14 +215,15 @@ static LBAddOnData* lbk_app_load_panel_module(const BPath &pth, const char *opt)
 	image_id image = load_add_on(pth.Path());
 	if(IMAGE_IS_VALID(image))
 	{
-		LBView* (*instantiate_func)(const char**, const lbk_icon**) = NULL;
+		LBView* (*instantiate_func)(const char*, const char*, const char**, const lbk_icon***, int*) = NULL;
 		if(get_image_symbol(image, "instantiate_panel_module",
-				B_SYMBOL_TYPE_TEXT,
-				(void**)&instantiate_func) == B_OK)
+				    B_SYMBOL_TYPE_TEXT,
+				    (void**)&instantiate_func) == B_OK)
 		{
 			devData->desc = NULL;
-			devData->icon = NULL;
-			devData->view = (*instantiate_func)(&devData->desc, &devData->icon);
+			devData->icons = NULL;
+			devData->icons_count = 0;
+			devData->view = (*instantiate_func)(pth.Path(), opt, &devData->desc, &devData->icons, &devData->icons_count);
 		}
 	}
 
@@ -1009,10 +1011,11 @@ LBApplication::CountModules() const
 
 
 const lbk_icon*
-LBApplication::GetModuleIcon(int32 index) const
+LBApplication::GetModuleIcon(int32 module_index, int32 icon_index) const
 {
-	LBPanelModuleData *data = lbk_app_get_panel_module_data(fAddOnsList, index);
-	return((data != NULL) ? data->icon : NULL);
+	LBPanelModuleData *data = lbk_app_get_panel_module_data(fAddOnsList, module_index);
+	if(data == NULL || icon_index >= (int32)data->icons_count) return NULL;
+	return(data->icons[icon_index]);
 }
 
 

@@ -78,10 +78,16 @@ TView::KeyUp(uint8 key, uint8 clicks)
 
 
 static char module_desc[] = "Hello World";
+static const lbk_icon *module_icons[1];
 
-extern "C" _EXPORT LBView* instantiate_panel_module(const char** desc, const lbk_icon** icon)
+extern "C" _EXPORT LBView* instantiate_panel_module(const char *path, const char *opt, const char** desc, const lbk_icon*** icons, int *icons_count)
 {
 	*desc = module_desc;
-	*icon = lbk_get_icon_data(LBK_ICON_CUSTOM);
+
+	module_icons[0] = lbk_get_icon_data(LBK_ICON_CUSTOM);
+
+	*icons = module_icons;
+	*icons_count = sizeof(module_icons) / sizeof(module_icons[0]);
+
 	return new TView();
 }

@@ -51,7 +51,10 @@ TApplication::TApplication(const LBAppSettings *settings)
 
 	for(int32 k = 0; k < CountModules(); k++)
 	{
-		cmdsView->AddModuleItem(GetModuleView(k), GetModuleDescription(k), GetModuleIcon(k));
+		// TODO: find the proper icon for main panel
+		const lbk_icon *icon = GetModuleIcon(k);
+
+		cmdsView->AddModuleItem(GetModuleView(k), GetModuleDescription(k), icon);
 	}
 }
 
